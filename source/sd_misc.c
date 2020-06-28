@@ -1,3 +1,38 @@
+/******************************************************************************
+ * Author: Joshua Fain
+ * Date:   6/28/2020
+ * 
+ * File: SD_MISCH.C 
+ * 
+ * Requires: SD_MISC.H - header for functions defined here
+ *           SD_BASE.H - needed for direct interaction with the SD Card.
+ *           SPI.H     - needed for sending commands to, and receiving
+ *                       responses from, SD Card
+ *           PRINTS.H  - needed for various print functions used here
+ *           STDINT.H  - needed data types used here
+ *           AVR/IO.H  - needed for I/O related AVR variables.
+ * 
+ * Target: ATmega 1280
+ *
+ * 
+ * Description: 
+ * Defines functions declared in SD_MISC.H. These functions defined here may be 
+ * useful, but are not necessary, for interaction with the SD Card, unlike those
+ * in SD_BASE.C. They are intended to provide some calculations, print, and 
+ * get SD Card related functions.
+ * 
+ * 
+ * Functions:
+ * 1) uint32_t      sd_getMemoryCapacity(void)
+ * 2) DataSector    sd_ReadSingleDataSector(uint32_t address)
+ * 3) void          print_sector(uint8_t *sector)
+ * 
+ * Notes:
+ * Other functions will be included as needed. 
+ * ***************************************************************************/
+
+
+
 #include <stdint.h>
 #include <avr/io.h>
 #include "../includes/usart.h"
@@ -8,76 +43,76 @@
 
 
 
-
-//calculates and returns the memory capacity of the SD card from CSD parameters.
-//Returns 1 if there is an error getting or calculating the value.
-uint32_t sd_getMemoryCapacity()
+/******************************************************************************
+ * Function:    sd_getMemoryCapacity(void) 
+ * Description: Calculates and returns the memory capacity (in BYTES) of the 
+ *              SD card based on values of the CSD register parameters C_SIZE,
+ *              READ_BL_LEN, and C_SIZE_MULT.
+ * Argument(s): VOID
+ * Returns:     Integer value of the memory capcity in bytes in successful.
+ *              1 if unsuccessful.
+ * Notes:       The function reads in the bytes of the CSD register and 
+ *              performs checks on the returned values of the CSD where 
+ *              possible, not just those used for the calculation.  
+ *              See SD Card Physical Layer Specification for specifics
+ *              regarding the calculation.
+******************************************************************************/
+uint32_t sd_getMemoryCapacity(void)
 {
-    //Memory Capacity is calculated from the C_SIZE, READ_BL_LEN, and C_SIZE_MULT parameters found in the CSD register.
-    //This function reads in the CSD register and parses the returned values, performing checks on the returned values of the CSD where possible.
-    //It then calculates the memory capacity based on the equation supplied in the Part1_Physical_Layer Specification.
-
-    if(SD_MSG > 2) print_str("\n\r>> INFO: In sd_getMemoryCapacity()\n\r");
-
+    //Initialize parameter values needed for memory capacity calculation.
     uint8_t READ_BL_LEN = 0;
     uint16_t C_SIZE = 0;
     uint8_t C_SIZE_MULT = 0;
 
+    //Initialize other variables
     uint8_t resp;
     uint8_t R1 = 0;
     uint8_t attempt = 0;
 
+    // ***** Send command SEND_CSD (CMD9) and get R1 response.
     CS_ASSERT;
-
-    for(int i=0;i<=20;i++) SPI_MasterTransmit(0xFF); //Calling SEND_CSD too quickly after calling from sd_SPI_Mode_Init() 
-                                                     //required several more dummy data to be sent to ensure the card was.
-
-    sd_SendCommand(SEND_CSD,0); //CMD9 Request SD card return CSD.
+    for(int i=0;i<=20;i++) SPI_MasterTransmit(0xFF); //wait 16 clock cycles before sending command.
+    sd_SendCommand(SEND_CSD,0); //CMD9 - Request CSD Register from SD card.
+    R1 = sd_getR1(); // Get R1 response
 
     //If R1 is non-zero or times out, then return without getting rest of CSD.
-    while((R1 = sd_Response())==0xFF) 
-    {  
-        if(attempt++ >= 0xFF)
-        {
-            CS_DEASSERT
-            print_str("\n\r>> ERROR: Timeout on R1 response for SEND_CSD (CMD9) in sd_getMemoryCapacity(). Returning with value 1.\n\r");
-            return 1;
-        }
-    }
-    if(SD_MSG > 0) {print_str("\n\r>> DEBUG: printing R1 response to SEND_CSD (CMD9) in sd_getMemoryCapacity().\n\r"); sd_printR1(R1);}
-
-    if(R1 > 1)
+    if(R1 > 0)
     {
         CS_DEASSERT
-        print_str(">> Error returned in R1 response of SEND_CSD (CMD9) in sd_getMemoryCapacity(). Returning with value 1.\n\r");
+        print_str("\n\r>> ERROR:   SEND_CSD (CMD9) in sd_getMemoryCapacity() returned error in R1 response.");
         return 1;
     }
 
+    
+    // ***** Get rest of the response bytes which are the CSD Register and CRC.
+    
+    
     attempt = 0;
-    do{ // CSD_STRUCTURE
-        if((sd_Response()>>6) <= 2) break;
-        if(attempt++ >= 0xFF){ CS_DEASSERT; return 1;} // Timeout returning CSD_STRUCTURE 
+    do{ // get CSD_STRUCTURE (Not used for memory calculation)
+        if((sd_Response()>>6) <= 2) break; //check for valid CSD_STRUCTURE returned
+        if(attempt++ >= 0xFF){ CS_DEASSERT; return 1;} // Timeout returning valid CSD_STRUCTURE 
     }while(1);
     
     attempt = 0;
-    do{ // TAAC
-        if(!(sd_Response()>>7)) break;
-        if(attempt++ >= 0xFF) { CS_DEASSERT; return 1;} //Timeout returning TAAC
+    do{ // get TAAC (Not used for memory calculation)
+        if(!(sd_Response()>>7)) break; // check for valid TAAC (bit 7 is rsvd should = 0)
+        if(attempt++ >= 0xFF) { CS_DEASSERT; return 1;} //Timeout returning valid TAAC
     }while(1);
 
-    sd_Response(); //NSAC of CSD. Any value could be valid.
+    sd_Response();  // get NSAC of CSD. Any value could be valid. (Not used for memory calculation)
 
     attempt = 0;
-    do{ //TRAN_SPEED. Must either be 0x32 or 0x5A.
+    do{ // get TRAN_SPEED. (Not used for memory calculation)
         resp = sd_Response();  
-        if((resp == 0x32) || (resp == 0x5A)) break;
-        if(attempt++ >= 0xFF) { CS_DEASSERT; return 1;}
+        if((resp == 0x32) || (resp == 0x5A)) break; //TRAN_SPEED must be 0x32 or 0x5A.
+        if(attempt++ >= 0xFF) { CS_DEASSERT; return 1;} //Timeout returning valid TRAN_SPEED
     }while(1);
 
-    //Next bytes include 12 bit CCC and 4 bit READ_BL_LENGTH.  READ_BL_LEN is needed to calculate memory capacity.
-    //CCC is of the form 01_110110101. READ_BL_LEN is 4 bits and must by 9, 10, or 11.
-    uint8_t flag = 1;
 
+    //Next 2 bytes include 12 bit CCC and 4 bit READ_BL_LENGTH.  
+    //CCC is of the form 01_110110101 and is NOT used for memory calculation
+    //READ_BL_LEN is needed to calculate memory capacity and must by 9, 10, or 11.
+    uint8_t flag = 1;
     while(flag == 1)
     {
         if((resp = sd_Response())&0x7B) //CCC 8 most significant bits must be of the form 01_11011;
@@ -85,14 +120,7 @@ uint32_t sd_getMemoryCapacity()
             if(((resp = sd_Response())>>4) == 0x05) //CCC least sig. 4 bits and 4 bit READ_BL_LEN.
             {
                 READ_BL_LEN = resp&0b00001111;
-                if ((READ_BL_LEN < 9) || (READ_BL_LEN > 11))
-                {
-                    CS_DEASSERT;
-                    print_str("\n\r>> FAILED to get valid READ_BL_LEN value in sd_getMemoryCapacity().");
-                    print_str("\n\r>> READ_BL_LEN should be 0x09, 0x0A, or 0x0B, but the value returned was 0x"); print_hex(READ_BL_LEN);
-                    print_str("\n\r>> Returning with value 1.");
-                    return 1; 
-                }
+                if ((READ_BL_LEN < 9) || (READ_BL_LEN > 11)) { CS_DEASSERT; return 1; }
                 flag = 0;
             }
         }
@@ -100,7 +128,8 @@ uint32_t sd_getMemoryCapacity()
     }
 
 
-    //This section gets the remaining bits of the CSD
+    //This section gets the remaining bits of the CSD.
+    //C_SIZE and C_SIZE_MULT are needed for memory capacity calculation.
     flag = 1;
     attempt = 0;
     while(flag == 1)
@@ -111,7 +140,7 @@ uint32_t sd_getMemoryCapacity()
                                         //READ_BLK_MISALIGN[5] = X;
                                         //DSR_IMP[4] = X;
                                         //RESERVERED[3:2] = 0;
-                                        //C_SIZE - 2 Most Significant Bits[1:0] = X;
+                                        //C_SIZE - 2 Most Significant Bits[1:0] = X.  (Used for memory capacity calculation.)
         {
             //get and parse C_SIZE            
             C_SIZE = (resp&0x03);           
@@ -131,7 +160,7 @@ uint32_t sd_getMemoryCapacity()
 
     CS_DEASSERT;
 
-    // Calculate memory capacity of SD Card.
+    // ***** Calculate and return memory capacity of SD Card.
     uint32_t BLOCK_LEN = 1;
     for (uint8_t i = 0; i< READ_BL_LEN; i++) BLOCK_LEN = BLOCK_LEN*2;
     uint32_t MULT = 1;
@@ -139,35 +168,43 @@ uint32_t sd_getMemoryCapacity()
     uint32_t BLOCKNR = (C_SIZE+1)*MULT;
     uint32_t memoryCapacity = BLOCKNR*BLOCK_LEN;
     
-    return memoryCapacity;
-
+    return memoryCapacity; //bytes
 }
 //END sd_MemoryCapacity()
 
 
 
-// Reads data sector
+/******************************************************************************
+ * Function:    sd_ReadSingleDataSector(uint32_t address)
+ * Description: Reads in a single data sector from the SD card at address
+ *              specified in the argument and stores in a DataSector struct
+ *              variable that includes the data bytes of the sector, errors 
+ *              returned, and CRC returned. 
+ * Argument(s): Address of data sector to read.
+ * Returns:     DataSector struct. See SD_MISC.H for details.
+ * Notes:       The length of the data sector is specified by the 
+ *              DATA_BLOCK_LEN defined in SD_BASE.H. This should be 512-bytes.
+******************************************************************************/
 DataSector sd_ReadSingleDataSector(uint32_t address)
 {
-    //print_str("\n\rIn READ Single Data Block\n\r");
     DataSector ds;
 
-    int attempt = 0;
+    uint8_t attempt = 0;
 
     CS_ASSERT;
-    for(int i=0;i<2;i++) SPI_MasterTransmit(0xFF);	//Wait 16 clock more clock cycles.  
+    for(int i=0;i<2;i++) SPI_MasterTransmit(0xFF); //Wait 16 clock more clock cycles.  
 
-    sd_SendCommand(READ_SINGLE_BLOCK,address);  //Send CMD17;
-    while((ds.R1 = sd_Response())==0xFF) 
-    {  
-        if(attempt++ >= 0xFF)
-        {
-            print_str("took too long\n\r");
-            sd_printR1(ds.R1);
-            return ds;
-        }
+    sd_SendCommand(READ_SINGLE_BLOCK,address);  //Send CMD17 to return a single block;
+    ds.R1 = sd_getR1(); // Get R1 response
+
+    //If R1 is non-zero or times out, then return without getting rest of CSD.
+    if(ds.R1 > 0)
+    {
+        CS_DEASSERT
+        print_str("\n\r>> ERROR:   READ_SINGLE_BLOCK (CMD17) in sd_ReadSingleDataSector() returned error in R1 response.");
+        ds.ERROR = 1;
+        return ds;
     }
-    //sd_printR1(ds.R1);
 
     if(ds.R1 == 0)
     {
@@ -179,21 +216,22 @@ DataSector sd_ReadSingleDataSector(uint32_t address)
             attempt++;
             if(attempt > 512)
             {
-                print_str("data read time out");
+                print_str("\n\r>> ERROR:   Timeout while waiting for Start Block Token in sd_ReadSingleDataSector().");
                 ds.ERROR = 1;
                 return ds;
             }
         }
 
+        // if start block token has been received and not timed out then begin reading in the data.
         if((attempt < 0xFF) && (r== 0xFE))
         {            
             for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
-                ds.byte[i] = sd_Response();
+                ds.data[i] = sd_Response();
 
-            for(int i = 0; i < 2; i++)
+            for(uint8_t i = 0; i < 2; i++)
                 ds.CRC[i] = sd_Response();
                 
-            sd_Response();
+            sd_Response(); // clear any remaining characters in SD response.
         }
     }
     CS_DEASSERT;
@@ -203,17 +241,30 @@ DataSector sd_ReadSingleDataSector(uint32_t address)
 
 
 
+/******************************************************************************
+ * Function:    print_sector(uint8_t *sector)
+ * Description: Prints the contents of the data sector array passed in as the
+ *              arguement. Prints the hexadecimal value of the data in 1 
+ *              section and the corresponding ASCII characters (if valid).
+ *              Each data row is prefixed with a sector offset value that
+ *              corresponds to the address offset of the data in the first 
+ *              column of that row.
+ * Argument(s): 8-bit unsigned integer array of length DATA_BLOCK_LEN (defined
+ *              in SD_BASE.H and should = 512).  
+ * Returns:     VOID
+ * Notes:       If the data does not correspond to a printable ASCII character 
+ *              then the function will print an empty character ' ' if data
+ *              is one of the control characters (i.e. <32) and a '.' 
+ *              character if the data value is > 128.
+******************************************************************************/
 void print_sector(uint8_t *sector)
 {
-    print_str("\n\n\rPRINTING DATA FOR 512-byte SECTOR\n\r");
-
     print_str("\n\n\rSECTOR OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
     uint16_t sector_offset = 0;
     int space = 0;
     for(uint16_t row=0; row<DATA_BLOCK_LEN/16; row++)
     {
         print_str("\n\r   ");
-        //if(sector_offset<0x10)        { print_str("0x0"); print_hex(sector_offset); }
         if(sector_offset<0x100)  { print_str("0x0"); print_hex(sector_offset); }
         else if(sector_offset<0x1000) { print_str("0x"); print_hex(sector_offset); }
         
@@ -244,3 +295,4 @@ void print_sector(uint8_t *sector)
     }    
     print_str("\n\n\r");
 }
+// END print_sector(uint8_t *sector)
