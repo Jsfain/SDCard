@@ -31,4 +31,5 @@ Anyone can use this and modify it to meet the needs of their system, but let me 
 [AVR Toolchain](https://github.com/osx-cross/homebrew-avr)
 
 # Reference Documents:
-Atmel
+1) Atmel ATmega640/V-1280/V-1281/V-2560/V-2561/V Datasheet
+2) SD Specifications Part 1: Physical Layer Specification - Simplified Specification Version 7.10
