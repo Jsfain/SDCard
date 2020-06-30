@@ -1,4 +1,4 @@
-/******************************************************************************
+/****************************************************************************************
  * Author: Joshua Fain
  * Date:   6/28/2020
  * 
@@ -26,10 +26,11 @@
  * 1) uint32_t      sd_getMemoryCapacity(void)
  * 2) DataSector    sd_ReadSingleDataSector(uint32_t address)
  * 3) void          print_sector(uint8_t *sector)
+ * 4) void          sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
  * 
  * Notes:
  * Other functions will be included as needed. 
- * ***************************************************************************/
+ * **************************************************************************************/
 
 
 
@@ -190,7 +191,8 @@ DataSector sd_ReadSingleDataSector(uint32_t address)
     DataSector ds;
 
     uint8_t attempt = 0;
-
+    print_str("\n\r   ");
+    print_dec(address);
     CS_ASSERT;
     for(int i=0;i<2;i++) SPI_MasterTransmit(0xFF); //Wait 16 clock more clock cycles.  
 
@@ -202,6 +204,7 @@ DataSector sd_ReadSingleDataSector(uint32_t address)
     {
         CS_DEASSERT
         print_str("\n\r>> ERROR:   READ_SINGLE_BLOCK (CMD17) in sd_ReadSingleDataSector() returned error in R1 response.");
+        sd_printR1(ds.R1);
         ds.ERROR = 1;
         return ds;
     }
@@ -296,3 +299,44 @@ void print_sector(uint8_t *sector)
     print_str("\n\n\r");
 }
 // END print_sector(uint8_t *sector)
+
+
+
+
+/***********************************************************************************
+ * Function:    sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
+ * Description: Searches between a specified range of sectors for any sectors that
+ *              have non-zero values and prints those sector numbers to screen. 
+ * Argument(s): 2 32-bit arguments that specify the beginning and ending sector in 
+ *              the search.
+ * Returns:     VOID
+ * Notes:       
+***********************************************************************************/
+void sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
+{
+    DataSector ds;
+    print_str("\n\rSearching for non-zero sectors over sector range ");
+    print_dec(begin_sector);
+    print_str(" to ");
+    print_dec(end_sector);
+    int tab = 0; //used for printing format
+    uint32_t Address = 0;
+    //for(uint32_t sector = begin_sector; sector<end_sector+1; sector++)
+    for(uint32_t sector = begin_sector; sector < end_sector + 1; sector++)
+    {
+        Address = sector * 512;
+        ds = sd_ReadSingleDataSector(Address);                
+        
+        for(int i = 0; i<512;i++)
+        {
+            if(ds.data[i]!=0)
+            {
+                if(tab%5==0) print_str("\n\r");
+                print_str("\t\t");print_dec(sector);
+                tab++;
+                break;
+            }
+        }        
+    }
+    print_str("\n\rDone searching non-zero sectors.");
+}

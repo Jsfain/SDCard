@@ -40,6 +40,11 @@ uint32_t sd_getMemoryCapacity();
 void print_sector(uint8_t *sector);  //only 512 byte sector supported.
 
 
+// Prints sectors numbers for those sectors between the begin and end
+// sectors that have non-zero data.
+void sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector);
+
+
 
 
 #endif // SD_MISC_H
