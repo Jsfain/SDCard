@@ -5,7 +5,7 @@
  * File: SD_MISCH.C 
  * 
  * Requires: SD_MISC.H - header for functions defined here
- *           SD_BASE.H - needed for direct interaction with the SD Card.
+ *           SD_SPI.H - needed for direct interaction with the SD Card.
  *           SPI.H     - needed for sending commands to, and receiving
  *                       responses from, SD Card
  *           PRINTS.H  - needed for various print functions used here
@@ -39,7 +39,7 @@
 #include "../includes/usart.h"
 #include "../includes/prints.h"
 #include "../includes/spi.h"
-#include "../includes/sd_base.h"
+#include "../includes/sd_spi.h"
 #include "../includes/sd_misc.h"
 
 
@@ -186,7 +186,7 @@ uint32_t sd_getMemoryCapacity(void)
  * Notes:       The length of the data sector is specified by the 
  *              DATA_BLOCK_LEN defined in SD_BASE.H. This should be 512-bytes.
 ******************************************************************************/
-DataSector sd_ReadSingleDataSector(uint32_t address)
+DataSector sd_ReadSingleDataBlock(uint32_t address)
 {
     DataSector ds;
 
@@ -325,7 +325,7 @@ void sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
     for(uint32_t sector = begin_sector; sector < end_sector + 1; sector++)
     {
         Address = sector * 512;
-        ds = sd_ReadSingleDataSector(Address);                
+        ds = sd_ReadSingleDataBlock(Address);                
         
         for(int i = 0; i<512;i++)
         {

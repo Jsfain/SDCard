@@ -2,7 +2,7 @@
  * Author: Joshua Fain
  * Date:   6/23/2020
  * 
- * File: SD_BASE.C 
+ * File: SD_SPI.C
  * 
  * Requires: SD_SPI.H - header for function defined here
  *           SPI.H     - needed for sending commands to, and receiving
@@ -14,7 +14,7 @@
  * Target: ATmega 1280
  *
  * Description: 
- * Defines SD Card base-level functions declared in SD_BASE.H  
+ * Defines SD Card base-level functions declared in SD_SPI.H
  * These functions are needed for base-level interaction with the SD Card 
  * in SPI Mode. This includes an initialization function that initializes the
  * SD Card into SPI Mode, functions to send/receive a command/response from an
@@ -39,7 +39,7 @@
  *      currently not function for SDHC/SDXC.
  * 2)   Included in the code are error, informational, debug, verbose messages
  *      that can be printed to screen based on the setting of the SD_MSG flag
- *      in SD_BASE.H. They were useful while I was writing the code and may 
+ *      in SD_SPI.H. They were useful while I was writing the code and may
  *      assist in further debugging.
  * 3)   I found that sometimes when sending SD commands, the card responded
  *      better if a few clock cycles passed after asserting CS before the
@@ -62,7 +62,7 @@
  * Returns:     32-bit initialization response. If initialization is successful
  *              then returns 0 otherwise initialization failed and a positive 
  *              non-zero error is returned. See initialization error flag(s)
- *              (in SD_BASE.H.  The initialization response includes the last
+ *              (in SD_SPI.H.  The initialization response includes the last
  *              R1 response received during initialization.
  * Notes:       Call sd_printInitResponse() to read initialization response.
 ******************************************************************************/

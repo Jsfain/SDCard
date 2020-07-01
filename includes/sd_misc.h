@@ -27,7 +27,11 @@ typedef struct  DataSector { //A block is limited to 512 bytes in this implement
 
 // Reads in a single data secotr from an SD card and returns the data in a 
 // DataSector struct.
-DataSector sd_ReadSingleDataSector(uint32_t address);
+DataSector sd_ReadSingleDataBlock(uint32_t address);
+
+
+
+void sd_ReadMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks);
 
 
 

@@ -2,21 +2,21 @@
  * Author: Joshua Fain
  * Date:   6/23/2020
  * 
- * File: SD_BASE.H
+ * File: SD_SPI.H
  * 
- * Required by: SD_BASE.C
+ * Required by: SD_SPI.C
  *
  * Target: ATmega 1280
  * 
  * Description: 
  * Declares SD Card "base-level" functions, defines SD Card commands as well as
- * various error, and other, flags required by SD_BASE.C.  See comments
+ * various error, and other, flags required by SD_SPI.C.  See comments
  * throughout file for specifics.
  * ***************************************************************************/
 
 
-#ifndef SD_BASE_H
-#define SD_BASE_H
+#ifndef SD_SPI_H
+#define SD_SPI_H
 
 
 /******************************************************************************
@@ -138,7 +138,7 @@
 
 
 /******************************************************************************
- * Functions: See the full description of these function in SD_BASE.C
+ * Functions: See the full description of these function in SD_SPI.C
 ******************************************************************************/
 
 
@@ -164,4 +164,4 @@ void sd_printR1(uint8_t R1);
 void sd_printInitResponse(uint32_t err);
 
 
-#endif //SD_BASE_H
+#endif //SD_SPI_H
