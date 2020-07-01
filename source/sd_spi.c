@@ -4,7 +4,7 @@
  * 
  * File: SD_BASE.C 
  * 
- * Requires: SD_BASE.H - header for function defined here
+ * Requires: SD_SPI.H - header for function defined here
  *           SPI.H     - needed for sending commands to, and receiving
  *                       responses from, SD Card
  *           PRINTS.H  - needed for various print functions used here
@@ -52,7 +52,7 @@
 #include <avr/io.h>
 #include "../includes/prints.h"
 #include "../includes/spi.h"
-#include "../includes/sd_Base.h"
+#include "../includes/sd_spi.h"
 
 
 /******************************************************************************
@@ -239,7 +239,7 @@ uint32_t sd_SPI_Mode_Init(void)
                 return (FAILED_SD_SEND_OP_COND | R1);
             }
 
-            if(attempt++ >= 0xFF)
+            if(attempt++ >= 0x05)
             {
                 if(SD_MSG) 
                 {
@@ -535,34 +535,34 @@ void sd_printR1(uint8_t R1)
 void sd_printInitResponse(uint32_t err)
 {
     //print R1 portion of initiailzation response
-    if(SD_MSG > 0) print_str("\n\r>> INFO: R1 Response returned from SD Card Initialization:\n\r");
+    if(SD_MSG > 1) print_str("\n\r>> INFO:    R1 Response returned from SD Card Initialization:");
     sd_printR1((uint8_t)(0x000FF&err));
 
-    if(SD_MSG > 0) print_str("\n\r>> INFO: Additional response returned from SD Card Initialization:");
+    if(SD_MSG > 1) print_str("\n\r>> INFO:    Other response returned from SD Card Initialization:");
     //print other portion of R1 response
     if(err&FAILED_GO_IDLE_STATE)
-        print_str("\n\r         FAILED_GO_IDLE_STATE\n\r");
+        print_str("\n\r\t    FAILED_GO_IDLE_STATE\n\r");
     if(err&FAILED_SEND_IF_COND)
-        print_str("\n\r         FAILED_SEND_IF_COND");
+        print_str("\n\r\t    FAILED_SEND_IF_COND");
     if(err&UNSUPPORTED_CARD_TYPE)
-        print_str("\n\r         UNSUPPORTED_CARD_TYPE");
+        print_str("\n\r\t    UNSUPPORTED_CARD_TYPE");
     if(err&FAILED_CRC_ON_OFF)
-        print_str("\n\r         FAILED_CRC_ON_OFF");
+        print_str("\n\r\t    FAILED_CRC_ON_OFF");
     if(err&FAILED_APP_CMD)
-        print_str("\n\r         FAILED_APP_CMD");
+        print_str("\n\r\t    FAILED_APP_CMD");
     if(err&FAILED_SD_SEND_OP_COND)
-        print_str("\n\r         FAILED_SD_SEND_OP_COND");
+        print_str("\n\r\t    FAILED_SD_SEND_OP_COND");
     if(err&OUT_OF_IDLE_TIMEOUT)
-        print_str("\n\r         OUT_OF_IDLE_TIMEOUT");
+        print_str("\n\r\t    OUT_OF_IDLE_TIMEOUT");
     if(err&FAILED_READ_OCR)
-        print_str("\n\r         FAILED_READ_OCR");
+        print_str("\n\r\t    FAILED_READ_OCR");
     if(err&POWER_UP_NOT_COMPLETE)
-        print_str("\n\r         POWER_UP_NOT_COMPLETE");
+        print_str("\n\r\t    POWER_UP_NOT_COMPLETE");
     if(err&FAILED_SET_BLOCKLEN)
-        print_str("\n\r         FAILED_SET_BLOCKLEN");
+        print_str("\n\r\t    FAILED_SET_BLOCKLEN");
     if(err&FAILED_SEND_CSD)
-        print_str("\n\r         FAILED_SEND_CSD");
+        print_str("\n\r\t    FAILED_SEND_CSD");
     if(err == 0) // NO ERRORS
-        print_str("\n\r         NO ERRORS RETURNED DURING INITIALIZATION.\n\r");
+        print_str("\n\r\t    NO ERRORS RETURNED DURING INITIALIZATION.\n\r");
 }
 //END sd_printInitErrors()

@@ -27,10 +27,10 @@
  *              1  = ERROR messages
  *              2  = INFO messages
  *              3  = DEBUG messages
- *              >4 = VERBOSE messages
+ *             >3  = VERBOSE messages
  * Notes:       Call sd_printInitResponse() to read initialization response.
 ******************************************************************************/
-#define SD_MSG 1
+#define SD_MSG 4
 
 /******************************************************************************
  * Flag:        HCS 
