@@ -24,6 +24,10 @@ typedef struct  DataSector { //A block is limited to 512 bytes in this implement
 } DataSector;
 
 
+// Calculate and return the memory capacity of the SD Card in Bytes.
+uint32_t sd_GetMemoryCapacity();
+
+
 
 // Reads in a single data secotr from an SD card and returns the data in a 
 // DataSector struct.
@@ -31,17 +35,18 @@ DataSector sd_ReadSingleDataBlock(uint32_t address);
 
 
 
-void sd_ReadMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks);
 
-
-
-// Calculate and return the memory capacity of the SD Card in Bytes.
-uint32_t sd_getMemoryCapacity();
 
 
 
 // Print the data in data sector array passed as the argument.
-void print_sector(uint8_t *sector);  //only 512 byte sector supported.
+void sd_PrintSector(uint8_t *sector);  //only 512 byte sector supported.
+
+
+
+// Prints multiple data blocks to screen by calling the CMD18.
+void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks);
+
 
 
 // Prints sectors numbers for those sectors between the begin and end
@@ -49,6 +54,7 @@ void print_sector(uint8_t *sector);  //only 512 byte sector supported.
 void sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector);
 
 
+void sd_WriteSingleDataBlock(uint32_t address);
 
 
 #endif // SD_MISC_H

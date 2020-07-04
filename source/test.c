@@ -22,6 +22,8 @@ int main(void)
     USART_Init();
     SPI_MasterInit();
 
+    for(int k=0;k<0xFF;k++) print_str("\n\r");
+
     print_str("\n\n\n\r ******  BEGIN TESTING *********\n\n\n\r");
     for(int i=0;i<0xFF;i++) SPI_MasterTransmit(0xFF);
 
@@ -46,9 +48,9 @@ int main(void)
     }
 
 
-    print_dec(sd_getMemoryCapacity());
+    print_dec(sd_GetMemoryCapacity());
 
-    DataSector ds;
+    //DataSector ds;
 
     uint32_t sector = 0;
     uint32_t address = 0;
@@ -58,16 +60,20 @@ int main(void)
         sector = 2048+i;
         address = sector * 512;
         ds = sd_ReadSingleDataSector(address);
-        print_sector(ds.data);
+        sd_PrintSector(ds.data);
     }
     */
+    
     sector = 2048;
     address = sector * 512;
-    ds = sd_ReadSingleDataBlock(address);
-    print_sector(ds.data);
+    //ds = sd_ReadSingleDataBlock(address);
+    //sd_PrintSector(ds.data);
 
 
-    //just something to do after after running the sd card routines
+    int numOfBlocks = 3;
+
+    sd_PrintMultipleDataBlocks(address,numOfBlocks);
+
     while(1)
         USART_Transmit(USART_Receive());
     

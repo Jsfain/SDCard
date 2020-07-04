@@ -1,4 +1,4 @@
-/****************************************************************************************
+/*********************************************************************************************
  * Author: Joshua Fain
  * Date:   6/28/2020
  * 
@@ -18,19 +18,20 @@
  * Description: 
  * Defines functions declared in SD_MISC.H. These functions defined here may be 
  * useful, but are not necessary, for interaction with the SD Card, unlike those
- * in SD_BASE.C. They are intended to provide some calculations, print, and 
+ * in SD_SPI.C. They are intended to provide some calculations, print, and 
  * get SD Card related functions.
  * 
  * 
  * Functions:
- * 1) uint32_t      sd_getMemoryCapacity(void)
+ * 1) uint32_t      sd_GetMemoryCapacity(void)
  * 2) DataSector    sd_ReadSingleDataSector(uint32_t address)
- * 3) void          print_sector(uint8_t *sector)
- * 4) void          sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
+ * 3) void          sd_PrintSector(uint8_t *sector)
+ * 4) void          sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
+ * 5) void          sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
  * 
  * Notes:
  * Other functions will be included as needed. 
- * **************************************************************************************/
+ * ******************************************************************************************/
 
 
 
@@ -50,7 +51,7 @@
  *              SD card based on values of the CSD register parameters C_SIZE,
  *              READ_BL_LEN, and C_SIZE_MULT.
  * Argument(s): VOID
- * Returns:     Integer value of the memory capcity in bytes in successful.
+ * Returns:     Integer value of the memory capcity in bytes if successful.
  *              1 if unsuccessful.
  * Notes:       The function reads in the bytes of the CSD register and 
  *              performs checks on the returned values of the CSD where 
@@ -58,7 +59,7 @@
  *              See SD Card Physical Layer Specification for specifics
  *              regarding the calculation.
 ******************************************************************************/
-uint32_t sd_getMemoryCapacity(void)
+uint32_t sd_GetMemoryCapacity(void)
 {
     //Initialize parameter values needed for memory capacity calculation.
     uint8_t READ_BL_LEN = 0;
@@ -184,7 +185,7 @@ uint32_t sd_getMemoryCapacity(void)
  * Argument(s): Address of data sector to read.
  * Returns:     DataSector struct. See SD_MISC.H for details.
  * Notes:       The length of the data sector is specified by the 
- *              DATA_BLOCK_LEN defined in SD_BASE.H. This should be 512-bytes.
+ *              DATA_BLOCK_LEN defined in SD_SPI.H. This should be 512-bytes.
 ******************************************************************************/
 DataSector sd_ReadSingleDataBlock(uint32_t address)
 {
@@ -245,7 +246,7 @@ DataSector sd_ReadSingleDataBlock(uint32_t address)
 
 
 /******************************************************************************
- * Function:    print_sector(uint8_t *sector)
+ * Function:    sd_PrintSector(uint8_t *sector)
  * Description: Prints the contents of the data sector array passed in as the
  *              arguement. Prints the hexadecimal value of the data in 1 
  *              section and the corresponding ASCII characters (if valid).
@@ -253,14 +254,14 @@ DataSector sd_ReadSingleDataBlock(uint32_t address)
  *              corresponds to the address offset of the data in the first 
  *              column of that row.
  * Argument(s): 8-bit unsigned integer array of length DATA_BLOCK_LEN (defined
- *              in SD_BASE.H and should = 512).  
+ *              in SD_SPI.H and should = 512).  
  * Returns:     VOID
  * Notes:       If the data does not correspond to a printable ASCII character 
  *              then the function will print an empty character ' ' if data
  *              is one of the control characters (i.e. <32) and a '.' 
  *              character if the data value is > 128.
 ******************************************************************************/
-void print_sector(uint8_t *sector)
+void sd_PrintSector(uint8_t *sector)
 {
     print_str("\n\n\rSECTOR OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
     uint16_t sector_offset = 0;
@@ -298,8 +299,68 @@ void print_sector(uint8_t *sector)
     }    
     print_str("\n\n\r");
 }
-// END print_sector(uint8_t *sector)
+// END sd_PrintSector(uint8_t *sector)
 
+
+
+/****************************************************************************************
+ * Function:    sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
+ * Description: Prints multiple, consecutive data blocks using READ_MULTIPLE_BLOCK
+ *              command and sd_PrintSector(). The range of data blocks to be printed 
+ *              begin at start_address and ending at start_address + (numOfBlocks - 1).
+ * Argument(s): start address and number of blocks to read.
+ * Returns:     VOID
+ * Notes:       
+****************************************************************************************/
+void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
+{
+    DataSector ds;
+    int attempt = 0;
+
+    CS_ASSERT;
+
+    for(int i=0;i<2;i++) SPI_MasterTransmit(0xFF); // Wait to send the command.
+    sd_SendCommand(READ_MULTIPLE_BLOCK,start_address); 
+    ds.R1 = sd_getR1(); //get R1 response
+
+    if(ds.R1 > 0)
+    {
+        CS_DEASSERT
+        print_str("\n\r>> ERROR:   READ_MULTIPLE_BLOCK (CMD18) in sd_PrintMultipleDataBlocks() returned error in R1 response.");
+        sd_printR1(ds.R1); //print R1 response if error was returned.
+    }
+
+    // if R1 response has no errors then read in / print the data block
+    if(ds.R1 == 0)
+    {
+        for (int i=0;i<numOfBlocks;i++)
+        {
+            // prior to returning each data block, a start block token must be sent.
+            while(sd_Response() != 0xFE) // wait for start block token.
+            {
+                print_str("\n\rattempts = "); print_dec(attempt);
+                attempt++;
+                if(attempt > 511)
+                {
+                    print_str("\n\r>> ERROR:   Timeout while waiting for Start Block Token in sd_ReadSingleDataSector().");
+                    ds.ERROR = 1;
+                    break;
+                }
+            }
+
+            for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++) ds.data[i] = sd_Response(); // get data block
+            for(uint8_t i = 0; i < 2; i++) ds.CRC[i] = sd_Response(); // get CRC response
+
+            sd_PrintSector(ds.data); // print data block
+        }
+        
+        sd_SendCommand(STOP_TRANSMISSION,0); // stop data block tranmission 
+        sd_Response(); //response doesn't matter
+    }
+
+    CS_DEASSERT;
+}
+// END sd_PrintMultiplDataBlocks()
 
 
 
@@ -340,3 +401,4 @@ void sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
     }
     print_str("\n\rDone searching non-zero sectors.");
 }
+// END sd_SearchNonZeroSectors()

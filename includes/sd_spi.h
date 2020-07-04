@@ -30,7 +30,7 @@
  *             >3  = VERBOSE messages
  * Notes:       Call sd_printInitResponse() to read initialization response.
 ******************************************************************************/
-#define SD_MSG 4
+#define SD_MSG 3
 
 /******************************************************************************
  * Flag:        HCS 
