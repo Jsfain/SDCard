@@ -28,6 +28,8 @@
  * 3) void          sd_PrintSector(uint8_t *sector)
  * 4) void          sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
  * 5) void          sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
+ * 6) uint16_t      sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
+ * 7) void          sd_printWriteError(uint16_t err)
  * 
  * Notes:
  * Other functions will be included as needed. 
@@ -169,7 +171,6 @@ uint32_t sd_GetMemoryCapacity(void)
     for (uint8_t i = 0; i< C_SIZE_MULT+2; i++) MULT = MULT*2;
     uint32_t BLOCKNR = (C_SIZE+1)*MULT;
     uint32_t memoryCapacity = BLOCKNR*BLOCK_LEN;
-    
     return memoryCapacity; //bytes
 }
 //END sd_MemoryCapacity()
@@ -192,7 +193,7 @@ DataSector sd_ReadSingleDataBlock(uint32_t address)
     DataSector ds;
 
     uint8_t attempt = 0;
-    print_str("\n\r   ");
+    print_str("\n\rReading Address: ");
     print_dec(address);
     CS_ASSERT;
     for(int i=0;i<2;i++) SPI_MasterTransmit(0xFF); //Wait 16 clock more clock cycles.  
@@ -200,7 +201,7 @@ DataSector sd_ReadSingleDataBlock(uint32_t address)
     sd_SendCommand(READ_SINGLE_BLOCK,address);  //Send CMD17 to return a single block;
     ds.R1 = sd_getR1(); // Get R1 response
 
-    //If R1 is non-zero or times out, then return without getting rest of CSD.
+    //If R1 is non-zero or times out, then return without getting rest of block.
     if(ds.R1 > 0)
     {
         CS_DEASSERT
@@ -402,3 +403,157 @@ void sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
     print_str("\n\rDone searching non-zero sectors.");
 }
 // END sd_SearchNonZeroSectors()
+
+
+
+/****************************************************************************************
+ * Function:    sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
+ * Description: Writes the data in the dataBuffer to the sector specified by address.
+ * Argument(s): uint32_t address:       address of data sector to write to.
+ *              uint8_t  *dataBuffer:   pointer to array (length DATA_BLOCK_LEN) of data
+ *                                      bytes that will be written to the sector 
+ *                                      specified by address.
+ * Returns:     Value corresponding to one of the Data Response Codes and R1 response. 
+ * Notes:       1) Byte returned by SD Card for the Data Response Token is of the form
+ *                 xxx0SSS1, where:
+ *                                 xxx = don't care 
+ *                                 SSS = 010: Data Accepted
+ *                                 SSS = 101: Data rejected due to a CRC Error.
+ *                                 SSS = 101: Data rejected due to a Write Error.
+ * 
+ *              2) If returned value indicates a write error occurred then the SEND_STATUS 
+ *                 command should be sent in order to get the cause of the write error.  
+ *              3) The data buffer length should be the value of DATA_BLOCK_LEN set in 
+ *                 SD_SPI.H. This value should always be 512 (bytes).
+*******************************************************************************************/
+uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
+{
+    uint8_t DataResponseToken;  // data response token is returned from SD card
+                                // once all the data block has been sent.
+
+    int attempt = 0; // used for timeout
+
+    CS_ASSERT;
+
+    for(int i=0;i<2;i++) SPI_MasterTransmit(0xFF); //Wait 16 clock cycles before sending command.  
+    
+    sd_SendCommand(WRITE_BLOCK,address);  //Send CMD24 to write a single data block at sector address;
+    uint8_t R1 = sd_getR1(); // Get R1 response. If non-zero then error.
+
+    //If R1 is non-zero or times out, then return with R1 response.
+    if(R1 > 0)
+    {
+        CS_DEASSERT
+        print_str("\n\r>> ERROR:   WRITE_BLOCK (CMD24) in sd_WriteSingleDataSector() returned error in R1 response.");
+        sd_printR1(R1);
+        return (R1 | INVALID_DATA_RESPONSE);
+    }
+
+    //if R1 response is 0 then proceed with writing to data block
+    if(R1 == 0)
+    {
+        SPI_MasterTransmit(0xFE); // Send Start Block Token to SD card.
+
+        // send data to write to SD card.
+        for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
+            SPI_MasterTransmit(dataBuffer[i]);
+
+        // Send 16-bit CRC. CRC value does not matter if CRC is off (default).
+        SPI_MasterTransmit(0xFF);
+        SPI_MasterTransmit(0xFF);
+        
+
+        uint8_t dtMask = 0x1F; //Data Token Mask
+        attempt = 0;
+
+        do{ // loop until data response token received.
+            
+            DataResponseToken = sd_Response(); // get data token
+            
+            if(attempt++ > 0xFF)
+            {
+                CS_DEASSERT;
+                print_str("\n\r>> ERROR:   Timeout while waiting for Data Response Token in sd_WriteSingleDataBlock().  Returning with INVALID_DATA_TOKEN\n\r");
+                return (R1 | INVALID_DATA_RESPONSE);
+            }  
+             
+        }while( ((dtMask&DataResponseToken)!=0x05) &&  // confirm valid data response token received.
+                ((dtMask&DataResponseToken)!=0x0B) && 
+                ((dtMask&DataResponseToken)!=0x0D) ); 
+        
+        // Return value corresponding to the data response token received.
+        if((DataResponseToken&0x05)==5) // Data Accepted
+        {
+            int j = 0;
+            
+            // wait for SD card to not be busy, i.e. to finish writing data to the sector.
+            while(sd_Response() != 0)
+            {
+                if(j > 512) { print_str("\n\r>> timeout waiting for idle\n\r"); break; } 
+                j++;
+            };
+            CS_DEASSERT
+            return DATA_ACCEPTED;
+        }
+
+        else if((DataResponseToken&0x0B)==0x0B) // CRC Error
+        {
+            CS_DEASSERT;
+            print_str("\n\r>> Data rejected Due to CRC Error\n\rData Response Token = ");
+            print_hex(DataResponseToken);
+            print_str("n\r");
+            return CRC_ERROR;
+        }
+
+        else if((DataResponseToken&0x0D)==0x0D) // Write Error
+        {
+            CS_DEASSERT;
+            print_str("\n\r>> Data rejected due to a Write Error\n\rData Response Token = ");
+            print_hex(DataResponseToken);
+            print_str("n\r");
+            return WRITE_ERROR;
+        }
+    }
+    return INVALID_DATA_RESPONSE; // successful write returns 0
+}
+//END sd_WriteSingleDataBlock()
+
+
+
+/********************************************************************************
+ * Function:    sd_printWriteError(uint16_t err)
+ * Description: prints the response returned by sd_WriteSingleDataBlock() in a 
+ *              readable form.  Includes the R1 response as well as the value of 
+ *              Data Response Token if it is valid.
+ * Argument(s): 16-bit response from sd_WriteSingleDataBlock()
+ * Returns:     VOID
+ * Notes:             
+ * ******************************************************************************/
+void sd_printWriteError(uint16_t err)
+{
+    //print R1 portion of initiailzation response
+    if(SD_MSG > 1) print_str("\n\r>> INFO:    R1 Response returned by sd_WriteSingelDataBlock():");
+    sd_printR1((uint8_t)(0x00FF&err));
+
+    if(SD_MSG > 1) print_str("\n\r>> INFO:    Data Response Errors:");
+    //print other portion of R1 response
+    
+    switch(err&0x0700)
+    {
+        case(INVALID_DATA_RESPONSE):
+            print_str("\n\r\t    INVALID DATA RESPONSE");
+            break;
+        case(WRITE_ERROR):
+            print_str("\n\r\t    WRITE_ERROR");
+            break;
+        case(CRC_ERROR):
+            print_str("\n\r\t    CRC_ERROR");
+            break;
+        case(DATA_ACCEPTED):
+            print_str("\n\r\t    DATA ACCEPTED"); // Successful data write
+            break;
+        default:
+            print_str("\n\r\t    INCORRECT RESPONSE RETURNED");
+    }
+}
+//END sd_printWriteError()

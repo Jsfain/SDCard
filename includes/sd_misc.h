@@ -35,10 +35,6 @@ DataSector sd_ReadSingleDataBlock(uint32_t address);
 
 
 
-
-
-
-
 // Print the data in data sector array passed as the argument.
 void sd_PrintSector(uint8_t *sector);  //only 512 byte sector supported.
 
@@ -54,7 +50,23 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks);
 void sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector);
 
 
-void sd_WriteSingleDataBlock(uint32_t address);
 
+// Writes data in the dataBuffer to the sector at the address arguement. 
+uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer);
+
+
+/********************************************************************************
+ * Data Response Codes: Values returned by the function sd_WriteSingleDataBlock()      
+ * Notes:               All, except INVALID_DATA_RESPONSE, correspond to a valid 
+ *                      value of the 3-bit data response token returned after an 
+ *                      attempt to write data to a single sector/block.
+ *                      These are 16-bits here to accommodate the R1 response. 
+*********************************************************************************/
+#define DATA_ACCEPTED          0x0200
+#define CRC_ERROR              0x0500
+#define WRITE_ERROR            0x0600
+#define INVALID_DATA_RESPONSE  0x0F00 
+
+void sd_printWriteError(uint16_t err);
 
 #endif // SD_MISC_H
