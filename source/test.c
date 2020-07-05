@@ -64,22 +64,40 @@ int main(void)
     uint32_t sector = 0;
     uint32_t address = 0;
 
-    sector = 0;
+    sector = 2;
     address = sector * 512;
 
     ds = sd_ReadSingleDataBlock(address);
     sd_PrintSector(ds.data);
 
-    uint8_t db[DATA_BLOCK_LEN] = "Hello World! What would you like to do today?";
+    uint8_t db[DATA_BLOCK_LEN] = "I Smell Bacon!";
 
-    uint16_t wr = sd_WriteSingleDataBlock(0,db);
+    uint16_t wr = sd_WriteSingleDataBlock(address,db);
+
+
+    //send status returns R2 response.  Should be called if there is a write error.
+    if ((wr&0x0F00)==WRITE_ERROR)
+    {
+        uint16_t R2;
+        CS_ASSERT;             
+        sd_SendCommand(SEND_STATUS,0);
+        R2 = sd_getR1(); // The first byte of the R2 response is the R1 response.
+        R2 <<= 8;
+        R2 |= sd_getR1(); // can use the sd_getR1 to get second byte of R2 response as well.
+        print_dec(R2);
+        CS_DEASSERT;
+        print_str("\n\rR2 Response = ");
+        print_dec(R2);
+    }
+
+
+    print_str("\n\rWrite Response = ");
     print_hex(wr);
     sd_printWriteError(wr);
     
 
     ds = sd_ReadSingleDataBlock(address);
     sd_PrintSector(ds.data);
-
 
 
     // Something to do after SD card testing has completed.

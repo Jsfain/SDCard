@@ -75,7 +75,6 @@ uint32_t sd_GetMemoryCapacity(void)
 
     // ***** Send command SEND_CSD (CMD9) and get R1 response.
     CS_ASSERT;
-    for(int i=0;i<=20;i++) SPI_MasterTransmit(0xFF); //wait 16 clock cycles before sending command.
     sd_SendCommand(SEND_CSD,0); //CMD9 - Request CSD Register from SD card.
     R1 = sd_getR1(); // Get R1 response
 
@@ -196,8 +195,6 @@ DataSector sd_ReadSingleDataBlock(uint32_t address)
     print_str("\n\rReading Address: ");
     print_dec(address);
     CS_ASSERT;
-    for(int i=0;i<2;i++) SPI_MasterTransmit(0xFF); //Wait 16 clock more clock cycles.  
-
     sd_SendCommand(READ_SINGLE_BLOCK,address);  //Send CMD17 to return a single block;
     ds.R1 = sd_getR1(); // Get R1 response
 
@@ -319,8 +316,6 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
     int attempt = 0;
 
     CS_ASSERT;
-
-    for(int i=0;i<2;i++) SPI_MasterTransmit(0xFF); // Wait to send the command.
     sd_SendCommand(READ_MULTIPLE_BLOCK,start_address); 
     ds.R1 = sd_getR1(); //get R1 response
 
@@ -433,10 +428,7 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
 
     int attempt = 0; // used for timeout
 
-    CS_ASSERT;
-
-    for(int i=0;i<2;i++) SPI_MasterTransmit(0xFF); //Wait 16 clock cycles before sending command.  
-    
+    CS_ASSERT;    
     sd_SendCommand(WRITE_BLOCK,address);  //Send CMD24 to write a single data block at sector address;
     uint8_t R1 = sd_getR1(); // Get R1 response. If non-zero then error.
 

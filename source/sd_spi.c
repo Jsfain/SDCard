@@ -79,8 +79,7 @@ uint32_t sd_SPI_Mode_Init(void)
 
     // ********************
     // GO_IDLE_STATE (CMD0) : place card in SPI mode  
-    CS_ASSERT;
-    for(int i=0;i<=2;i++) SPI_MasterTransmit(0xFF);	//Wait 16 clock cycles before sending command                         
+    CS_ASSERT;                   
     sd_SendCommand(GO_IDLE_STATE, 0);  //CMD0;
     R1 = sd_getR1(); // Get R1 response
     CS_DEASSERT;
@@ -105,7 +104,6 @@ uint32_t sd_SPI_Mode_Init(void)
     uint8_t v  = 0x01; //supply voltage: range = 2.7 to 3.6V
     
     CS_ASSERT;
-    for(int i=0;i<=2;i++) SPI_MasterTransmit(0xFF);	//Wait 16 clock cycles before sending command.
     sd_SendCommand(SEND_IF_COND, ((uint16_t)v<<8)|cp); //CMD8
 
     //Get R7 response
@@ -128,7 +126,7 @@ uint32_t sd_SPI_Mode_Init(void)
         return (FAILED_SEND_IF_COND | R7[0]);
     }
 
-    if(R7[3]!=0x01) //Check the rest of the response for SEND_IF_COND is valid.
+    if(R7[3]!=0x01) //Check the rest of the response to confirm if SEND_IF_COND is valid.
     {
         if(SD_MSG)
         {
@@ -162,7 +160,6 @@ uint32_t sd_SPI_Mode_Init(void)
     // CRC_ON_OFF (CMD59): turns CRC ON or OFF. Should be off by default, 
     R1 = 0; // Reset R1
     CS_ASSERT;
-    for(int i=0;i<=2;i++) SPI_MasterTransmit(0xFF);	//Wait 16 clock cycles before sending command  
     sd_SendCommand(CRC_ON_OFF,0);  //Send CMD 59. 
                                    //arg = 0 CRC OFF (default for SPI mode). 
                                    //arg = 1 CRC ON 
@@ -207,7 +204,6 @@ uint32_t sd_SPI_Mode_Init(void)
         do{
             R1 = 0; // Reset R1
             CS_ASSERT;
-            for(int i=0;i<=2;i++) SPI_MasterTransmit(0xFF);	//Wait 16 clock cycles before sending command  
             sd_SendCommand(APP_CMD,0); //send APP_CMD (CMD55) to signal next command is ACMD type.
             R1 = sd_getR1();
             CS_DEASSERT;
@@ -224,7 +220,6 @@ uint32_t sd_SPI_Mode_Init(void)
             
             R1 = 0; // Reset R1
             CS_ASSERT;
-            for(int i=0;i<=2;i++) SPI_MasterTransmit(0xFF);	//Wait 16 clock cycles before sending command
             sd_SendCommand(SD_SEND_OP_COND,acmd41_arg); //send SD_SEND_OP_COND (ACMD41)
             R1 = sd_getR1();
             CS_DEASSERT;
@@ -262,7 +257,6 @@ uint32_t sd_SPI_Mode_Init(void)
     uint8_t resp;
     R1 = 0; // Reset R1
     CS_ASSERT;
-    for(int i=0;i<=2;i++) SPI_MasterTransmit(0xFF);	//Wait 16 clock cycles before sending command
     sd_SendCommand(READ_OCR,0);  //Send CMD 58
     R1 = sd_getR1();
     if(SD_MSG > 2) {print_str("\n\r>> DEBUG:   Printing R1 response returned from sd_getR1() for command READ_OCR (CMD58):"); sd_printR1(R1);}
@@ -383,6 +377,8 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg)
         print_str("\n\r            Byte[0]: 0x"); print_hex((uint8_t)tcacs);
     }
 
+    for(int i=0;i<=2;i++) SPI_MasterTransmit(0xFF);	//Wait 16 clock cycles before sending command.
+    
     // Send command to SD Card via SPI
     SPI_MasterTransmit((uint8_t)(tcacs >> 40));
     SPI_MasterTransmit((uint8_t)(tcacs >> 32));
@@ -531,7 +527,6 @@ void sd_printR1(uint8_t R1)
  *              returned by the SD Card as well as any initialization errors. 
  *              See SD_BASE.H.       
  * ******************************************************************************/
-//prints response returned by sd_SPI_Mode_Init()
 void sd_printInitResponse(uint32_t err)
 {
     //print R1 portion of initiailzation response
