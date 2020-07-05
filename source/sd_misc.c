@@ -1,6 +1,6 @@
 /*********************************************************************************************
  * Author: Joshua Fain
- * Date:   6/28/2020
+ * Date:   7/5/2020
  * 
  * File: SD_MISCH.C 
  * 
@@ -41,7 +41,6 @@
 #include <avr/io.h>
 #include "../includes/usart.h"
 #include "../includes/prints.h"
-#include "../includes/spi.h"
 #include "../includes/sd_spi.h"
 #include "../includes/sd_misc.h"
 
@@ -444,15 +443,15 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
     //if R1 response is 0 then proceed with writing to data block
     if(R1 == 0)
     {
-        SPI_MasterTransmit(0xFE); // Send Start Block Token to SD card.
+        sd_SendDataByte(0xFE); // Send Start Block Token to SD card.
 
         // send data to write to SD card.
         for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
-            SPI_MasterTransmit(dataBuffer[i]);
+            sd_SendDataByte(dataBuffer[i]);
 
         // Send 16-bit CRC. CRC value does not matter if CRC is off (default).
-        SPI_MasterTransmit(0xFF);
-        SPI_MasterTransmit(0xFF);
+        sd_SendDataByte(0xFF);
+        sd_SendDataByte(0xFF);
         
 
         uint8_t dtMask = 0x1F; //Data Token Mask

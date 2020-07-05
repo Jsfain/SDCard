@@ -1,6 +1,6 @@
 /*************************************************************************
  * Author: Joshua Fain
- * Date:   6/27/2020
+ * Date:   7/5/2020
  * 
  * Contians main()
  * File used to test out the sd card functions. Changes regularly

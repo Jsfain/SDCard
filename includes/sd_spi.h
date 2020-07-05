@@ -1,6 +1,6 @@
 /******************************************************************************
  * Author: Joshua Fain
- * Date:   6/23/2020
+ * Date:   7/5/2020
  * 
  * File: SD_SPI.H
  * 
@@ -18,6 +18,7 @@
 #ifndef SD_SPI_H
 #define SD_SPI_H
 
+#include "../includes/spi.h"
 
 /******************************************************************************
  * Flag:        SD_MSG 
@@ -145,7 +146,10 @@
 //initializes SD card in SPI mode
 uint32_t sd_SPI_Mode_Init();
 
-//sends SD command/argument to SD Card via SPI
+//sends one byte of data to the SD card via SPI.
+void sd_SendDataByte(uint8_t data);
+
+//sends SD command/argument to SD Card
 void sd_SendCommand(uint8_t cmd, uint32_t arg);
 
 //gets 8 bit response returned from SD card

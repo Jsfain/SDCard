@@ -1,6 +1,6 @@
 /******************************************************************************
  * Author: Joshua Fain
- * Date:   6/23/2020
+ * Date:   7/5/2020
  * 
  * File: SD_SPI.C
  * 
@@ -26,12 +26,13 @@
  * 
  * Functions:
  * 1) uint32_t  sd_SPI_Mode_Init(void)
- * 2) void      sd_SendCommand(uint8_t cmd, uint32_t arg)
- * 3) uint8_t   sd_Response(void)
- * 4) uint8_t   sd_CRC7(uint64_t tca)
- * 5) uint8_t   sd_getR1(void) 
- * 6) void      sd_printR1(uint8_t R1)
- * 7) void      sd_printInitResponse(uint32_t err)
+ * 2) void      sd_SendDataByte(uint8_t data)
+ * 3) void      sd_SendCommand(uint8_t cmd, uint32_t arg)
+ * 4) uint8_t   sd_Response(void)
+ * 5) uint8_t   sd_CRC7(uint64_t tca)
+ * 6) uint8_t   sd_getR1(void) 
+ * 7) void      sd_printR1(uint8_t R1)
+ * 8) void      sd_printInitResponse(uint32_t err)
  * 
  * 
  * Notes:
@@ -74,8 +75,7 @@ uint32_t sd_SPI_Mode_Init(void)
     uint8_t R1 = 0; //R1 response returned for every SD Command 
     uint8_t R7[5]; //R7 response returned by SEND_IF_COND (CMD8)
 
-    for(int i=0;i<=10;i++) SPI_MasterTransmit(0xFF); //Wait 80 clock cycles for power up to complete.
-
+    for(int i=0;i<=10;i++)  sd_SendDataByte(0xFF); //Wait 80 clock cycles for power up to complete.
 
     // ********************
     // GO_IDLE_STATE (CMD0) : place card in SPI mode  
@@ -331,6 +331,21 @@ uint32_t sd_SPI_Mode_Init(void)
 
 
 /******************************************************************************
+ * Function:    sd_SendDataByte(uint8_t data)
+ * Description: Function used to send data byte to SD card. 
+ *              Intended to provide layer between the SPI interface and the SD
+ *              card specific functions. 
+ * Argument(s): uint8_t data : 8-bit data byte to send to SD card.
+ * Returns:     VOID
+ * Notes:       
+******************************************************************************/
+void sd_SendDataByte(uint8_t data)
+{
+    SPI_MasterTransmit(data);
+}
+
+
+/******************************************************************************
  * Function:    sd_SendCommand(uint8_t cmd, uint32_t arg)
  * Description: sends SD command, argument, and CRC via SPI.
  * Argument(s): 8-bit SD COMMAND, 32-bit ARGUMENT.
@@ -377,15 +392,15 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg)
         print_str("\n\r            Byte[0]: 0x"); print_hex((uint8_t)tcacs);
     }
 
-    for(int i=0;i<=2;i++) SPI_MasterTransmit(0xFF);	//Wait 16 clock cycles before sending command.
+    for(int i=0;i<=2;i++)   sd_SendDataByte(0xFF);	//Wait 16 clock cycles before sending command.
     
     // Send command to SD Card via SPI
-    SPI_MasterTransmit((uint8_t)(tcacs >> 40));
-    SPI_MasterTransmit((uint8_t)(tcacs >> 32));
-    SPI_MasterTransmit((uint8_t)(tcacs >> 24));
-    SPI_MasterTransmit((uint8_t)(tcacs >> 16));
-    SPI_MasterTransmit((uint8_t)(tcacs >> 8));
-    SPI_MasterTransmit((uint8_t)tcacs);
+    sd_SendDataByte((uint8_t)(tcacs >> 40));
+    sd_SendDataByte((uint8_t)(tcacs >> 32));
+    sd_SendDataByte((uint8_t)(tcacs >> 24));
+    sd_SendDataByte((uint8_t)(tcacs >> 16));
+    sd_SendDataByte((uint8_t)(tcacs >> 8));
+    sd_SendDataByte((uint8_t)tcacs);
 } 
 //END  sd_SendCommand()
 
@@ -406,7 +421,7 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg)
 ******************************************************************************/
 uint8_t sd_Response(void)
 {
-    SPI_MasterTransmit(0xFF);
+    sd_SendDataByte(0xFF);
     return SPI_MasterRead();
 } 
 //END sd_Response
