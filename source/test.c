@@ -37,7 +37,7 @@ int main(void)
         initResponse = sd_SPI_Mode_Init();
         if(initResponse != OUT_OF_IDLE) // If response is anything other than 0 (OUT_OF_IDLE) then initialization failed.
         {    
-            print_str("\n\n\rSD INITIALIZATION FAILED with Response, \n\r");
+            print_str("\n\n\rSD INITIALIZATION FAILED with Response 0x");
             print_hex(initResponse);
             sd_printInitResponse(initResponse);
         }
@@ -59,47 +59,61 @@ int main(void)
     // This will first print the data block (sd_ReadSingleDataBlock and PrintSector)
     // Then write to the data block (sd_WriteSingelDataBlock) and then 
     // print the data block again to confirm a successful write operation has completed.
-    DataSector ds;
+    
+    
+    //DataSector ds;
 
     uint32_t sector = 0;
     uint32_t address = 0;
 
-    sector = 2;
-    address = sector * 512;
+    int nob = 3;
+    
+    uint8_t db[DATA_BLOCK_LEN] = "Helopoiu e";
 
-    ds = sd_ReadSingleDataBlock(address);
-    sd_PrintSector(ds.data);
-
-    uint8_t db[DATA_BLOCK_LEN] = "I Smell Bacon!";
-
-    uint16_t wr = sd_WriteSingleDataBlock(address,db);
-
-
-    //send status returns R2 response.  Should be called if there is a write error.
-    if ((wr&0x0F00)==WRITE_ERROR)
+    print_str("\n\r INITIAL BLOCK STATE\n\r");
+    sd_PrintMultipleDataBlocks(address,nob);
+    
+    uint16_t wr;
+    print_str("\n\r WRITING \n\r");
+    for(int j = 0; j < nob; j++)
     {
-        uint16_t R2;
-        CS_ASSERT;             
-        sd_SendCommand(SEND_STATUS,0);
-        R2 = sd_getR1(); // The first byte of the R2 response is the R1 response.
-        R2 <<= 8;
-        R2 |= sd_getR1(); // can use the sd_getR1 to get second byte of R2 response as well.
-        print_dec(R2);
-        CS_DEASSERT;
-        print_str("\n\rR2 Response = ");
-        print_dec(R2);
+        sector = 0 + j;
+        address = sector * 512;
+        wr = sd_WriteSingleDataBlock(address,db);
+
+        //send status returns R2 response.  Should be called if there is a write error.
+        
+        if ((wr&0x0F00)==WRITE_ERROR)
+        {
+            uint16_t R2;
+        
+        
+            CS_ASSERT;             
+            sd_SendCommand(SEND_STATUS,0);
+            R2 = sd_getR1(); // The first byte of the R2 response is the R1 response.
+            R2 <<= 8;
+            R2 |= sd_getR1(); // can use the sd_getR1 to get second byte of R2 response as well.
+            print_dec(R2);
+            CS_DEASSERT;
+            print_str("\n\rR2 Response = ");
+            print_dec(R2);
+            print_str("\n\rWrite Response = ");
+            sd_PrintWriteError(wr);
+        }
     }
-
-
-    print_str("\n\rWrite Response = ");
-    print_hex(wr);
-    sd_printWriteError(wr);
+    
+    address = 0;
+    print_str("\n\r POST WRITE BLOCK STATE\n\r");
+    sd_PrintMultipleDataBlocks(address,nob);
     
 
-    ds = sd_ReadSingleDataBlock(address);
-    sd_PrintSector(ds.data);
-
-
+    address = (nob - 1) * 512;
+    uint16_t err = sd_EraseSectors(0,address);
+    print_str("\n\r POST ERASE BLOCK STATE\n\r");
+    sd_PrintMultipleDataBlocks(address,nob);
+    
+    sd_PrintEraseSectorError(err);
+    
     // Something to do after SD card testing has completed.
     while(1)
         USART_Transmit(USART_Receive());

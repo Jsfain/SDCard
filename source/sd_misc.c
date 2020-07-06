@@ -29,7 +29,9 @@
  * 4) void          sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
  * 5) void          sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
  * 6) uint16_t      sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
- * 7) void          sd_printWriteError(uint16_t err)
+ * 7) void          sd_PrintWriteError(uint16_t err)
+ * 8) uint16_t      sd_EraseSector(uint32_t start_address, uint16_t end_address)
+ * 9) void          sd_PrintEraseSectorError(uint16_t err)
  * 
  * Notes:
  * Other functions will be included as needed. 
@@ -331,9 +333,9 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
         for (int i=0;i<numOfBlocks;i++)
         {
             // prior to returning each data block, a start block token must be sent.
+            attempt = 0;
             while(sd_Response() != 0xFE) // wait for start block token.
             {
-                print_str("\n\rattempts = "); print_dec(attempt);
                 attempt++;
                 if(attempt > 511)
                 {
@@ -343,9 +345,10 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
                 }
             }
 
-            for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++) ds.data[i] = sd_Response(); // get data block
-            for(uint8_t i = 0; i < 2; i++) ds.CRC[i] = sd_Response(); // get CRC response
-
+            for(uint16_t k = 0; k < DATA_BLOCK_LEN; k++) ds.data[k] = sd_Response(); // get data block
+            for(uint8_t k = 0; k < 2; k++) ds.CRC[k] = sd_Response(); // get CRC response
+            print_str("\n\n\rSECTOR ADDRESS: ");
+            print_dec(start_address + (i*512));
             sd_PrintSector(ds.data); // print data block
         }
         
@@ -478,9 +481,9 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
             int j = 0;
             
             // wait for SD card to not be busy, i.e. to finish writing data to the sector.
-            while(sd_Response() != 0)
+            while(sd_Response() == 0) // DO (data out) line held low while card is busy writing data to block.
             {
-                if(j > 512) { print_str("\n\r>> timeout waiting for idle\n\r"); break; } 
+                if(j > 512) { print_str("\n\r>> timeout waiting for card to not be busy.\n\r"); break; } 
                 j++;
             };
             CS_DEASSERT
@@ -520,14 +523,13 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
  * Returns:     VOID
  * Notes:             
  * ******************************************************************************/
-void sd_printWriteError(uint16_t err)
+void sd_PrintWriteError(uint16_t err)
 {
     //print R1 portion of initiailzation response
     if(SD_MSG > 1) print_str("\n\r>> INFO:    R1 Response returned by sd_WriteSingelDataBlock():");
     sd_printR1((uint8_t)(0x00FF&err));
 
     if(SD_MSG > 1) print_str("\n\r>> INFO:    Data Response Errors:");
-    //print other portion of R1 response
     
     switch(err&0x0700)
     {
@@ -545,6 +547,121 @@ void sd_printWriteError(uint16_t err)
             break;
         default:
             print_str("\n\r\t    INCORRECT RESPONSE RETURNED");
+    }
+}
+//END sd_printWriteError()
+
+
+
+/*****************************************************************************
+ * Function:    sd_EraseSectors(uint32_t start_address, uint32_t end_address)
+ * Description: Erases all sectors between and including start_address and 
+ *              end_address.
+ * Argument(s): 1) uint32_t start_address: address of first sector to erase.
+ *              2) uint32_t end_address:   address of last sector to erase.
+ * Returns:     error code. see sd_misc.h
+ * Notes:             
+ * ***************************************************************************/
+uint16_t sd_EraseSectors(uint32_t start_address, uint32_t end_address)
+{
+    uint8_t R1 = 0;
+    
+    // set start address for erase block
+    CS_ASSERT;
+    sd_SendCommand(ERASE_WR_BLK_START_ADDR,start_address);
+    R1 = sd_getR1();
+    CS_DEASSERT;
+
+    //If R1 is non-zero or times out, then return with R1 response.
+    if(R1 > 0)
+    {
+        print_str("\n\r>> ERROR:   ERASE_WR_BLOCK_START_ADDR (CMD32) in sd_EraseSectors() returned error in R1 response.");
+        sd_printR1(R1);
+        return (R1 | ERROR_ERASE_START_ADDR);
+    }
+    
+    // set end address for erase block
+    CS_ASSERT;
+    sd_SendCommand(ERASE_WR_BLK_END_ADDR,end_address);
+    R1 = sd_getR1();
+    CS_DEASSERT;
+    //If R1 is non-zero or times out, then return with R1 response.
+    if(R1 > 0)
+    {
+        print_str("\n\r>> ERROR:   ERASE_WR_BLOCK_END_ADDR (CMD33) in sd_EraseSectors() returned error in R1 response.");
+        sd_printR1(R1);
+        return (R1 | ERROR_ERASE_END_ADDR);
+    }
+
+    // erase all blocks in range of start address to end address
+    CS_ASSERT;
+    sd_SendCommand(ERASE,0);
+    R1 = sd_getR1();
+    
+    //If R1 is non-zero or times out, then return with R1 response.
+    if(R1 > 0)
+    {
+        CS_DEASSERT;
+        print_str("\n\r>> ERROR:   ERASE (CMD38) in sd_EraseSectors() returned error in R1 response.");
+        sd_printR1(R1);
+        return (R1 | ERROR_ERASE);
+    }
+
+    uint16_t attempt = 0; 
+
+    // DO (Data Out) line will be held low by card while it completes erase of data sectors.
+    // once it is complete the DO line will be any non-zero value to signal it is out of the busy state.
+    while(sd_Response() == 0)
+    {
+        if(attempt++ > 0xFFFE) 
+        {
+            print_str("\n\r>> ERROR:    Timeout while waiting for card to exit the busy state during sector erase in sd_EraseSectors(). Returning with error(s).\n\r");
+            return (R1 | ERROR_BUSY);
+        }
+    }
+    CS_DEASSERT;
+    return ERASE_SUCCESSFUL;
+}
+// END sd_EraseSectors()
+
+
+
+/********************************************************************************
+ * Function:    sd_PrintEraseSectorError(uint16_t err)
+ * Description: prints the response returned by sd_EraseSector() in readable form.
+ *              Includes the R1 response as well as other errors specific to the 
+ *              Erase function.
+ * Argument(s): uint16_t err: 16-bit response from sd_WriteSingleDataBlock()
+ * Returns:     VOID
+ * Notes:       
+ * ******************************************************************************/
+void sd_PrintEraseSectorError(uint16_t err)
+{
+    //print R1 portion of initiailzation response
+    if(SD_MSG > 1) print_str("\n\r>> INFO:    R1 Response returned by sd_EraseSector():");
+    sd_printR1((uint8_t)(0x00FF&err));
+
+    if(SD_MSG > 1) print_str("\n\r>> INFO:    sd_EraseSector():");
+    
+    switch(err&0xFF00)
+    {
+        case(ERASE_SUCCESSFUL):
+            print_str("\n\r\t    ERASE SUCCESSFUL");
+            break;
+        case(ERROR_ERASE_START_ADDR):
+            print_str("\n\r\t    ERROR ERASE START ADDRESS");
+            break;
+        case(ERROR_ERASE_END_ADDR):
+            print_str("\n\r\t    ERROR ERASE END ADDRESS");
+            break;
+        case(ERROR_ERASE):
+            print_str("\n\r\t    ERROR ERASE"); // Successful data write
+            break;
+        case(ERROR_BUSY):
+            print_str("\n\r\t    ERROR BUSY"); // Successful data write
+            break;
+        default:
+            print_str("\n\r\t    INVALID ERROR RESPONSE");
     }
 }
 //END sd_printWriteError()

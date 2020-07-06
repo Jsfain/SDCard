@@ -51,10 +51,6 @@ void sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector);
 
 
 
-// Writes data in the dataBuffer to the sector at the address arguement. 
-uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer);
-
-
 /********************************************************************************
  * Data Response Codes: Values returned by the function sd_WriteSingleDataBlock()      
  * Notes:               All, except INVALID_DATA_RESPONSE, correspond to a valid 
@@ -67,6 +63,31 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer);
 #define WRITE_ERROR            0x0600
 #define INVALID_DATA_RESPONSE  0x0F00 
 
-void sd_printWriteError(uint16_t err);
+
+// Writes data in the dataBuffer to the sector at the address arguement. 
+uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer);
+
+
+// Prints the error code returned by sd_WriteSingleDataBlock() in readable format.
+void sd_PrintWriteError(uint16_t err);
+
+
+
+/********************************************************************************
+ * Error Flags:         Values returned by the function sd_EraseSectors()      
+*********************************************************************************/
+#define ERASE_SUCCESSFUL       0x0000
+#define ERROR_ERASE_START_ADDR 0x0100
+#define ERROR_ERASE_END_ADDR   0x0200
+#define ERROR_ERASE            0x0400
+#define ERROR_BUSY             0x0800
+
+
+// erases sectors from start_address to end_address (inclusive)
+uint16_t sd_EraseSectors(uint32_t start_address, uint32_t end_address);
+
+
+// print error code returned by sd_EraseSectors()
+void sd_PrintEraseSectorError(uint16_t err);
 
 #endif // SD_MISC_H
