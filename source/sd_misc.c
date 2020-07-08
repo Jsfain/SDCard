@@ -1,13 +1,12 @@
-/*********************************************************************************************
+/***********************************************************************************
  * Author: Joshua Fain
  * Date:   7/5/2020
  * 
  * File: SD_MISCH.C 
  * 
  * Requires: SD_MISC.H - header for functions defined here
- *           SD_SPI.H - needed for direct interaction with the SD Card.
- *           SPI.H     - needed for sending commands to, and receiving
- *                       responses from, SD Card
+ *           SD_SPI.H  - needed for direct interaction with the SD Card.
+ *           (SPI.H)   - included by sd_spi.h
  *           PRINTS.H  - needed for various print functions used here
  *           STDINT.H  - needed data types used here
  *           AVR/IO.H  - needed for I/O related AVR variables.
@@ -26,16 +25,23 @@
  * 1) uint32_t      sd_GetMemoryCapacity(void)
  * 2) DataSector    sd_ReadSingleDataSector(uint32_t address)
  * 3) void          sd_PrintSector(uint8_t *sector)
- * 4) void          sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
- * 5) void          sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
- * 6) uint16_t      sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
+ * 4) void          sd_PrintMultipleDataBlocks(uint32_t start_address, 
+ *                                             uint32_t numOfBlocks)
+ * 5) void          sd_SearchNonZeroSectors(uint32_t begin_sector, 
+ *                                          uint32_t end_sector)
+ * 6) uint16_t      sd_WriteSingleDataBlock(uint32_t address, 
+ *                                          uint8_t *dataBuffer)
+ * 7) uint16_t      sd_WriteMultipleDataSectors(uint32_t address, 
+ *                                              uint8_t nob, 
+ *                                              uint8_t *dataBuffer)
  * 7) void          sd_PrintWriteError(uint16_t err)
- * 8) uint16_t      sd_EraseSector(uint32_t start_address, uint16_t end_address)
+ * 8) uint16_t      sd_EraseSector(uint32_t start_address, 
+ *                                 uint16_t end_address)
  * 9) void          sd_PrintEraseSectorError(uint16_t err)
  * 
  * Notes:
  * Other functions will be included as needed. 
- * ******************************************************************************************/
+ * ********************************************************************************/
 
 
 
@@ -303,7 +309,8 @@ void sd_PrintSector(uint8_t *sector)
 
 
 /****************************************************************************************
- * Function:    sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
+ * Function:    sd_PrintMultipleDataBlocks(uint32_t start_address, 
+ *                                         uint32_t numOfBlocks)
  * Description: Prints multiple, consecutive data blocks using READ_MULTIPLE_BLOCK
  *              command and sd_PrintSector(). The range of data blocks to be printed 
  *              begin at start_address and ending at start_address + (numOfBlocks - 1).
@@ -317,7 +324,7 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
     int attempt = 0;
 
     CS_ASSERT;
-    sd_SendCommand(READ_MULTIPLE_BLOCK,start_address); 
+    sd_SendCommand(READ_MULTIPLE_BLOCK,start_address); // CMD18
     ds.R1 = sd_getR1(); //get R1 response
 
     if(ds.R1 > 0)
@@ -339,7 +346,7 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
                 attempt++;
                 if(attempt > 511)
                 {
-                    print_str("\n\r>> ERROR:   Timeout while waiting for Start Block Token in sd_ReadSingleDataSector().");
+                    print_str("\n\r>> ERROR:   Timeout while waiting for Start Block Token in sd_PrintMultipleDataBlocks().");
                     ds.ERROR = 1;
                     break;
                 }
@@ -363,7 +370,8 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
 
 
 /***********************************************************************************
- * Function:    sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
+ * Function:    sd_SearchNonZeroSectors(uint32_t begin_sector, 
+ *                                      uint32_t end_sector)
  * Description: Searches between a specified range of sectors for any sectors that
  *              have non-zero values and prints those sector numbers to screen. 
  * Argument(s): 2 32-bit arguments that specify the beginning and ending sector in 
@@ -404,13 +412,15 @@ void sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
 
 
 /****************************************************************************************
- * Function:    sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
+ * Function:    sd_WriteSingleDataBlock(uint32_t address, 
+ *                                      uint8_t *dataBuffer)
  * Description: Writes the data in the dataBuffer to the sector specified by address.
  * Argument(s): uint32_t address:       address of data sector to write to.
  *              uint8_t  *dataBuffer:   pointer to array (length DATA_BLOCK_LEN) of data
  *                                      bytes that will be written to the sector 
  *                                      specified by address.
- * Returns:     Value corresponding to one of the Data Response Codes and R1 response. 
+ * Returns:     Write Error Code whose value is composed of a Data Response Code in the 
+ *              MSByte and the most recent R1 response in the LSByte. 
  * Notes:       1) Byte returned by SD Card for the Data Response Token is of the form
  *                 xxx0SSS1, where:
  *                                 xxx = don't care 
@@ -425,8 +435,9 @@ void sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector)
 *******************************************************************************************/
 uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
 {
-    uint8_t DataResponseToken;  // data response token is returned from SD card
-                                // once all the data block has been sent.
+    uint8_t DataResponseToken;  // a data response token is returned from the SD card upon
+                                // completion of sending an entire block of data.  It is
+                                // used to indicate if the data was accepted or rejected.
 
     int attempt = 0; // used for timeout
 
@@ -446,7 +457,7 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
     //if R1 response is 0 then proceed with writing to data block
     if(R1 == 0)
     {
-        sd_SendDataByte(0xFE); // Send Start Block Token to SD card.
+        sd_SendDataByte(0xFE); // Send Start Block Token to SD card to signal initiating data transfer.
 
         // send data to write to SD card.
         for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
@@ -514,6 +525,136 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
 
 
 
+
+/****************************************************************************************
+ * Function:    sd_WriteMultipleDataSecotors(uint32_t address, 
+ *                                           uint8_t  nob,
+ *                                           uint8_t *dataBuffer)
+ * Description: Writes the data in the dataBuffer to all sectors consecutively in the 
+ *              range of [address:address + nob] (inclusive). Currently this will write
+ *              the same data in the dataBuffer to every block in the sector range.
+ * Argument(s): uint32_t address:       address of first byte in first sector to write to.
+ *              uint8_t  *dataBuffer:   pointer to array of data in memory that will be 
+ *                                      written to the SD card. The array length should 
+ *                                      be of length DATA_BLOCK_LEN in SD_SPI.H.
+ * Returns:     Write Error Code whose value is composed of a Data Response Code in the 
+ *              MSByte and the most recent R1 response in the LSByte. 
+ * Notes:       1) Byte returned by SD Card for the Data Response Token is of the same
+ *                 form specified in sd_WriteSingleDataBlock().
+ *              2) If returned value indicates a write error occurred then the SEND_STATUS 
+ *                 command should be sent in order to get the cause of the write error.  
+ *              3) Call ACMD22 after this completes to find get the number blocks/sectors
+ *                 that were successfully written to.
+*******************************************************************************************/
+uint16_t sd_WriteMultipleDataSectors(uint32_t address, uint8_t nob, uint8_t *dataBuffer)
+{
+    uint8_t DataResponseToken;  // a data response token is returned from the SD card upon
+                                // completion of sending an entire block of data.  It is
+                                // used to indicate if the data was accepted or rejected.
+    
+    uint16_t retVal = INVALID_DATA_RESPONSE; // used to hold return value. Initiated with 
+                                             // INVALID_DATA_RESPONSE. Will be updated 
+                                             // as data response tokens are received.
+
+    int attempt = 0; // used for timeout
+    
+    CS_ASSERT;    
+    sd_SendCommand(WRITE_MULTIPLE_BLOCK,address);  //Send CMD25 write data to multiple blocks.
+    uint8_t R1 = sd_getR1(); // Get R1 response.
+    
+    //If R1 is non-zero or times out, then return.
+    if(R1 > 0)
+    {
+        CS_DEASSERT
+        print_str("\n\r>> ERROR:   WRITE_BLOCK (CMD24) in sd_WriteMultipleDataSectors() returned error in R1 response.");
+        sd_printR1(R1);
+        return (R1 | retVal); // retVal should be INVALID_DATA_RESPONSE here.
+    }
+
+    //if R1 response is 0 then proceed with writing dataBuffer to data block
+    if(R1 == 0)
+    {
+        uint8_t dtMask = 0x1F; //Data Token Mask
+
+        for(int k = 0; k < nob; k++)
+        {
+            retVal = INVALID_DATA_RESPONSE; //Reset retVal to INVALID_DATA_RESPONSE prior to sending each data block.
+            sd_SendDataByte(0xFC); // Send Start Block Token to SD card to signal initiating data transfer.
+
+            // send data in dataBuffer to SD card.
+            for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
+                sd_SendDataByte(dataBuffer[i]);
+
+            // Send 16-bit CRC. CRC value does not matter if CRC is off (default). Set using CRC_ON_OFF command.
+            sd_SendDataByte(0xFF); 
+            sd_SendDataByte(0xFF);
+
+
+
+
+            attempt = 0;
+            
+            do{ // loop until data response token received.    
+                DataResponseToken = sd_Response(); // get data token
+                if(attempt++ > 0xFF)
+                {
+                    CS_DEASSERT;
+                    print_str("\n\r>> ERROR:   Timeout while waiting for Data Response Token in sd_WriteMultipleDataSectors().  Returning with INVALID_DATA_TOKEN\n\r");
+                    return (R1 | retVal); // retVal should be INVALID_DATA_RESPONSE here.
+                }  
+                
+            }while( ((dtMask&DataResponseToken)!=0x05) &&  // valid data response token received?
+                    ((dtMask&DataResponseToken)!=0x0B) && 
+                    ((dtMask&DataResponseToken)!=0x0D) ); 
+
+            // Check which Data Response Token was received. Return value corresponding to the data response token received.
+            if((DataResponseToken&0x05)==5) // Data Accepted
+            {
+                int j = 0;
+                
+                // wait for SD card to not be busy, i.e. to finish writing data to the sector.
+                while(sd_Response() == 0) // DO (data out) line held low while card is busy writing data to block.
+                {
+                    if(j > 512) { print_str("\n\r>> timeout waiting for card to not be busy.\n\r"); break; } 
+                    j++;
+                };
+                retVal = DATA_ACCEPTED;
+            }
+
+            else if((DataResponseToken&0x0B)==0x0B) // CRC Error
+            {
+                print_str("\n\r>> Data rejected Due to CRC Error\n\rData Response Token = ");
+                print_hex(DataResponseToken);
+                print_str("n\r");
+                retVal = CRC_ERROR;
+                break;
+            }
+
+            else if((DataResponseToken&0x0D)==0x0D) // Write Error
+            {
+                print_str("\n\r>> Data rejected due to a Write Error\n\rData Response Token = ");
+                print_hex(DataResponseToken);
+                print_str("n\r");
+                retVal = WRITE_ERROR;
+                break;
+            }
+        }
+
+        int j = 0;
+        sd_SendDataByte(0xFD); // send stop transmission token
+        while(sd_Response() == 0) // DO (data out) line held low while card is busy writing data to block.
+        {
+            if(j > 512) { print_str("\n\r>> timeout waiting for card to not be busy.\n\r"); break; } 
+            j++;
+        }
+    }
+    CS_DEASSERT;
+    return retVal; // successful write returns 0
+}
+//END sd_WriteMultipleDataSectors()
+
+
+
 /********************************************************************************
  * Function:    sd_printWriteError(uint16_t err)
  * Description: prints the response returned by sd_WriteSingleDataBlock() in a 
@@ -549,12 +690,14 @@ void sd_PrintWriteError(uint16_t err)
             print_str("\n\r\t    INCORRECT RESPONSE RETURNED");
     }
 }
-//END sd_printWriteError()
+//END sd_PrintWriteError()
+
 
 
 
 /*****************************************************************************
- * Function:    sd_EraseSectors(uint32_t start_address, uint32_t end_address)
+ * Function:    sd_EraseSectors(uint32_t start_address, 
+ *                              uint32_t end_address)
  * Description: Erases all sectors between and including start_address and 
  *              end_address.
  * Argument(s): 1) uint32_t start_address: address of first sector to erase.
@@ -664,4 +807,4 @@ void sd_PrintEraseSectorError(uint16_t err)
             print_str("\n\r\t    INVALID ERROR RESPONSE");
     }
 }
-//END sd_printWriteError()
+//END sd_PrintWriteError()

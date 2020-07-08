@@ -24,6 +24,7 @@ typedef struct  DataSector { //A block is limited to 512 bytes in this implement
 } DataSector;
 
 
+
 // Calculate and return the memory capacity of the SD Card in Bytes.
 uint32_t sd_GetMemoryCapacity();
 
@@ -68,8 +69,15 @@ void sd_SearchNonZeroSectors(uint32_t begin_sector, uint32_t end_sector);
 uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer);
 
 
+
+// Writes data in the dataBuffer to the multiple sectors beginning at address. 
+uint16_t sd_WriteMultipleDataSectors(uint32_t address, uint8_t nob, uint8_t *dataBuffer);
+
+
+
 // Prints the error code returned by sd_WriteSingleDataBlock() in readable format.
 void sd_PrintWriteError(uint16_t err);
+
 
 
 
