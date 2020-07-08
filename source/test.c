@@ -56,29 +56,58 @@ int main(void)
     */
 
     // Test sd_WriteSingleDataBlock, by writing data in db[] array.
-    // This will first print the data block (sd_ReadSingleDataBlock and PrintSector)
+    // This will first print the data block (sd_ReadSingleDataBlock and PrintDataBlock)
     // Then write to the data block (sd_WriteSingelDataBlock) and then 
     // print the data block again to confirm a successful write operation has completed.
     
     
-    //DataSector ds;
+    //DataBlock ds;
 
-    uint32_t sector = 0;
+    uint32_t block = 0;
     uint32_t address = 0;
+    uint16_t err;
 
     int nob = 3;
     
-    uint8_t db[DATA_BLOCK_LEN] = "Helopoiu e";
+    uint8_t db[DATA_BLOCK_LEN] = "Well Hi! I see you brought a pie?!?!";
 
     print_str("\n\r INITIAL BLOCK STATE\n\r");
     sd_PrintMultipleDataBlocks(address,nob);
     
+    print_str("\n\rWrite Multiple Data Blocks");
+    
+    err = sd_WriteMultipleDataBlocks(0,nob,db);
+    print_str("\n\rerr = ");
+    print_hex(err);
+    print_str("\n\rBlock = ");
+    print_dec(block);
+
+    
+    uint16_t R2;
+    CS_ASSERT;             
+    sd_SendCommand(SEND_STATUS,0);
+    R2 = sd_getR1(); // The first byte of the R2 response is the R1 response.
+    R2 <<= 8;
+    R2 |= sd_getR1(); // can use the sd_getR1 to get second byte of R2 response as well.
+    print_dec(R2);
+    CS_DEASSERT;
+    print_str("\n\rR2 Response = ");
+    print_dec(R2);
+    print_str("\n\rWrite Response = ");
+    sd_PrintWriteError(err);
+
+    print_str("\n\rDone Writing Data Blocks");
+    sd_PrintMultipleDataBlocks(address,nob);
+
+    
+
+    /*
     uint16_t wr;
     print_str("\n\r WRITING \n\r");
     for(int j = 0; j < nob; j++)
     {
-        sector = 0 + j;
-        address = sector * 512;
+        block = 0 + j;
+        address = block * 512;
         wr = sd_WriteSingleDataBlock(address,db);
 
         //send status returns R2 response.  Should be called if there is a write error.
@@ -105,16 +134,19 @@ int main(void)
     address = 0;
     print_str("\n\r POST WRITE BLOCK STATE\n\r");
     sd_PrintMultipleDataBlocks(address,nob);
-    
+    */
 
+    
+    /*
     address = (nob - 1) * 512;
-    uint16_t err = sd_EraseSectors(0,address);
+    uint16_t err = sd_EraseBlocks(0,address);
     print_str("\n\r POST ERASE BLOCK STATE\n\r");
     sd_PrintMultipleDataBlocks(address,nob);
     
-    sd_PrintEraseSectorError(err);
-    
+    sd_PrintEraseBlockError(err);
+    */
     // Something to do after SD card testing has completed.
+
     while(1)
         USART_Transmit(USART_Receive());
     
