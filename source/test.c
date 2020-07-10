@@ -30,7 +30,7 @@ int main(void)
     uint32_t initResponse;
 
     //attempt to initialize sd card.
-    for(int i = 0; i<2; i++)
+    for(int i = 0; i<1; i++)
     {
         print_str("\n\n\rSD Card Initialization Attempt: ");
         print_dec(i);
@@ -46,107 +46,131 @@ int main(void)
             break;
         }
     }
-
-    /*
-    // test sd_GetMemoryCapcity() function in sd_misc.c
-    uint32_t mc = sd_GetMemoryCapacity();
-    print_str("\n\rmemory capacity = ");
-    print_dec(mc);
-    print_str("\n\r");
-    */
-
-    // Test sd_WriteSingleDataBlock, by writing data in db[] array.
-    // This will first print the data block (sd_ReadSingleDataBlock and PrintDataBlock)
-    // Then write to the data block (sd_WriteSingelDataBlock) and then 
-    // print the data block again to confirm a successful write operation has completed.
-    
-    
-    //DataBlock ds;
-
-    uint32_t block = 0;
-    uint32_t address = 0;
-    uint16_t err;
-
-    int nob = 3;
-    
-    uint8_t db[DATA_BLOCK_LEN] = "Well Hi! I see you brought a pie?!?!";
-
-    print_str("\n\r INITIAL BLOCK STATE\n\r");
-    sd_PrintMultipleDataBlocks(address,nob);
-    
-    print_str("\n\rWrite Multiple Data Blocks");
-    
-    err = sd_WriteMultipleDataBlocks(0,nob,db);
-    print_str("\n\rerr = ");
-    print_hex(err);
-    print_str("\n\rBlock = ");
-    print_dec(block);
-
-    
-    uint16_t R2;
-    CS_ASSERT;             
-    sd_SendCommand(SEND_STATUS,0);
-    R2 = sd_getR1(); // The first byte of the R2 response is the R1 response.
-    R2 <<= 8;
-    R2 |= sd_getR1(); // can use the sd_getR1 to get second byte of R2 response as well.
-    print_dec(R2);
-    CS_DEASSERT;
-    print_str("\n\rR2 Response = ");
-    print_dec(R2);
-    print_str("\n\rWrite Response = ");
-    sd_PrintWriteError(err);
-
-    print_str("\n\rDone Writing Data Blocks");
-    sd_PrintMultipleDataBlocks(address,nob);
-
+    sd_printInitResponse(initResponse);
     
 
-    /*
-    uint16_t wr;
-    print_str("\n\r WRITING \n\r");
-    for(int j = 0; j < nob; j++)
-    {
-        block = 0 + j;
-        address = block * 512;
+    if(initResponse==OUT_OF_IDLE) // initialization successful
+    {      
+        /*
+        // ***** test sd_GetMemoryCapcity() function in sd_misc.c  *****
+        uint32_t mc = sd_GetMemoryCapacity();
+        print_str("\n\rmemory capacity = ");
+        print_dec(mc);
+        print_str(" Bytes\n\r");
+        // ***** END test sd_GetMemoryCapcity()
+        */
+
+
+        /*
+        // ***** test sd_WriteSingleDataBlock() function in sd_misc.c *****
+        
+        DataBlock ds; //data block struct
+        uint32_t block = 0;
+        uint32_t address = block * DATA_BLOCK_LEN; // the address of first byte in block.
+        uint16_t wr; // write response
+
+        // data to write to block
+        uint8_t db[DATA_BLOCK_LEN] = "HELLO WORLD......"; 
+    
+        //see what is currently written to block we will be writing to. 
+        ds = sd_ReadSingleDataBlock(address);
+        sd_PrintDataBlock(ds.data);
+
+        print_str("\n\r *** WRITING SINGLE BLOCK *** \n\r");
         wr = sd_WriteSingleDataBlock(address,db);
 
-        //send status returns R2 response.  Should be called if there is a write error.
-        
+        //Get R2 response (SEND_STATUS) if there is a write error.    
         if ((wr&0x0F00)==WRITE_ERROR)
         {
+            print_str("\n\r Write error detected");
             uint16_t R2;
-        
         
             CS_ASSERT;             
             sd_SendCommand(SEND_STATUS,0);
-            R2 = sd_getR1(); // The first byte of the R2 response is the R1 response.
+            R2 = sd_getR1(); // The first byte of the R2 response is same as the R1 response.
             R2 <<= 8;
             R2 |= sd_getR1(); // can use the sd_getR1 to get second byte of R2 response as well.
             print_dec(R2);
             CS_DEASSERT;
-            print_str("\n\rR2 Response = ");
+            print_str("\n\r R2 Response = ");
             print_dec(R2);
-            print_str("\n\rWrite Response = ");
+            print_str("\n\r Write Response = ");
             sd_PrintWriteError(wr);
         }
+        
+        else // No write error, then verify data has been written to block at address
+        {
+            ds = sd_ReadSingleDataBlock(address);
+            sd_PrintDataBlock(ds.data);
+        }
+        */
+
+
+
+
+                
+        // ***** test sd_WriteSingleDataBlock() function in sd_misc.c *****
+
+        //DataBlock ds; //data block struct
+        uint32_t write_start_block = 0;
+        uint32_t write_start_address = write_start_block * DATA_BLOCK_LEN; // the address of first byte in block.
+        uint16_t mwr; // multiple write response
+
+        int nowb = 3; // number of write blocks
+        
+        uint8_t mdb[DATA_BLOCK_LEN] = "Howdy Folks!";
+
+        print_str("\n\r ***** Read Multiple Blocks *****");
+        sd_PrintMultipleDataBlocks(write_start_address,nowb);
+        
+        print_str("\n\r **** Write Multiple Blocks *****");
+        mwr = sd_WriteMultipleDataBlocks(write_start_address,nowb,mdb);
+
+        //Get R2 response (SEND_STATUS) if there is a write error.    
+        if ((mwr&0x0F00)==WRITE_ERROR)
+        {
+            print_str("\n\r Write error detected");
+            uint16_t R2;
+        
+            CS_ASSERT;             
+            sd_SendCommand(SEND_STATUS,0);
+            R2 = sd_getR1(); // The first byte of the R2 response is same as the R1 response.
+            R2 <<= 8;
+            R2 |= sd_getR1(); // can use the sd_getR1 to get second byte of R2 response as well.
+            print_dec(R2);
+            CS_DEASSERT;
+            print_str("\n\r R2 Response = ");
+            print_dec(R2);
+            print_str("\n\r Write Response = ");
+            sd_PrintWriteError(mwr);
+        }
+
+        print_str("\n\rDone Writing Data Blocks");
+        sd_PrintMultipleDataBlocks(write_start_address,nowb);
+        
+        
+        
+        // ***** ERASE BLOCKS *****
+        int noeb = 3; // number of erase blocks
+        uint32_t erase_start_block = 0;
+        uint32_t erase_start_address = erase_start_block * DATA_BLOCK_LEN; // the address of first byte in block.
+        uint32_t erase_end_address = noeb * DATA_BLOCK_LEN;
+
+        uint16_t er; // erase response
+
+
+        print_str("\n\r ***** Read Multiple Blocks *****");
+        sd_PrintMultipleDataBlocks(erase_start_address,noeb);
+        
+        print_str("\n\r ***** Erase Multiple Blocks *****");
+        er = sd_EraseBlocks(erase_start_address,erase_end_address);
+        sd_PrintEraseBlockError(er);
+
+        print_str("\n\r ***** Read Multiple Blocks *****");
+        sd_PrintMultipleDataBlocks(erase_start_address,noeb);        
     }
-    
-    address = 0;
-    print_str("\n\r POST WRITE BLOCK STATE\n\r");
-    sd_PrintMultipleDataBlocks(address,nob);
-    */
 
-    
-    /*
-    address = (nob - 1) * 512;
-    uint16_t err = sd_EraseBlocks(0,address);
-    print_str("\n\r POST ERASE BLOCK STATE\n\r");
-    sd_PrintMultipleDataBlocks(address,nob);
-    
-    sd_PrintEraseBlockError(err);
-    */
     // Something to do after SD card testing has completed.
-
     while(1)
         USART_Transmit(USART_Receive());
     

@@ -95,6 +95,6 @@ uint16_t sd_EraseBlocks(uint32_t start_address, uint32_t end_address);
 
 
 // print error code returned by sd_Eraseblocks()
-void sd_PrintEraseBlocksError(uint16_t err);
+void sd_PrintEraseBlockError(uint16_t err);
 
 #endif // SD_MISC_H

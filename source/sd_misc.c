@@ -525,7 +525,6 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
 
 
 
-
 /****************************************************************************************
  * Function:    sd_WriteMultipleDataSecotors(uint32_t address, 
  *                                           uint8_t  nob,
@@ -667,31 +666,30 @@ uint16_t sd_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *data
 void sd_PrintWriteError(uint16_t err)
 {
     //print R1 portion of initiailzation response
-    if(SD_MSG > 1) print_str("\n\r>> INFO:    R1 Response returned by sd_WriteSingelDataBlock():");
+    print_str("\n\r>> R1 Response returned by sd_WriteSingelDataBlock():");
     sd_printR1((uint8_t)(0x00FF&err));
 
-    if(SD_MSG > 1) print_str("\n\r>> INFO:    Data Response Errors:");
+    print_str("\n\r>> Data Response Errors:");
     
     switch(err&0x0700)
     {
         case(INVALID_DATA_RESPONSE):
-            print_str("\n\r\t    INVALID DATA RESPONSE");
+            print_str("\n\r INVALID DATA RESPONSE");
             break;
         case(WRITE_ERROR):
-            print_str("\n\r\t    WRITE_ERROR");
+            print_str("\n\r WRITE_ERROR");
             break;
         case(CRC_ERROR):
-            print_str("\n\r\t    CRC_ERROR");
+            print_str("\n\r CRC_ERROR");
             break;
         case(DATA_ACCEPTED):
-            print_str("\n\r\t    DATA ACCEPTED"); // Successful data write
+            print_str("\n\r DATA ACCEPTED"); // Successful data write
             break;
         default:
-            print_str("\n\r\t    INCORRECT RESPONSE RETURNED");
+            print_str("\n\r INCORRECT RESPONSE RETURNED");
     }
 }
 //END sd_PrintWriteError()
-
 
 
 
@@ -778,7 +776,7 @@ uint16_t sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
  * Returns:     VOID
  * Notes:       
  * ******************************************************************************/
-void sd_PrintEraseBlocksError(uint16_t err)
+void sd_PrintEraseBlockError(uint16_t err)
 {
     //print R1 portion of initiailzation response
     if(SD_MSG > 1) print_str("\n\r>> INFO:    R1 Response returned by sd_EraseBlocks():");
