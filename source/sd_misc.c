@@ -99,21 +99,21 @@ uint32_t sd_GetMemoryCapacity(void)
     
     attempt = 0;
     do{ // get CSD_STRUCTURE (Not used for memory calculation)
-        if((sd_Response()>>6) <= 2) break; //check for valid CSD_STRUCTURE returned
+        if((sd_ReturnByte()>>6) <= 2) break; //check for valid CSD_STRUCTURE returned
         if(attempt++ >= 0xFF){ CS_DEASSERT; return 1;} // Timeout returning valid CSD_STRUCTURE 
     }while(1);
     
     attempt = 0;
     do{ // get TAAC (Not used for memory calculation)
-        if(!(sd_Response()>>7)) break; // check for valid TAAC (bit 7 is rsvd should = 0)
+        if(!(sd_ReturnByte()>>7)) break; // check for valid TAAC (bit 7 is rsvd should = 0)
         if(attempt++ >= 0xFF) { CS_DEASSERT; return 1;} //Timeout returning valid TAAC
     }while(1);
 
-    sd_Response();  // get NSAC of CSD. Any value could be valid. (Not used for memory calculation)
+    sd_ReturnByte();  // get NSAC of CSD. Any value could be valid. (Not used for memory calculation)
 
     attempt = 0;
     do{ // get TRAN_SPEED. (Not used for memory calculation)
-        resp = sd_Response();  
+        resp = sd_ReturnByte();  
         if((resp == 0x32) || (resp == 0x5A)) break; //TRAN_SPEED must be 0x32 or 0x5A.
         if(attempt++ >= 0xFF) { CS_DEASSERT; return 1;} //Timeout returning valid TRAN_SPEED
     }while(1);
@@ -125,9 +125,9 @@ uint32_t sd_GetMemoryCapacity(void)
     uint8_t flag = 1;
     while(flag == 1)
     {
-        if((resp = sd_Response())&0x7B) //CCC 8 most significant bits must be of the form 01_11011;
+        if((resp = sd_ReturnByte())&0x7B) //CCC 8 most significant bits must be of the form 01_11011;
         {
-            if(((resp = sd_Response())>>4) == 0x05) //CCC least sig. 4 bits and 4 bit READ_BL_LEN.
+            if(((resp = sd_ReturnByte())>>4) == 0x05) //CCC least sig. 4 bits and 4 bit READ_BL_LEN.
             {
                 READ_BL_LEN = resp&0b00001111;
                 if ((READ_BL_LEN < 9) || (READ_BL_LEN > 11)) { CS_DEASSERT; return 1; }
@@ -144,7 +144,7 @@ uint32_t sd_GetMemoryCapacity(void)
     attempt = 0;
     while(flag == 1)
     {
-        if((resp = sd_Response())&0xF3) //MASK of 0xF3 is based on the following. X is 1 or 0.
+        if((resp = sd_ReturnByte())&0xF3) //MASK of 0xF3 is based on the following. X is 1 or 0.
                                         //READ_BLK_PARTIAL[7] = 1;
                                         //WRITE_BLK_MISALIGN[6] = X;
                                         //READ_BLK_MISALIGN[5] = X;
@@ -155,13 +155,13 @@ uint32_t sd_GetMemoryCapacity(void)
             //get and parse C_SIZE            
             C_SIZE = (resp&0x03);           
             C_SIZE <<= 8;           
-            C_SIZE |= sd_Response(); //get next 8 bits of C_SIZE
+            C_SIZE |= sd_ReturnByte(); //get next 8 bits of C_SIZE
             C_SIZE <<= 2;        
-            C_SIZE |= ((sd_Response())>>6);
+            C_SIZE |= ((sd_ReturnByte())>>6);
             
             //get C_SIZE_MULT
-            C_SIZE_MULT = ((sd_Response()&0x03)<<1);
-            C_SIZE_MULT |= (sd_Response()>>7);
+            C_SIZE_MULT = ((sd_ReturnByte()&0x03)<<1);
+            C_SIZE_MULT |= (sd_ReturnByte()>>7);
             
             flag = 0;
         }
@@ -218,10 +218,10 @@ DataBlock sd_ReadSingleDataBlock(uint32_t address)
     if(ds.R1 == 0)
     {
         attempt = 0;
-        uint8_t r = sd_Response();
+        uint8_t r = sd_ReturnByte();
         while(r != 0xFE)//Start Block Token
         {
-            r = sd_Response();
+            r = sd_ReturnByte();
             attempt++;
             if(attempt > 512)
             {
@@ -235,12 +235,12 @@ DataBlock sd_ReadSingleDataBlock(uint32_t address)
         if((attempt < 0xFF) && (r== 0xFE))
         {            
             for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
-                ds.data[i] = sd_Response();
+                ds.data[i] = sd_ReturnByte();
 
             for(uint8_t i = 0; i < 2; i++)
-                ds.CRC[i] = sd_Response();
+                ds.CRC[i] = sd_ReturnByte();
                 
-            sd_Response(); // clear any remaining characters in SD response.
+            sd_ReturnByte(); // clear any remaining characters in SD response.
         }
     }
     CS_DEASSERT;
@@ -341,7 +341,7 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
         {
             // prior to returning each data block, a start block token must be sent.
             attempt = 0;
-            while(sd_Response() != 0xFE) // wait for start block token.
+            while(sd_ReturnByte() != 0xFE) // wait for start block token.
             {
                 attempt++;
                 if(attempt > 511)
@@ -352,15 +352,15 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
                 }
             }
 
-            for(uint16_t k = 0; k < DATA_BLOCK_LEN; k++) ds.data[k] = sd_Response(); // get data block
-            for(uint8_t k = 0; k < 2; k++) ds.CRC[k] = sd_Response(); // get CRC response
+            for(uint16_t k = 0; k < DATA_BLOCK_LEN; k++) ds.data[k] = sd_ReturnByte(); // get data block
+            for(uint8_t k = 0; k < 2; k++) ds.CRC[k] = sd_ReturnByte(); // get CRC response
             print_str("\n\n\rBLOCK ADDRESS: ");
             print_dec(start_address + (i*512));
             sd_PrintDataBlock(ds.data); // print data block
         }
         
         sd_SendCommand(STOP_TRANSMISSION,0); // stop data block tranmission 
-        sd_Response(); //response doesn't matter
+        sd_ReturnByte(); //response doesn't matter
     }
 
     CS_DEASSERT;
@@ -457,15 +457,15 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
     //if R1 response is 0 then proceed with writing to data block
     if(R1 == 0)
     {
-        sd_SendDataByte(0xFE); // Send Start Block Token to SD card to signal initiating data transfer.
+        sd_SendByte(0xFE); // Send Start Block Token to SD card to signal initiating data transfer.
 
         // send data to write to SD card.
         for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
-            sd_SendDataByte(dataBuffer[i]);
+            sd_SendByte(dataBuffer[i]);
 
         // Send 16-bit CRC. CRC value does not matter if CRC is off (default).
-        sd_SendDataByte(0xFF);
-        sd_SendDataByte(0xFF);
+        sd_SendByte(0xFF);
+        sd_SendByte(0xFF);
         
 
         uint8_t dtMask = 0x1F; //Data Token Mask
@@ -473,7 +473,7 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
 
         do{ // loop until data response token received.
             
-            DataResponseToken = sd_Response(); // get data token
+            DataResponseToken = sd_ReturnByte(); // get data token
             
             if(attempt++ > 0xFF)
             {
@@ -492,7 +492,7 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
             int j = 0;
             
             // wait for SD card to not be busy, i.e. to finish writing data to the block.
-            while(sd_Response() == 0) // DO (data out) line held low while card is busy writing data to block.
+            while(sd_ReturnByte() == 0) // DO (data out) line held low while card is busy writing data to block.
             {
                 if(j > 512) { print_str("\n\r>> timeout waiting for card to not be busy.\n\r"); break; } 
                 j++;
@@ -526,7 +526,7 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
 
 
 /****************************************************************************************
- * Function:    sd_WriteMultipleDataSecotors(uint32_t address, 
+ * Function:    sd_WriteMultipleDataBlocks(uint32_t address, 
  *                                           uint8_t  nob,
  *                                           uint8_t *dataBuffer)
  * Description: Writes the data in the dataBuffer to all blocks consecutively in the 
@@ -578,15 +578,15 @@ uint16_t sd_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *data
         for(int k = 0; k < nob; k++)
         {
             retVal = INVALID_DATA_RESPONSE; //Reset retVal to INVALID_DATA_RESPONSE prior to sending each data block.
-            sd_SendDataByte(0xFC); // Send Start Block Token to SD card to signal initiating data transfer.
+            sd_SendByte(0xFC); // Send Start Block Token to SD card to signal initiating data transfer.
 
             // send data in dataBuffer to SD card.
             for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
-                sd_SendDataByte(dataBuffer[i]);
+                sd_SendByte(dataBuffer[i]);
 
             // Send 16-bit CRC. CRC value does not matter if CRC is off (default). Set using CRC_ON_OFF command.
-            sd_SendDataByte(0xFF); 
-            sd_SendDataByte(0xFF);
+            sd_SendByte(0xFF); 
+            sd_SendByte(0xFF);
 
 
 
@@ -594,7 +594,7 @@ uint16_t sd_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *data
             attempt = 0;
             
             do{ // loop until data response token received.    
-                DataResponseToken = sd_Response(); // get data token
+                DataResponseToken = sd_ReturnByte(); // get data token
                 if(attempt++ > 0xFF)
                 {
                     CS_DEASSERT;
@@ -612,7 +612,7 @@ uint16_t sd_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *data
                 int j = 0;
                 
                 // wait for SD card to not be busy, i.e. to finish writing data to the block.
-                while(sd_Response() == 0) // DO (data out) line held low while card is busy writing data to block.
+                while(sd_ReturnByte() == 0) // DO (data out) line held low while card is busy writing data to block.
                 {
                     if(j > 512) { print_str("\n\r>> timeout waiting for card to not be busy.\n\r"); break; } 
                     j++;
@@ -640,8 +640,8 @@ uint16_t sd_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *data
         }
 
         int j = 0;
-        sd_SendDataByte(0xFD); // send stop transmission token
-        while(sd_Response() == 0) // DO (data out) line held low while card is busy writing data to block.
+        sd_SendByte(0xFD); // send stop transmission token
+        while(sd_ReturnByte() == 0) // DO (data out) line held low while card is busy writing data to block.
         {
             if(j > 512) { print_str("\n\r>> timeout waiting for card to not be busy.\n\r"); break; } 
             j++;
@@ -752,7 +752,7 @@ uint16_t sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
 
     // DO (Data Out) line will be held low by card while it completes erase of data blocks.
     // once it is complete the DO line will be any non-zero value to signal it is out of the busy state.
-    while(sd_Response() == 0)
+    while(sd_ReturnByte() == 0)
     {
         if(attempt++ > 0xFFFE) 
         {

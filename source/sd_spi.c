@@ -26,9 +26,9 @@
  * 
  * Functions:
  * 1) uint32_t  sd_SPI_Mode_Init(void)
- * 2) void      sd_SendDataByte(uint8_t data)
- * 3) void      sd_SendCommand(uint8_t cmd, uint32_t arg)
- * 4) uint8_t   sd_Response(void)
+ * 2) void      sd_SendByte(uint8_t data)
+ * 3) uint8_t   sd_ReturnByte(void)
+ * 4) void      sd_SendCommand(uint8_t cmd, uint32_t arg)
  * 5) uint8_t   sd_CRC7(uint64_t tca)
  * 6) uint8_t   sd_getR1(void) 
  * 7) void      sd_printR1(uint8_t R1)
@@ -75,7 +75,7 @@ uint32_t sd_SPI_Mode_Init(void)
     uint8_t R1 = 0; //R1 response returned for every SD Command 
     uint8_t R7[5]; //R7 response returned by SEND_IF_COND (CMD8)
 
-    for(int i=0;i<=10;i++)  sd_SendDataByte(0xFF); //Wait 80 clock cycles for power up to complete.
+    for(int i=0;i<=10;i++)  sd_SendByte(0xFF); //Wait 80 clock cycles for power up to complete.
 
     // ********************
     // GO_IDLE_STATE (CMD0) : place card in SPI mode  
@@ -108,10 +108,10 @@ uint32_t sd_SPI_Mode_Init(void)
 
     //Get R7 response
     R7[0] = sd_getR1(); // First byte of R7 response is the R1 response.
-    R7[1] = sd_Response();
-    R7[2] = sd_Response();
-    R7[3] = sd_Response();
-    R7[4] = sd_Response();
+    R7[1] = sd_ReturnByte();
+    R7[2] = sd_ReturnByte();
+    R7[3] = sd_ReturnByte();
+    R7[4] = sd_ReturnByte();
     
     CS_DEASSERT;
 
@@ -270,7 +270,7 @@ uint32_t sd_SPI_Mode_Init(void)
         return (FAILED_READ_OCR | R1);
     }
 
-    resp = sd_Response();  //Get the rest of the response to READ_OCR
+    resp = sd_ReturnByte();  //Get the rest of the response to READ_OCR
 
     //Check POWER_UP_STATUS
     if((resp>>7)!=1)
@@ -289,9 +289,9 @@ uint32_t sd_SPI_Mode_Init(void)
     uint8_t UHSII = ((resp&0x20)>>5);
     uint8_t CO2T = ((resp&0x10)>>3);
     uint8_t S18A = (resp&0x01);
-    uint16_t VOLTAGE_RANGES_ACCEPTED = sd_Response();
+    uint16_t VOLTAGE_RANGES_ACCEPTED = sd_ReturnByte();
              VOLTAGE_RANGES_ACCEPTED <<= 1;
-             VOLTAGE_RANGES_ACCEPTED |= (sd_Response()>>7);
+             VOLTAGE_RANGES_ACCEPTED |= (sd_ReturnByte()>>7);
 
 
     if(CCS > 0)
@@ -331,18 +331,43 @@ uint32_t sd_SPI_Mode_Init(void)
 
 
 /******************************************************************************
- * Function:    sd_SendDataByte(uint8_t data)
- * Description: Function used to send data byte to SD card. 
- *              Intended to provide layer between the SPI interface and the SD
- *              card specific functions. 
+ * Function:    sd_SendByte(uint8_t data)
+ * Description: Function used to send single byte to SD card via SPI.
+ *              This, along with the sd_ReturnByte(), are the only functions 
+ *              that explicitly call the SPI specific functions.
  * Argument(s): uint8_t data : 8-bit data byte to send to SD card.
  * Returns:     VOID
- * Notes:       
-******************************************************************************/
-void sd_SendDataByte(uint8_t data)
+ * Notes:       Call this function as many times as necessary to send a command
+ *              to the SD card in single byte packets.
+*******************************************************************************/
+void sd_SendByte(uint8_t data)
 {
     SPI_MasterTransmit(data);
 }
+
+
+
+/******************************************************************************
+ * Function:    sd_ReturnByte(void)
+ * Description: Function used to get byte returned by SD card via SPI.
+ *              This, along with the sd_SendByte(), are the only functions that
+ *              explicitly call the SPI specific functions.
+ * Argument(s): VOID
+ * Returns:     8-bit SD Card response.
+ * Notes:       1) If a multi-byte value is expected to be returned then this
+ *                 function should be called at least that many times.
+ *              2) This function will return whatever byte value is present in 
+ *                 the SPDR when the SPIF flag is set in SPI_MasterRead(). It 
+ *                 is up to the calling function to determine if the returned 
+ *                 value is valid.
+******************************************************************************/
+uint8_t sd_ReturnByte(void)
+{
+    sd_SendByte(0xFF);
+    return SPI_MasterRead();
+} 
+//END sd_ReturnByte
+
 
 
 /******************************************************************************
@@ -392,39 +417,17 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg)
         print_str("\n\r            Byte[0]: 0x"); print_hex((uint8_t)tcacs);
     }
 
-    for(int i=0;i<=2;i++)   sd_SendDataByte(0xFF);	//Wait 16 clock cycles before sending command.
+    for(int i=0;i<=2;i++)   sd_SendByte(0xFF);	//Wait 16 clock cycles before sending command.
     
     // Send command to SD Card via SPI
-    sd_SendDataByte((uint8_t)(tcacs >> 40));
-    sd_SendDataByte((uint8_t)(tcacs >> 32));
-    sd_SendDataByte((uint8_t)(tcacs >> 24));
-    sd_SendDataByte((uint8_t)(tcacs >> 16));
-    sd_SendDataByte((uint8_t)(tcacs >> 8));
-    sd_SendDataByte((uint8_t)tcacs);
+    sd_SendByte((uint8_t)(tcacs >> 40));
+    sd_SendByte((uint8_t)(tcacs >> 32));
+    sd_SendByte((uint8_t)(tcacs >> 24));
+    sd_SendByte((uint8_t)(tcacs >> 16));
+    sd_SendByte((uint8_t)(tcacs >> 8));
+    sd_SendByte((uint8_t)tcacs);
 } 
 //END  sd_SendCommand()
-
-
-
-/******************************************************************************
- * Function:    sd_Response(void)
- * Description: gets the SD card response to a command using the SPI functions.
- * Argument(s): VOID
- * Returns:     8-bit SD Card response.
- * Notes:       If a multi-byte response is expected then this function should
- *              be called at least that many times.
- *              It is up to the code calling the function to determine if the 
- *              response returned is valid.  
- *              This function will return whatever byte value is present in 
- *              the SPDR when the SPIF flag is set, indicating a new byte has
- *              been shifted out/in to the SPDR.
-******************************************************************************/
-uint8_t sd_Response(void)
-{
-    sd_SendDataByte(0xFF);
-    return SPI_MasterRead();
-} 
-//END sd_Response
 
 
 
@@ -472,7 +475,7 @@ uint8_t sd_CRC7(uint64_t tca)
  * Function:    sd_getR1(void)
  * Description: gets the R1 response returned by an SD card for a given command.
  * Argument(s): VOID
- * Returns:     1 byte corresponding to the R1 response.
+ * Returns:     1 byte corresponding to the R1 response or timeout error flag.
  * Notes:       The R1 response is the first response byte sent by an SD Card
  *              in response to any command, therefore, this function should 
  *              not be called at any other time except to get the first byte 
@@ -484,7 +487,7 @@ uint8_t sd_getR1(void)
     uint8_t R1;
     uint8_t attempt = 0;
 
-    while((R1 = sd_Response()) == 0xFF)
+    while((R1 = sd_ReturnByte()) == 0xFF)
     {  
         if(attempt++ >= 0xFF)
             return R1_TIMEOUT;
@@ -500,11 +503,11 @@ uint8_t sd_getR1(void)
  * Description: prints the results of the R1 response in readable form.
  * Argument(s): 8-bit R1 response
  * Returns:     VOID
- * Notes:       R1 response, according to the specification, occupies bits 0 
- *              to 7 of the first response byte to a command. Bit 8 is reserved
- *              (always zero). Here, if bit 8 is set to 1 then it is used to 
- *              signal that there was timeout while waiting for R1 response 
- *              to be returned (R1_TIMEOUT).
+ * Notes:       The R1 response, occupies bits 0 to 7 of the first byte 
+ *              returned by the SD card in responsed to any command. Bit 8 is 
+ *              reserved (always zero). Here, if bit 8 is set to 1 then it is
+ *              used to signal that there was timeout while waiting for R1 the
+ *              response to be returned (R1_TIMEOUT).
 ******************************************************************************/
 void sd_printR1(uint8_t R1)
 {

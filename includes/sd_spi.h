@@ -46,7 +46,7 @@
 
 /******************************************************************************
  * Flag:        DATA_BLOCK_LEN
- * Description: Defines the data block/sector length.
+ * Description: Defines the data block length.
  * Settings:    512
 ******************************************************************************/
 #define DATA_BLOCK_LEN 512
@@ -147,13 +147,13 @@
 uint32_t sd_SPI_Mode_Init();
 
 //sends one byte of data to the SD card via SPI.
-void sd_SendDataByte(uint8_t data);
+void sd_SendByte(uint8_t data);
 
 //sends SD command/argument to SD Card
 void sd_SendCommand(uint8_t cmd, uint32_t arg);
 
 //gets 8 bit response returned from SD card
-uint8_t sd_Response();
+uint8_t sd_ReturnByte();
 
 //calculates the CRC7 bits for command/argument combination
 uint8_t sd_CRC7(uint64_t ca);

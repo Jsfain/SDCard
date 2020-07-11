@@ -107,8 +107,6 @@ int main(void)
 
 
 
-
-                
         // ***** test sd_WriteSingleDataBlock() function in sd_misc.c *****
 
         //DataBlock ds; //data block struct
@@ -147,10 +145,13 @@ int main(void)
 
         print_str("\n\rDone Writing Data Blocks");
         sd_PrintMultipleDataBlocks(write_start_address,nowb);
+        sd_SendCommand(APP_CMD,0);
+        sd_getR1();
         
-        
-        
-        // ***** ERASE BLOCKS *****
+
+
+        /*
+        // ***** Test Erase Blocks *****
         int noeb = 3; // number of erase blocks
         uint32_t erase_start_block = 0;
         uint32_t erase_start_address = erase_start_block * DATA_BLOCK_LEN; // the address of first byte in block.
@@ -167,7 +168,8 @@ int main(void)
         sd_PrintEraseBlockError(er);
 
         print_str("\n\r ***** Read Multiple Blocks *****");
-        sd_PrintMultipleDataBlocks(erase_start_address,noeb);        
+        sd_PrintMultipleDataBlocks(erase_start_address,noeb);
+        */        
     }
 
     // Something to do after SD card testing has completed.
