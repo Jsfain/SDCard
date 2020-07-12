@@ -1,7 +1,7 @@
 clear
 
 #directory to store build/compiled files
-buildDir=../build
+buildDir=build
 
 #directory for source files
 sourceDir=source
