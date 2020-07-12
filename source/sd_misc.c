@@ -27,14 +27,15 @@
  * 3) void          sd_PrintDataBlock(uint8_t *block)
  * 4) void          sd_PrintMultipleDataBlocks(uint32_t start_address, 
  *                                             uint32_t numOfBlocks)
- * 5) void          sd_SearchNonZeroDataBlocks(uint32_t begin_block, 
- *                                          uint32_t end_block)
+ * 5) void          sd_SearchNonZeroBlocks(uint32_t begin_block, 
+ *                                             uint32_t end_block)
  * 6) uint16_t      sd_WriteSingleDataBlock(uint32_t address, 
  *                                          uint8_t *dataBuffer)
  * 7) uint16_t      sd_WriteMultipleDataBlocks(uint32_t address, 
  *                                              uint8_t nob, 
  *                                              uint8_t *dataBuffer)
  * 7) void          sd_PrintWriteError(uint16_t err)
+ * 8) uint32_t      sd_NumberOfWellWrittenBlocks(void)
  * 8) uint16_t      sd_EraseBlocks(uint32_t start_address, 
  *                                 uint16_t end_address)
  * 9) void          sd_PrintEraseBlockError(uint16_t err)
@@ -200,8 +201,6 @@ DataBlock sd_ReadSingleDataBlock(uint32_t address)
     DataBlock ds;
 
     uint8_t attempt = 0;
-    print_str("\n\rReading Address: ");
-    print_dec(address);
     CS_LOW;
     sd_SendCommand(READ_SINGLE_BLOCK,address);  //Send CMD17 to return a single block;
     ds.R1 = sd_getR1(); // Get R1 response
@@ -371,7 +370,7 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
 
 
 /***********************************************************************************
- * Function:    sd_SearchNonZeroDataBlocks(uint32_t begin_block, 
+ * Function:    sd_SearchNonZeroBlocks(uint32_t begin_block, 
  *                                      uint32_t end_block)
  * Description: Searches between a specified range of blocks for any blocks that
  *              have non-zero values and prints those block numbers to screen. 
@@ -380,7 +379,7 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
  * Returns:     VOID
  * Notes:       
 ***********************************************************************************/
-void sd_SearchNonZeroDataBlocks(uint32_t begin_block, uint32_t end_block)
+void sd_SearchNonZeroBlocks(uint32_t begin_block, uint32_t end_block)
 {
     DataBlock ds;
     print_str("\n\rSearching for non-zero blocks over range ");
@@ -694,13 +693,82 @@ void sd_PrintWriteError(uint16_t err)
 
 
 
+/********************************************************************************
+ * Function:    sd_NumberOfWellWrittenBlocks(void)
+ * Description: returns the number of well written blocks after a multi-block 
+ *              write operation is performed. Call this function if 
+ *              sd_WriteMultipleDataBlocks() returns write error to see how many
+ *              blocks were successfully written to.
+ * Argument(s): VOID
+ * Returns:     32-byte number of well written blocks. 0 if error.
+ * Notes:             
+ * ******************************************************************************/
+uint32_t sd_NumberOfWellWrittenBlocks(void)
+{
+    uint32_t wwwb = 0; //well written blocks. initialized to zero
+    uint8_t R1; // for R1 response.
+    int count = 0; 
+
+
+    CS_LOW; // Assert CS
+    sd_SendCommand(APP_CMD,0); // signal that next command is an application command
+    R1 = sd_getR1();
+    if(R1 > 0) 
+    { 
+        print_str("\n\r>> ERROR: error returned in R1 response to APP_CMD in sd_NumberOfWellWrittenBlocks(). Returning with invalid value");
+        sd_printR1(R1);
+        return 0;
+    }
+
+    sd_SendCommand(SEND_NUM_WR_BLOCKS,0);// number of well written write blocks
+    R1 = sd_getR1();
+    if(R1 > 0) 
+    { 
+        print_str("\n\r>> ERROR: error returned in R1 response to SEND_NUM_WR_BLOCKS in sd_NumberOfWellWrittenBlocks(). Returning with invalid value");
+        sd_printR1(R1);
+        return 0;
+    }
+    //print_str("\n\r");sd_printR1(sd_getR1());
+    
+    while(sd_ReturnByte() != 0xFE) // start block token
+    {
+        if(count++ > 0xFE) 
+        { 
+            print_str("\n\r>> ERROR: timeout while waiting for start token in sd_NumberOfWellWrittenBlocks(). Returning with invalid value"); 
+            return 0;
+        }
+
+    }
+
+    // Get the number of well written blocks (32-bit)
+    wwwb = sd_ReturnByte();
+    wwwb <<= 8;
+    wwwb |= sd_ReturnByte();
+    wwwb <<= 8;
+    wwwb |= sd_ReturnByte();
+    wwwb <<= 8;
+    wwwb |= sd_ReturnByte();
+
+    // CRC bytes
+    sd_ReturnByte();
+    sd_ReturnByte();
+
+    CS_HIGH; // Deassert CS
+
+    return wwwb;
+}
+
+
+
+
 /*****************************************************************************
- * Function:    sd_EraseBlocks(uint32_t start_address, 
- *                              uint32_t end_address)
- * Description: Erases all blocks between and including start_address and 
- *              end_address.
- * Argument(s): 1) uint32_t start_address: address of first block to erase.
- *              2) uint32_t end_address:   address of last block to erase.
+ * Function:    sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
+ * Description: Erases all blocks between, and including, the blocks 
+ *              containing start_address and end_address.
+ * Argument(s): 1) uint32_t start_address: first block to erase includes 
+ *                                         start address.
+ *              2) uint32_t end_address:   last block to erase includes 
+ *                                         end address.
  * Returns:     error code. see sd_misc.h
  * Notes:             
  * ***************************************************************************/

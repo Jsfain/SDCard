@@ -78,6 +78,10 @@ uint16_t sd_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *data
 void sd_PrintWriteError(uint16_t err);
 
 
+// returns the number of well written blocks after a multi-block write operation is performed.
+uint32_t sd_NumberOfWellWrittenBlocks();
+
+
 
 /********************************************************************************
  * Error Flags:         Values returned by the function sd_Eraseblocks()      
