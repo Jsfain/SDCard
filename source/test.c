@@ -30,7 +30,7 @@ int main(void)
     uint32_t initResponse;
 
     //attempt to initialize sd card.
-    for(int i = 0; i<1; i++)
+    for(int i = 0; i<2; i++)
     {
         print_str("\n\n\rSD Card Initialization Attempt: ");
         print_dec(i);
@@ -51,14 +51,14 @@ int main(void)
 
     if(initResponse==OUT_OF_IDLE) // initialization successful
     {      
-        /*
+        
         // ***** test sd_GetMemoryCapcity() function in sd_misc.c  *****
         uint32_t mc = sd_GetMemoryCapacity();
         print_str("\n\rmemory capacity = ");
         print_dec(mc);
         print_str(" Bytes\n\r");
         // ***** END test sd_GetMemoryCapcity()
-        */
+        
 
 
         /*
@@ -85,13 +85,13 @@ int main(void)
             print_str("\n\r Write error detected");
             uint16_t R2;
         
-            CS_ASSERT;             
+            CS_LOW;             
             sd_SendCommand(SEND_STATUS,0);
             R2 = sd_getR1(); // The first byte of the R2 response is same as the R1 response.
             R2 <<= 8;
             R2 |= sd_getR1(); // can use the sd_getR1 to get second byte of R2 response as well.
             print_dec(R2);
-            CS_DEASSERT;
+            CS_HIGH;
             print_str("\n\r R2 Response = ");
             print_dec(R2);
             print_str("\n\r Write Response = ");
@@ -106,7 +106,7 @@ int main(void)
         */
 
 
-
+        
         // ***** test sd_WriteSingleDataBlock() function in sd_misc.c *****
 
         //DataBlock ds; //data block struct
@@ -130,23 +130,51 @@ int main(void)
             print_str("\n\r Write error detected");
             uint16_t R2;
         
-            CS_ASSERT;             
+            CS_LOW;             
             sd_SendCommand(SEND_STATUS,0);
             R2 = sd_getR1(); // The first byte of the R2 response is same as the R1 response.
             R2 <<= 8;
             R2 |= sd_getR1(); // can use the sd_getR1 to get second byte of R2 response as well.
             print_dec(R2);
-            CS_DEASSERT;
+            CS_HIGH;
             print_str("\n\r R2 Response = ");
             print_dec(R2);
             print_str("\n\r Write Response = ");
             sd_PrintWriteError(mwr);
         }
 
+        
         print_str("\n\rDone Writing Data Blocks");
         sd_PrintMultipleDataBlocks(write_start_address,nowb);
+        
+
+        // Gets the number of well written blocks
+        uint32_t wwwb = 0;
+        int count = 0;
+        CS_LOW;
         sd_SendCommand(APP_CMD,0);
-        sd_getR1();
+        sd_printR1(sd_getR1());
+        sd_SendCommand(SEND_NUM_WR_BLOCKS,0);// number of well written write blocks
+        print_str("\n\r");sd_printR1(sd_getR1());
+
+        
+        while(sd_ReturnByte() != 0xFE) // start block token
+        {
+            if(count++ > 0xFE) { print_str("\n\r timeout while waiting for start token"); break;}
+        }
+        if(count < 0xFE)
+        {
+            wwwb = sd_ReturnByte();
+            wwwb <<= 8;
+            wwwb |= sd_ReturnByte();
+            wwwb <<= 8;
+            wwwb |= sd_ReturnByte();
+            wwwb <<= 8;
+            wwwb |= sd_ReturnByte();
+        }
+        CS_HIGH;
+        print_str("\n\r Number of well written write blocks = ");
+        print_dec(wwwb);
         
 
 

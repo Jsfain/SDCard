@@ -79,10 +79,10 @@ uint32_t sd_SPI_Mode_Init(void)
 
     // ********************
     // GO_IDLE_STATE (CMD0) : place card in SPI mode  
-    CS_ASSERT;                   
+    CS_LOW; // Assert CS          
     sd_SendCommand(GO_IDLE_STATE, 0);  //CMD0;
     R1 = sd_getR1(); // Get R1 response
-    CS_DEASSERT;
+    CS_HIGH; // Deassert CS
     if(SD_MSG > 2) {print_str("\n\r>> DEBUG:   Printing R1 response returned from sd_getR1() for command GO_IDLE_STATE (CMD0):"); sd_printR1(R1);}
     if (R1 != 1)
     {
@@ -103,7 +103,7 @@ uint32_t sd_SPI_Mode_Init(void)
     uint8_t cp = 0xAA; //check pattern
     uint8_t v  = 0x01; //supply voltage: range = 2.7 to 3.6V
     
-    CS_ASSERT;
+    CS_LOW;
     sd_SendCommand(SEND_IF_COND, ((uint16_t)v<<8)|cp); //CMD8
 
     //Get R7 response
@@ -113,7 +113,7 @@ uint32_t sd_SPI_Mode_Init(void)
     R7[3] = sd_ReturnByte();
     R7[4] = sd_ReturnByte();
     
-    CS_DEASSERT;
+    CS_HIGH;
 
     if(SD_MSG > 2) {print_str("\n\r>> DEBUG:   Printing R1 response returned from sd_getR1() for command SEND_IF_COND (CMD8):"); sd_printR1(R7[0]);}
     if (R7[0] != 1) //R7[0] is R1 response returned for CMD8
@@ -159,12 +159,12 @@ uint32_t sd_SPI_Mode_Init(void)
     // **********************
     // CRC_ON_OFF (CMD59): turns CRC ON or OFF. Should be off by default, 
     R1 = 0; // Reset R1
-    CS_ASSERT;
+    CS_LOW;
     sd_SendCommand(CRC_ON_OFF,0);  //Send CMD 59. 
                                    //arg = 0 CRC OFF (default for SPI mode). 
                                    //arg = 1 CRC ON 
     R1 = sd_getR1(); // Get R1 response
-    CS_DEASSERT;
+    CS_HIGH;
     if(SD_MSG > 2) {print_str("\n\r>> DEBUG:   Printing R1 response returned from sd_getR1() for command CRC_ON_OFF (CMD59):"); sd_printR1(R1);}
     if (R1 != 1)
     {
@@ -203,10 +203,10 @@ uint32_t sd_SPI_Mode_Init(void)
         uint8_t attempt = 0; //used for timeout returning OUT_OF_IDLE
         do{
             R1 = 0; // Reset R1
-            CS_ASSERT;
+            CS_LOW;
             sd_SendCommand(APP_CMD,0); //send APP_CMD (CMD55) to signal next command is ACMD type.
             R1 = sd_getR1();
-            CS_DEASSERT;
+            CS_HIGH;
             if(SD_MSG > 2) {print_str("\n\r>> DEBUG:   Printing R1 response returned from sd_getR1() for command APP_CMD (CMD55):"); sd_printR1(R1);}
             if (R1 != 1)
             {
@@ -219,10 +219,10 @@ uint32_t sd_SPI_Mode_Init(void)
             }
             
             R1 = 0; // Reset R1
-            CS_ASSERT;
+            CS_LOW;
             sd_SendCommand(SD_SEND_OP_COND,acmd41_arg); //send SD_SEND_OP_COND (ACMD41)
             R1 = sd_getR1();
-            CS_DEASSERT;
+            CS_HIGH;
             if(SD_MSG > 2) {print_str("\n\r>> DEBUG:   Printing R1 response returned from sd_getR1() for command SD_SEND_OP_COND (ACMD41):"); sd_printR1(R1);}
             if (R1 > 1)
             {
@@ -256,7 +256,7 @@ uint32_t sd_SPI_Mode_Init(void)
     // of the OCR (Operating Condition Register). Currently only CCS = 0 is supported on host.
     uint8_t resp;
     R1 = 0; // Reset R1
-    CS_ASSERT;
+    CS_LOW;
     sd_SendCommand(READ_OCR,0);  //Send CMD 58
     R1 = sd_getR1();
     if(SD_MSG > 2) {print_str("\n\r>> DEBUG:   Printing R1 response returned from sd_getR1() for command READ_OCR (CMD58):"); sd_printR1(R1);}
@@ -275,7 +275,7 @@ uint32_t sd_SPI_Mode_Init(void)
     //Check POWER_UP_STATUS
     if((resp>>7)!=1)
     {
-        CS_DEASSERT;
+        CS_HIGH;
         if(SD_MSG)
         {
             print_str("\n\r>> ERROR:   POWER_UP_STATUS bit in OCR is 1. SD Card has not completed power up cycle.");
@@ -296,7 +296,7 @@ uint32_t sd_SPI_Mode_Init(void)
 
     if(CCS > 0)
     {
-        CS_DEASSERT;
+        CS_HIGH;
         if(SD_MSG)
         {
             print_str("\n\r>> ERROR:   CCS bit of OCR is = 1 and is not currently supported by host.");
@@ -310,7 +310,7 @@ uint32_t sd_SPI_Mode_Init(void)
         (S18A  !=  0) || //0 for NO switching to 1.8V Accepted.
         (VOLTAGE_RANGES_ACCEPTED != 0x1FF)  )//Voltages over range 2.7 to 3.6V supported.
     {
-        CS_DEASSERT;
+        CS_HIGH;
         if(SD_MSG)
         {
             print_str("\n\r>> ERROR:   Unexpected response to READ_OCR in sd_SPI_Mode_Init() for UHSII, CO2T, S18A, or VOLTAGE_RANGES.");
@@ -318,7 +318,7 @@ uint32_t sd_SPI_Mode_Init(void)
         }
         return (FAILED_READ_OCR | UNSUPPORTED_CARD_TYPE | R1);
     }
-    CS_DEASSERT;
+    CS_HIGH;
     // END READ_OCR (CMD58)
     // ************************
 

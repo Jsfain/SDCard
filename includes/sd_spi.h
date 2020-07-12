@@ -18,8 +18,6 @@
 #ifndef SD_SPI_H
 #define SD_SPI_H
 
-#include "../includes/spi.h"
-
 /******************************************************************************
  * Flag:        SD_MSG 
  * Description: Useful for debugging, this flag can be used to print differnt
@@ -31,7 +29,7 @@
  *             >3  = VERBOSE messages
  * Notes:       Call sd_printInitResponse() to read initialization response.
 ******************************************************************************/
-#define SD_MSG 2
+#define SD_MSG 0
 
 /******************************************************************************
  * Flag:        HCS 
@@ -53,13 +51,14 @@
 
 
 /******************************************************************************
- * Functions:   ASSERT / DEASSERT       
- * Description: ASSERT will assert (bring low) the SS pin of the SPI port 
- *              (CS pin of SD Card) to signal the SD Card to receive a command/
- *              return a response. DEASSERT when command/response is complete.
+ * Functions:   CS_LOW and CS_HIGH       
+ * Description: CS_LOW will assert (bring low) the SS pin of the SPI port 
+ *              (CS pin of SD Card) to signal the SD card to prepare for
+ *              communication. CS_HIGH will deassert the SS pin (bring high) 
+ *              when communication is complete.
 ******************************************************************************/
-#define CS_ASSERT    SPI_PORT &= ~(1<<SS);
-#define CS_DEASSERT  SPI_PORT |= (1<<SS);
+#define CS_LOW    SPI_PORT &= ~(1<<SS);  // Assert CS
+#define CS_HIGH   SPI_PORT |= (1<<SS);   // Deassert CS
 
 
 /******************************************************************************

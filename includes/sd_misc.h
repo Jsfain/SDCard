@@ -30,8 +30,7 @@ uint32_t sd_GetMemoryCapacity();
 
 
 
-// Reads in a single data block from an SD card and returns the data in a 
-// DataBlock struct.
+// Reads in a single data block from an SD card and returns it in a DataBlock struct.
 DataBlock sd_ReadSingleDataBlock(uint32_t address);
 
 
