@@ -1,8 +1,8 @@
 /***********************************************************************************
  * Author: Joshua Fain
- * Date:   7/5/2020
+ * Date:   7/30/2020
  * 
- * File: SD_MISCH.C 
+ * File: SD_MISC.C 
  * 
  * Requires: SD_MISC.H - header for functions defined here
  *           SD_SPI.H  - needed for direct interaction with the SD Card.
@@ -354,8 +354,8 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
 
             for(uint16_t k = 0; k < DATA_BLOCK_LEN; k++) ds.data[k] = sd_ReturnByte(); // get data block
             for(uint8_t k = 0; k < 2; k++) ds.CRC[k] = sd_ReturnByte(); // get CRC response
-            print_str("\n\n\rBLOCK ADDRESS: ");
-            print_dec(start_address + (i*512));
+            print_str("\n\n\r\t\t\t\t\tBLOCK: ");
+            print_dec((start_address + (i*512))/512);
             sd_PrintDataBlock(ds.data); // print data block
         }
         
