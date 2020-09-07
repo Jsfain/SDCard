@@ -511,24 +511,27 @@ uint8_t sd_getR1(void)
 ******************************************************************************/
 void sd_printR1(uint8_t R1)
 {
-    if(R1&R1_TIMEOUT)
-        print_str(" R1_TIMEOUT,"); //Not part of SD card R1 standard.
-    if(R1&PARAMETER_ERROR)
-        print_str(" PARAMETER ERROR,");
-    if(R1&ADDRESS_ERROR)
-        print_str(" ADDRESS ERROR,");
-    if(R1&ERASE_SEQUENCE_ERROR)
-        print_str(" ERASE SEQUENCE ERROR");
-    if(R1&COM_CRC_ERROR)
-        print_str(" COM_CRC_ERROR");
-    if(R1&ILLEGAL_COMMAND)
-        print_str(" ILLEGAL COMMAND");
-    if(R1&ERASE_RESET)
-        print_str(" ERASE RESET");
-    if(R1&IN_IDLE_STATE)
-        print_str(" IN IDLE STATE");
-    if(R1==0) // R1 = 0 NO ERRORS;
-        print_str(" OUT OF IDLE");
+    if(SD_MSG)  // modified 9/1/2020
+    {
+        if(R1&R1_TIMEOUT)
+            print_str(" R1_TIMEOUT,"); //Not part of SD card R1 standard.
+        if(R1&PARAMETER_ERROR)
+            print_str(" PARAMETER ERROR,");
+        if(R1&ADDRESS_ERROR)
+            print_str(" ADDRESS ERROR,");
+        if(R1&ERASE_SEQUENCE_ERROR)
+            print_str(" ERASE SEQUENCE ERROR");
+        if(R1&COM_CRC_ERROR)
+            print_str(" COM_CRC_ERROR");
+        if(R1&ILLEGAL_COMMAND)
+            print_str(" ILLEGAL COMMAND");
+        if(R1&ERASE_RESET)
+            print_str(" ERASE RESET");
+        if(R1&IN_IDLE_STATE)
+            print_str(" IN IDLE STATE");
+        if(R1==0) // R1 = 0 NO ERRORS;
+            print_str(" OUT OF IDLE");
+    }
 }
 //END sd_printR1()
 
@@ -546,35 +549,38 @@ void sd_printR1(uint8_t R1)
  * ******************************************************************************/
 void sd_printInitResponse(uint32_t err)
 {
-    //print R1 portion of initiailzation response
-    print_str("\n\r>> R1 response returned from SD Card Initialization:");
-    sd_printR1((uint8_t)(0x000FF&err));
+    if(SD_MSG)
+    {
+        //print R1 portion of initiailzation response
+        print_str("\n\r>> R1 response returned from SD Card Initialization:");
+        sd_printR1((uint8_t)(0x000FF&err));
 
-    print_str("\n\r>> Initialization response returned from SD Card Initialization:");
-    //print other portion of R1 response
-    if(err&FAILED_GO_IDLE_STATE)
-        print_str(" FAILED_GO_IDLE_STATE\n\r");
-    if(err&FAILED_SEND_IF_COND)
-        print_str(" FAILED_SEND_IF_COND");
-    if(err&UNSUPPORTED_CARD_TYPE)
-        print_str(" UNSUPPORTED_CARD_TYPE");
-    if(err&FAILED_CRC_ON_OFF)
-        print_str(" FAILED_CRC_ON_OFF");
-    if(err&FAILED_APP_CMD)
-        print_str(" FAILED_APP_CMD");
-    if(err&FAILED_SD_SEND_OP_COND)
-        print_str(" FAILED_SD_SEND_OP_COND");
-    if(err&OUT_OF_IDLE_TIMEOUT)
-        print_str(" OUT_OF_IDLE_TIMEOUT");
-    if(err&FAILED_READ_OCR)
-        print_str(" FAILED_READ_OCR");
-    if(err&POWER_UP_NOT_COMPLETE)
-        print_str(" POWER_UP_NOT_COMPLETE");
-    if(err&FAILED_SET_BLOCKLEN)
-        print_str(" FAILED_SET_BLOCKLEN");
-    if(err&FAILED_SEND_CSD)
-        print_str(" FAILED_SEND_CSD");
-    if(err == 0) // NO ERRORS
-        print_str(" INIT_SUCCESS\n\r");
+        print_str("\n\r>> Initialization response returned from SD Card Initialization:");
+        //print other portion of R1 response
+        if(err&FAILED_GO_IDLE_STATE)
+            print_str(" FAILED_GO_IDLE_STATE\n\r");
+        if(err&FAILED_SEND_IF_COND)
+            print_str(" FAILED_SEND_IF_COND");
+        if(err&UNSUPPORTED_CARD_TYPE)
+            print_str(" UNSUPPORTED_CARD_TYPE");
+        if(err&FAILED_CRC_ON_OFF)
+            print_str(" FAILED_CRC_ON_OFF");
+        if(err&FAILED_APP_CMD)
+            print_str(" FAILED_APP_CMD");
+        if(err&FAILED_SD_SEND_OP_COND)
+            print_str(" FAILED_SD_SEND_OP_COND");
+        if(err&OUT_OF_IDLE_TIMEOUT)
+            print_str(" OUT_OF_IDLE_TIMEOUT");
+        if(err&FAILED_READ_OCR)
+            print_str(" FAILED_READ_OCR");
+        if(err&POWER_UP_NOT_COMPLETE)
+            print_str(" POWER_UP_NOT_COMPLETE");
+        if(err&FAILED_SET_BLOCKLEN)
+            print_str(" FAILED_SET_BLOCKLEN");
+        if(err&FAILED_SEND_CSD)
+            print_str(" FAILED_SEND_CSD");
+        if(err == 0) // NO ERRORS
+            print_str(" INIT_SUCCESS\n\r");
+    }
 }
 //END sd_printInitErrors()
