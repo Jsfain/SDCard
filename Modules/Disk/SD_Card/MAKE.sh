@@ -32,36 +32,6 @@ fi
 
 
 
- echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/prints.o" $sourceDir"/prints.c"
-"${Compile[@]}" $buildDir/prints.o $sourceDir/prints.c
-status=$?
-sleep $t
-if [ $status -gt 0 ]
-then
-    echo -e "error compiling PRINTS.C"
-    echo -e "program exiting with code $status"
-    exit $status
-else
-    echo -e "Compiling PRINTS.C successful"
-fi
-
-
-
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/usart.o "$sourceDir"/usart.c"
-"${Compile[@]}" $buildDir/usart.o $sourceDir/usart.c
-status=$?
-sleep $t
-if [ $status -gt 0 ]
-then
-    echo -e "error compiling USART.C"
-    echo -e "program exiting with code $status"
-    exit $status
-else
-    echo -e "Compiling USART.C successful"
-fi
-
-
-
 echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/sd_spi.o" $sourceDir"/sd_spi.c"
 "${Compile[@]}" $buildDir/sd_spi.o $sourceDir/sd_spi.c
 status=$?
@@ -87,21 +57,6 @@ then
     exit $status
 else
     echo -e "Compiling SD_SPI.C successful"
-fi
-
-
-
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/spi.o "$sourceDir"/spi.c"
-"${Compile[@]}" $buildDir/spi.o $sourceDir/spi.c
-status=$?
-sleep $t
-if [ $status -gt 0 ]
-then
-    echo -e "error compiling SPI.C"
-    echo -e "program exiting with code $status"
-    exit $status
-else
-    echo -e "Compiling SPI.C successful"
 fi
 
 
@@ -149,4 +104,3 @@ then
 else
     echo -e "Program successfully downloaded to AVR"
 fi
-

@@ -10,13 +10,14 @@
 #include <stdint.h>
 #include <avr/io.h>
 #include "../includes/sd_spi.h"
-#include "../includes/usart.h"
-#include "../includes/spi.h"
-#include "../includes/prints.h"
 #include "../includes/sd_misc.h"
+#include "../../../../general/includes/usart.h"
+#include "../../../../general/includes/spi.h"
+#include "../../../../general/includes/prints.h"
 
 
-//  *******   MAIN   ********  
+
+//  *******   MAIN   ********
 int main(void)
 {
     USART_Init();

@@ -51,10 +51,9 @@
 
 #include <stdint.h>
 #include <avr/io.h>
-#include "../includes/prints.h"
-#include "../includes/spi.h"
 #include "../includes/sd_spi.h"
-
+#include "../../../../general/includes/spi.h"
+#include "../../../../general/includes/prints.h"
 
 /******************************************************************************
  * Function:    sd_SPI_Mode_Init(void) 
