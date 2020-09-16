@@ -10,9 +10,3 @@ void fat_ReadSingleSector( uint32_t address, uint8_t *sectorByteArray)
     db = sd_ReadSingleDataBlock(address);
     for(int k = 0; k < 512; k++) { sectorByteArray[k] = db.data[k]; }
 };
-
-
-void fat_PrintSingleSector( uint8_t *sectorByteArray )
-{
-    sd_PrintDataBlock(sectorByteArray);
-};
