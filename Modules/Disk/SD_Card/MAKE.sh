@@ -32,37 +32,37 @@ fi
 
 
 
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/sd_spi.o" $sourceDir"/sd_spi.c"
-"${Compile[@]}" $buildDir/sd_spi.o $sourceDir/sd_spi.c
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/sd_spi_base.o" $sourceDir"/sd_spi_base.c"
+"${Compile[@]}" $buildDir/sd_spi_base.o $sourceDir/sd_spi_base.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
 then
-    echo -e "error compiling SD_SPI.C"
+    echo -e "error compiling SD_SPI_BASE.C"
     echo -e "program exiting with code $status"
     exit $status
 else
-    echo -e "Compiling SD_SPI.C successful"
+    echo -e "Compiling SD_SPI_BASE.C successful"
 fi
 
 
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/sd_misc.o" $sourceDir"/sd_misc.c"
-"${Compile[@]}" $buildDir/sd_misc.o $sourceDir/sd_misc.c
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/sd_spi_sf.o" $sourceDir"/sd_spi_sf.c"
+"${Compile[@]}" $buildDir/sd_spi_sf.o $sourceDir/sd_spi_sf.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
 then
-    echo -e "error compiling sd_misc.C"
+    echo -e "error compiling sd_spi_sf.C"
     echo -e "program exiting with code $status"
     exit $status
 else
-    echo -e "Compiling SD_SPI.C successful"
+    echo -e "Compiling SD_SPI_SF.C successful"
 fi
 
 
 
-echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/test.elf "$buildDir"/test.o  "$buildDir"/spi.o "$buildDir"/sd_spi.o "$buildDir"/sd_misc.o "$buildDir"/usart.o "$buildDir"/prints.o"
-"${Link[@]}" $buildDir/test.elf $buildDir/test.o $buildDir/spi.o $buildDir/sd_spi.o $buildDir/sd_misc.o $buildDir/usart.o $buildDir/prints.o
+echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/test.elf "$buildDir"/test.o  "$buildDir"/spi.o "$buildDir"/sd_spi_spi.o "$buildDir"/sd_spi_sf.o "$buildDir"/usart.o "$buildDir"/prints.o"
+"${Link[@]}" $buildDir/test.elf $buildDir/test.o $buildDir/spi.o $buildDir/sd_spi_base.o $buildDir/sd_spi_sf.o $buildDir/usart.o $buildDir/prints.o
 status=$?
 sleep $t
 if [ $status -gt 0 ]
