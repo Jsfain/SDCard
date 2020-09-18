@@ -1,48 +1,18 @@
-/***********************************************************************************
- * Author: Joshua Fain
- * Date:   7/30/2020
+ /*****************************************************************************
+ * SD_MISC.C 
  * 
- * File: SD_MISC.C 
- * 
- * Requires: SD_MISC.H - header for functions defined here
- *           SD_SPI.H  - needed for direct interaction with the SD Card.
- *           SPI.H     - included by sd_spi.h
- *           PRINTS.H  - needed for various print functions used here
- *           STDINT.H  - needed data types used here
- *           AVR/IO.H  - needed for I/O related AVR variables.
- * 
- * Target: ATmega 1280
+ * TARGET
+ * ATmega 1280
  *
+ * DESCRIPTION
+ * Specialized functions for interacting with an SD card hosted on an AVR 
+ * microcontroller operating in SPI mode. Uses SD_SPI_BASE.C(H) for physical
+ * interface to the SD card.
  * 
- * Description: 
- * Defines functions declared in SD_MISC.H. These functions defined here may be 
- * useful, but are not necessary, for interaction with the SD Card, unlike those
- * in SD_SPI.C. They are intended to provide some calculations, print, and 
- * get SD Card related functions.
- * 
- * 
- * Functions:
- * 1) uint32_t      sd_GetMemoryCapacity(void)
- * 2) DataBlock     sd_ReadSingleDataBlock(uint32_t address)
- * 3) void          sd_PrintDataBlock(uint8_t *block)
- * 4) void          sd_PrintMultipleDataBlocks(uint32_t start_address, 
- *                                             uint32_t numOfBlocks)
- * 5) void          sd_SearchNonZeroBlocks(uint32_t begin_block, 
- *                                             uint32_t end_block)
- * 6) uint16_t      sd_WriteSingleDataBlock(uint32_t address, 
- *                                          uint8_t *dataBuffer)
- * 7) uint16_t      sd_WriteMultipleDataBlocks(uint32_t address, 
- *                                              uint8_t nob, 
- *                                              uint8_t *dataBuffer)
- * 7) void          sd_PrintWriteError(uint16_t err)
- * 8) uint32_t      sd_NumberOfWellWrittenBlocks(void)
- * 8) uint16_t      sd_EraseBlocks(uint32_t start_address, 
- *                                 uint16_t end_address)
- * 9) void          sd_PrintEraseBlockError(uint16_t err)
- * 
- * Notes:
- * Other functions will be included as needed. 
- * ********************************************************************************/
+ *
+ * Author: Joshua Fain
+ * Date:   9/17/2020
+ * ***************************************************************************/
 
 
 
@@ -55,20 +25,8 @@
 #include "../../../../general/includes/prints.h"
 
 
-/******************************************************************************
- * Function:    sd_getMemoryCapacity(void) 
- * Description: Calculates and returns the memory capacity (in BYTES) of the 
- *              SD card based on values of the CSD register parameters C_SIZE,
- *              READ_BL_LEN, and C_SIZE_MULT.
- * Argument(s): VOID
- * Returns:     Integer value of the memory capcity in bytes if successful.
- *              1 if unsuccessful.
- * Notes:       The function reads in the bytes of the CSD register and 
- *              performs checks on the returned values of the CSD where 
- *              possible, not just those used for the calculation.  
- *              See SD Card Physical Layer Specification for specifics
- *              regarding the calculation.
-******************************************************************************/
+
+// Calculate and return the memory capacity of the SD Card in Bytes.
 uint32_t sd_GetMemoryCapacity(void)
 {
     //Initialize parameter values needed for memory capacity calculation.
@@ -184,17 +142,7 @@ uint32_t sd_GetMemoryCapacity(void)
 
 
 
-/******************************************************************************
- * Function:    sd_ReadSingleDataBlock(uint32_t address)
- * Description: Reads in a single data block from the SD card at address
- *              specified in the argument and stores in a DataBlock struct
- *              variable that includes the data bytes of the block, errors 
- *              returned, and CRC returned. 
- * Argument(s): Address of data block to read.
- * Returns:     DataBlock struct. See SD_MISC.H for details.
- * Notes:       The length of the data block is specified by the 
- *              DATA_BLOCK_LEN defined in SD_SPI.H. This should be 512-bytes.
-******************************************************************************/
+// Read a single block from an SD card into DataBlock struct
 DataBlock sd_ReadSingleDataBlock(uint32_t address)
 {
     DataBlock ds;
@@ -249,22 +197,7 @@ DataBlock sd_ReadSingleDataBlock(uint32_t address)
 
 
 
-/******************************************************************************
- * Function:    sd_PrintDataBlock(uint8_t *block)
- * Description: Prints the contents of the data block array passed in as the
- *              arguement. Prints the hexadecimal value of the data in 1 
- *              section and the corresponding ASCII characters (if valid).
- *              Each data row is prefixed with a block offset value that
- *              corresponds to the address offset of the data in the first 
- *              column of that row.
- * Argument(s): 8-bit unsigned integer array of length DATA_BLOCK_LEN (defined
- *              in SD_SPI.H and should = 512).  
- * Returns:     VOID
- * Notes:       If the data does not correspond to a printable ASCII character 
- *              then the function will print an empty character ' ' if data
- *              is one of the control characters (i.e. <32) and a '.' 
- *              character if the data value is > 128.
-******************************************************************************/
+// Print the data in the array pointed to by *block.
 void sd_PrintDataBlock(uint8_t *block)
 {
     print_str("\n\n\r BLOCK OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
@@ -307,16 +240,7 @@ void sd_PrintDataBlock(uint8_t *block)
 
 
 
-/****************************************************************************************
- * Function:    sd_PrintMultipleDataBlocks(uint32_t start_address, 
- *                                         uint32_t numOfBlocks)
- * Description: Prints multiple, consecutive data blocks using READ_MULTIPLE_BLOCK
- *              command and sd_PrintDataBlock(). The range of data blocks to be printed 
- *              begin at start_address and ending at start_address + (numOfBlocks - 1).
- * Argument(s): start address and number of blocks to read.
- * Returns:     VOID
- * Notes:       
-****************************************************************************************/
+// Print multiple data blocks to screen.
 void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
 {
     DataBlock ds;
@@ -368,16 +292,8 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
 
 
 
-/***********************************************************************************
- * Function:    sd_SearchNonZeroBlocks(uint32_t begin_block, 
- *                                      uint32_t end_block)
- * Description: Searches between a specified range of blocks for any blocks that
- *              have non-zero values and prints those block numbers to screen. 
- * Argument(s): 2 32-bit arguments that specify the beginning and ending block in 
- *              the search.
- * Returns:     VOID
- * Notes:       
-***********************************************************************************/
+// Prints the block number of all blocks between begin_block and end_block 
+// that have any non-zero bytes, to assist in finding blocks that have data.
 void sd_SearchNonZeroBlocks(uint32_t begin_block, uint32_t end_block)
 {
     DataBlock ds;
@@ -410,28 +326,7 @@ void sd_SearchNonZeroBlocks(uint32_t begin_block, uint32_t end_block)
 
 
 
-/****************************************************************************************
- * Function:    sd_WriteSingleDataBlock(uint32_t address, 
- *                                      uint8_t *dataBuffer)
- * Description: Writes the data in the dataBuffer to the block specified by address.
- * Argument(s): uint32_t address:       address of data block to write to.
- *              uint8_t  *dataBuffer:   pointer to array (length DATA_BLOCK_LEN) of data
- *                                      bytes that will be written to the block 
- *                                      specified by address.
- * Returns:     Write Error Code whose value is composed of a Data Response Code in the 
- *              MSByte and the most recent R1 response in the LSByte. 
- * Notes:       1) Byte returned by SD Card for the Data Response Token is of the form
- *                 xxx0SSS1, where:
- *                                 xxx = don't care 
- *                                 SSS = 010: Data Accepted
- *                                 SSS = 101: Data rejected due to a CRC Error.
- *                                 SSS = 101: Data rejected due to a Write Error.
- * 
- *              2) If returned value indicates a write error occurred then the SEND_STATUS 
- *                 command should be sent in order to get the cause of the write error.  
- *              3) The data buffer length should be the value of DATA_BLOCK_LEN set in 
- *                 SD_SPI.H. This value should always be 512 (bytes).
-*******************************************************************************************/
+// Writes data in the array pointed at by *dataBuffer to the block at 'address' 
 uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
 {
     uint8_t DataResponseToken;  // a data response token is returned from the SD card upon
@@ -524,26 +419,8 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
 
 
 
-/****************************************************************************************
- * Function:    sd_WriteMultipleDataBlocks(uint32_t address, 
- *                                           uint8_t  nob,
- *                                           uint8_t *dataBuffer)
- * Description: Writes the data in the dataBuffer to all blocks consecutively in the 
- *              range of [address:address + nob] (inclusive). Currently this will write
- *              the same data in the dataBuffer to every block in the block range.
- * Argument(s): uint32_t address:       address of first byte in first block to write to.
- *              uint8_t  *dataBuffer:   pointer to array of data in memory that will be 
- *                                      written to the SD card. The array length should 
- *                                      be of length DATA_BLOCK_LEN in SD_SPI.H.
- * Returns:     Write Error Code whose value is composed of a Data Response Code in the 
- *              MSByte and the most recent R1 response in the LSByte. 
- * Notes:       1) Byte returned by SD Card for the Data Response Token is of the same
- *                 form specified in sd_WriteSingleDataBlock().
- *              2) If returned value indicates a write error occurred then the SEND_STATUS 
- *                 command should be sent in order to get the cause of the write error.  
- *              3) Call ACMD22 after this completes to find get the number blocks
- *                 that were successfully written to.
-*******************************************************************************************/
+// Writes data in the array pointed at by *dataBuffer to multiple
+// blocks specified by 'nob' and beginning at 'address'. 
 uint16_t sd_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *dataBuffer)
 {
     uint8_t DataResponseToken;  // a data response token is returned from the SD card upon
@@ -653,15 +530,7 @@ uint16_t sd_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *data
 
 
 
-/********************************************************************************
- * Function:    sd_printWriteError(uint16_t err)
- * Description: prints the response returned by sd_WriteSingleDataBlock() in a 
- *              readable form.  Includes the R1 response as well as the value of 
- *              Data Response Token if it is valid.
- * Argument(s): 16-bit response from sd_WriteSingleDataBlock()
- * Returns:     VOID
- * Notes:             
- * ******************************************************************************/
+// Prints the error code returned by sd_WriteSingleDataBlock().
 void sd_PrintWriteError(uint16_t err)
 {
     //print R1 portion of initiailzation response
@@ -692,16 +561,8 @@ void sd_PrintWriteError(uint16_t err)
 
 
 
-/********************************************************************************
- * Function:    sd_NumberOfWellWrittenBlocks(void)
- * Description: returns the number of well written blocks after a multi-block 
- *              write operation is performed. Call this function if 
- *              sd_WriteMultipleDataBlocks() returns write error to see how many
- *              blocks were successfully written to.
- * Argument(s): VOID
- * Returns:     32-byte number of well written blocks. 0 if error.
- * Notes:             
- * ******************************************************************************/
+// Returns the number of well written blocks after a 
+// multi-block write operation is performed.
 uint32_t sd_NumberOfWellWrittenBlocks(void)
 {
     uint32_t wwwb = 0; //well written blocks. initialized to zero
@@ -756,21 +617,11 @@ uint32_t sd_NumberOfWellWrittenBlocks(void)
 
     return wwwb;
 }
+//END sd_NumberOfWellWrittenBlocks()
 
 
 
-
-/*****************************************************************************
- * Function:    sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
- * Description: Erases all blocks between, and including, the blocks 
- *              containing start_address and end_address.
- * Argument(s): 1) uint32_t start_address: first block to erase includes 
- *                                         start address.
- *              2) uint32_t end_address:   last block to erase includes 
- *                                         end address.
- * Returns:     error code. see sd_misc.h
- * Notes:             
- * ***************************************************************************/
+// Erases blocks from start_address to end_address (inclusive)
 uint16_t sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
 {
     uint8_t R1 = 0;
@@ -835,15 +686,7 @@ uint16_t sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
 
 
 
-/********************************************************************************
- * Function:    sd_PrintEraseBlockError(uint16_t err)
- * Description: prints the response returned by sd_EraseBlocks() in readable form.
- *              Includes the R1 response as well as other errors specific to the 
- *              Erase function.
- * Argument(s): uint16_t err: 16-bit response from sd_WriteSingleDataBlock()
- * Returns:     VOID
- * Notes:       
- * ******************************************************************************/
+// Prints the error code returned by sd_Eraseblocks()
 void sd_PrintEraseBlockError(uint16_t err)
 {
     //print R1 portion of initiailzation response
