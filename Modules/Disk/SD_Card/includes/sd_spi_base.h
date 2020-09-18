@@ -54,9 +54,11 @@
 #define DATA_BLOCK_LEN 512
 
 
+
 // Macros for asserting / deasserting the (CS) pin.
 #define CS_LOW    SPI_PORT &= ~(1<<SS);  // Assert CS
 #define CS_HIGH   SPI_PORT |= (1<<SS);   // Deassert CS
+
 
 
 // SD Card Commands available in SPI Mode.     
@@ -242,7 +244,7 @@ void sd_printR1(uint8_t R1);
  * Notes:       The sd_SPI_Mode_Init() response includes the last R1 response 
  *              returned by the SD card as well as the other initialization 
  *              errors.       
- * ******************************************************************************/
+ * ***************************************************************************/
 void sd_printInitResponse(uint32_t err);
 
 
