@@ -47,7 +47,8 @@ int main(void)
             break;
         }
     }
-    sd_printInitResponse(initResponse);
+    print_str("Printing R1 Response for init = "); sd_printR1((uint8_t)(0x000FF&initResponse));
+    print_str("\n\rinitialization response = "); sd_printInitResponse(initResponse);
 
 
 
@@ -71,11 +72,12 @@ int main(void)
 
 
         // ***** test read/print multiple data block *******
+        /*
         int nob = 3;
         uint32_t block = 10;
         uint32_t address = block * DATA_BLOCK_LEN; // the address of first byte in block.   
         sd_PrintMultipleDataBlocks(address,nob);
-
+        */
 
 
 
