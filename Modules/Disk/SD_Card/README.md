@@ -1,14 +1,32 @@
-# avr-SDCard
-SD Card project - AVR ATmega1280 target 
+# SD Card Module
+Used to execute the SPI mode SD card command set from an AVR host.
 
 # Purpose
-Establish a set of functions for base-level interaction with an SD card in SPI Mode using an ATmega1280 microcontroller.  This includes an SD card SPI initialization routine, a send SD command function, a receive SD response function, and a few helper functions.  These base-level SD functions can then be used to build other routines for more advanced interaction specific to other projects.
+To establish a set of functions for access and control of an SD card by an AVR microcontroller. This module is intended to be used as a phyiscal disk layer operating underneath a file system module, however, it can simply be used by itself for raw data access (read/write/erase) and disk control as it is possible to execute any valid SD Card SPI Mode command from this module.
 
 # Details
-Written in C and uses the avr-gcc.
+TARGET: AVR ATmega1280 microcontroller
+LANGUAGE: C 
+COMPILER: Successfully compiles with avr-gcc
 
-What I call the base (or primary) SD functions are defined in SD_SPI.C (needs SD_SPI.H). These are the functions that are required for communicating with an the SD card in SPI Mode.  SD_SPI.C includes a few additional helper functions as well. 
+# Overview
+* The SD Card Module is itself modularized into base-level functions (SD_SPI_BASE) and data access functions (SD_DATA_ACCESS). 
 
+* The base-level functions defined in SD_SPI_BASE.C are required by any implementation of this module.  Its primary tasks include:
+  * Initializing the SD Card into SPI Mode.
+  * Sending SPI-specific SD card commands/arguments to the SD card.
+  * Receiving the SD card's returned bytes in response to any command sent.  
+  * Additional helper functions. Their description is included in the "Detailed Description".
+
+
+* The data access functions defined in (SD_DATA_ACCESS) require the base-level functions to handle specific data access routines, such as:
+  * Reading and writing single data blocks.
+  * Reading and writing mulitple data blocks.
+  * Erasing data blocks.
+  * Data print functions.
+  * Additional miscellaneous functions. Their description is included in the "Detailed Description".
+
+# Detailed Description
 Base-Level Functions in SD_SPI.C:
   1) sd_SPI_Mode_Init(): An SD initialization routine to intialize the SD card into SPI mode. This    must be must be called first and complete successfully before any other interaction with the SD card will be successful/valid. Returns an initialization error code that also includes the most recent R1 response.  An initialization error code of 0 indicates the card has been successfully initialized. Any other error code indicates the initialization failed. Pass the error to sd_printInitResponse(err) to read the initialization error.
   2) sd_SendCommand(cmd, arg): Sends the command/argument/CRC7 combination to the SD card via the SPI port.  The CRC7 value is calculated and returned from sd_CRC7() which is called directly from the sd_SendCommand function.
@@ -25,10 +43,8 @@ Once the SD Card is initialized, all other host interaction with the SD Card can
 
 The SD_MSG flag in SD_SPI.H can be used for printing messages associated with functions in SD_SPI.C.  This was helpful when writing the code so I left it in.  If you use this code, you may find it useful as well while troubleshooting.  Recommend setting this flag to 1 for normal operation (ERROR messages only).
 
-
 An SDMISC.C is intended to be for any additional miscellaneous SD Card raw data access, calculation, and printing functions that I decide to create.
 
-This is all still a work in progress.
 
 # Additional Notes / Limitations / Warnings
 * This code has only been tested using an ATmega1280 microcontroller, but assuming program data space and memory are sufficient, I would expect it to be easily ported to other comparable AVR microcontrollers once the USART and SPI port assignments are modified.

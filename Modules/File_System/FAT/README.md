@@ -1,4 +1,4 @@
-# FAT Filesystem
+# FAT Filesystem Module
 AVR Module for reading a FAT32 formatted disk/volume
 
 # Purpose
