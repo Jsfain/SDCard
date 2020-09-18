@@ -1,22 +1,22 @@
 /******************************************************************************
  * SD_SPI_BASE.C
- * 
+ *
  * TARGET
  * ATmega 1280
  *
  * DESCRIPTION
  * Defines the base-level SD card functions for SPI mode.
- * 
+ *
  * FUNCTION LIST
  * 1) uint32_t  sd_SPI_Mode_Init(void)
  * 2) void      sd_SendByte(uint8_t data)
  * 3) uint8_t   sd_ReturnByte(void)
  * 4) void      sd_SendCommand(uint8_t cmd, uint32_t arg)
  * 5) uint8_t   sd_CRC7(uint64_t tca)
- * 6) uint8_t   sd_getR1(void) 
+ * 6) uint8_t   sd_getR1(void)
  * 7) void      sd_printR1(uint8_t R1)
  * 8) void      sd_printInitResponse(uint32_t err)
- * 
+ *
  * Author: Joshua Fain
  * Date:   9/17/2020
  * ***************************************************************************/
@@ -34,7 +34,7 @@
 // Initializes a standard capacity SD card into SPI mode
 uint32_t sd_SPI_Mode_Init(void)
 {
-    uint8_t R1 = 0;//R1 response returned for every SD Command 
+    uint8_t R1 = 0;//R1 response returned for every SD Command
     uint8_t R7[5]; //R7 response returned by SEND_IF_COND (CMD8)
 
     //Wait up to 80 clock cycles for power up to complete.
@@ -42,7 +42,7 @@ uint32_t sd_SPI_Mode_Init(void)
 
     // ********************
     // GO_IDLE_STATE (CMD0)
-    CS_LOW;       
+    CS_LOW;
     sd_SendCommand(GO_IDLE_STATE, 0);
     R1 = sd_getR1();
     CS_HIGH;
@@ -82,7 +82,7 @@ uint32_t sd_SPI_Mode_Init(void)
     // CRC_ON_OFF (CMD59)
     R1 = 0;
     CS_LOW;
-    sd_SendCommand(CRC_ON_OFF,0);  //arg = 0 CRC OFF (default) 
+    sd_SendCommand(CRC_ON_OFF,0);  //arg = 0 CRC OFF (default)
                                    //arg = 1 CRC ON
     R1 = sd_getR1();
     CS_HIGH;
@@ -100,7 +100,7 @@ uint32_t sd_SPI_Mode_Init(void)
     {
         // Continue sending host capacity info to SD card until card signals it
         // is no longer in the idle state (R1 != 1) or times out.
-        uint8_t timeOut = 0;
+        uint8_t timeout = 0;
         do{
             R1 = 0;
             CS_LOW;
@@ -116,7 +116,7 @@ uint32_t sd_SPI_Mode_Init(void)
             CS_HIGH;
             if (R1 > 1) { return (FAILED_SD_SEND_OP_COND | R1); }
 
-            if(timeOut++ >= 0x05) 
+            if(timeout++ >= 0x05)
             { return (FAILED_SD_SEND_OP_COND | OUT_OF_IDLE_TIMEOUT | R1); }
         }while( R1 & 1 );
     }
@@ -164,7 +164,7 @@ uint32_t sd_SPI_Mode_Init(void)
     if( (UHSII !=  0) || //0 for non-UHSII
         (CO2T  !=  0) || //0 for Over 2TB NOT supported
         (S18A  !=  0) || //0 for NO switching to 1.8V Accepted.
-        (VOLTAGE_RANGES_ACCEPTED != 0x1FF)  ) // Voltages over range 
+        (VOLTAGE_RANGES_ACCEPTED != 0x1FF)  ) // Voltages over range
                                               // 2.7 to 3.6V supported.
     {
         CS_HIGH;
@@ -176,7 +176,7 @@ uint32_t sd_SPI_Mode_Init(void)
 
     return OUT_OF_IDLE; //initialization succeded
 }
-//END sd_SPI_Mode_Init()
+// END sd_SPI_Mode_Init()
 
 
 
@@ -185,7 +185,7 @@ void sd_SendByte(uint8_t data)
 {
     SPI_MasterTransmit(data);
 }
-//END sd_SendByte()
+// END sd_SendByte()
 
 
 
@@ -195,52 +195,31 @@ uint8_t sd_ReturnByte(void)
 {
     sd_SendByte(0xFF);
     return SPI_MasterRead();
-} 
-//END sd_ReturnByte()
+}
+// END sd_ReturnByte()
 
 
 
 // Sends SD command, argument, and CRC via SPI.
 void sd_SendCommand(uint8_t cmd, uint32_t arg)
 {
-    uint8_t tc = 0x40 | cmd;    //Initialize transmit and command byte. 
-                                //The two MSBs of command are always 0b01
-    
-    //Initialize variable for 48-bit SD Card command. From MSB to LSB this is 
-    //TRANSMIT (2b) | CMD (6b) | ARG (32b) | CRC (7b) | STOP (1b)
+    // Structure of command / argument sent to an
+    // SD card via SPI, from MSB --> LSB. b = bit.
+    // TRANSMIT (2b) = 0b01 | CMD (6b) | ARG (32b) | CRC (7b) | STOP (1b) = 0b1
     uint64_t tcacs = 0;
 
-    //shift TRANSMIT, CMD, and ARG bits into place
+    uint8_t tc = 0x40 | cmd; // Transmit & Command byte.
+                             // Transmit bits are always 0b01
+    
     tcacs = (tcacs | tc) << 40;
     tcacs = tcacs | ((uint64_t)(arg) << 8);
 
-    uint8_t crc = sd_CRC7(tcacs); //Get CRC for command
+    uint8_t crc = sd_CRC7(tcacs);
  
     tcacs = tcacs | crc | 1;  //complete loading of 48-bit command into tcacs
                               //by setting CRC and stop transmission bits
 
-    if(SD_MSG > 2) 
-    {
-        if(cmd==41) print_str("\n\r>> DEBUG:   SENDING [ACMD "); 
-        else print_str("\n\r>> DEBUG:   SENDING [CMD "); 
-        print_dec(cmd);  
-        print_str(" | ARG 0x"); print_hex(arg);  
-        print_str(" | CRC 0x"); print_hex(crc);
-        print_str("]");
-    }
-
-    if(SD_MSG > 3)
-    {
-        print_str("\n\r>> VERBOSE: Bytes sent for SD Command:");
-        print_str("\n\r            Byte[5]: 0x"); print_hex((uint8_t)(tcacs >> 40));
-        print_str("\n\r            Byte[4]: 0x"); print_hex((uint8_t)(tcacs >> 32));
-        print_str("\n\r            Byte[3]: 0x"); print_hex((uint8_t)(tcacs >> 24));
-        print_str("\n\r            Byte[2]: 0x"); print_hex((uint8_t)(tcacs >> 16));
-        print_str("\n\r            Byte[1]: 0x"); print_hex((uint8_t)(tcacs >> 8));
-        print_str("\n\r            Byte[0]: 0x"); print_hex((uint8_t)tcacs);
-    }
-
-    for(int i=0;i<=2;i++)   sd_SendByte(0xFF);	//Wait 16 clock cycles before sending command.
+    for(int i=0;i<=2;i++) { sd_SendByte(0xFF); } // Wait 16 clk cycles.
     
     // Send command to SD Card via SPI
     sd_SendByte((uint8_t)(tcacs >> 40));
@@ -249,36 +228,35 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg)
     sd_SendByte((uint8_t)(tcacs >> 16));
     sd_SendByte((uint8_t)(tcacs >> 8));
     sd_SendByte((uint8_t)tcacs);
-} 
-//END  sd_SendCommand()
+}
+// END  sd_SendCommand()
 
 
 
 // Generates and returns CRC7 bits for SD command/argument
 uint8_t sd_CRC7(uint64_t tca)
-{    
-    uint64_t test = 0x800000000000; //initialize test variable used to 
-                                    //determine if division will take place 
-                                    //during a given iteration.
+{
+    uint64_t test = 0x800000000000; // test will determine if division will
+                                    // take place during a given iteration.
     
-    //divisor 0b10001001 (0x89) used by SD standard to generate CRC7. 
+    //divisor 0b10001001 (0x89) used by SD standard to generate CRC7.
     //byte 6 of divisor variable is initialized with this value.
     uint64_t divisor = 0x890000000000;
 
-    //initialize result with transmit/command/argument portion of SD command.
-    uint64_t result = tca; 
+    //initialize result with transmit/cmd/arg portion of SD command.
+    uint64_t result = tca;
 
     //calculate CRC7
     for (int i = 0; i < 40; i++)
     {
         if(result&test)
-            result ^= divisor;        
+            result ^= divisor;
         divisor  = (divisor >> 1);
-        test = (test >> 1);        
+        test = (test >> 1);
     }
     return(result);
-} 
-//END _CRC7()
+}
+// END _CRC7()
 
 
 
@@ -286,24 +264,23 @@ uint8_t sd_CRC7(uint64_t tca)
 uint8_t sd_getR1(void)
 {
     uint8_t R1;
-    uint8_t attempt = 0;
+    uint8_t timeout = 0;
 
     while((R1 = sd_ReturnByte()) == 0xFF)
-    {  
-        if(attempt++ >= 0xFF)
-            return R1_TIMEOUT;
+    {
+        if(timeout++ >= 0xFF) return R1_TIMEOUT;
     }
     return R1;
 }
-//END sd_getR1()
+// END sd_getR1()
 
 
 
 // Prints the results of the R1 response in readable form.
 void sd_printR1(uint8_t R1)
 {
-    if(SD_MSG)  // modified 9/1/2020
-    {
+    //if(SD_MSG)  // modified 9/1/2020
+    //{
         if(R1&R1_TIMEOUT)
             print_str(" R1_TIMEOUT,"); //Not part of SD card R1 standard.
         if(R1&PARAMETER_ERROR)
@@ -322,17 +299,17 @@ void sd_printR1(uint8_t R1)
             print_str(" IN IDLE STATE");
         if(R1==0) // R1 = 0 NO ERRORS;
             print_str(" OUT OF IDLE");
-    }
+    //}
 }
-//END sd_printR1()
+// END sd_printR1()
 
 
 
-// Prints the response returned by sd_SPI_Mode_Init() in a 
+// Prints the response returned by sd_SPI_Mode_Init() in a
 void sd_printInitResponse(uint32_t err)
 {
-    if(SD_MSG)
-    {
+    //if(SD_MSG)
+    //{
         //print R1 portion of initiailzation response
         print_str("\n\r>> R1 response returned from SD Card Initialization:");
         sd_printR1((uint8_t)(0x000FF&err));
@@ -363,6 +340,6 @@ void sd_printInitResponse(uint32_t err)
             print_str(" FAILED_SEND_CSD");
         if(err == 0) // NO ERRORS
             print_str(" INIT_SUCCESS\n\r");
-    }
+    //}
 }
-//END sd_printInitErrors()
+// END sd_printInitErrors()
