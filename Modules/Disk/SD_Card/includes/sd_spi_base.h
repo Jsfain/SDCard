@@ -13,10 +13,9 @@
  * 2) void      sd_SendByte(uint8_t data)
  * 3) uint8_t   sd_ReturnByte(void)
  * 4) void      sd_SendCommand(uint8_t cmd, uint32_t arg)
- * 5) uint8_t   sd_CRC7(uint64_t tca)
- * 6) uint8_t   sd_getR1(void) 
- * 7) void      sd_printR1(uint8_t R1)
- * 8) void      sd_printInitResponse(uint32_t err)
+ * 5) uint8_t   sd_getR1(void) 
+ * 6) void      sd_printR1(uint8_t R1)
+ * 7) void      sd_printInitResponse(uint32_t err)
  * 
  * Author: Joshua Fain
  * Date:   9/17/2020
@@ -185,23 +184,6 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg);
  *                 value is valid.
 ******************************************************************************/
 uint8_t sd_ReturnByte(void);
-
-
-
-/******************************************************************************
- * Function:    sd_CRC7(uint64_t tca)
- * Description: Generates and returns CRC7 bits for SD command/argument 
- *              combination. Should only be called from sd_SendCommand()
- * Argument(s): 40-bit Transmission, Command, Argument (tca) bits to be sent as
- *              command to SD Card. 24-bit leading zeros in the argument are
- *              not used
- * Returns:     1 byte with the 7 most significant bits corresponding to the 
- *              calculated CRC7.  
- * Notes:       The value of the LSB returned does not matter, it will be 
- *              set to 1 as the transmission stop bit regardless of the value
- *              returned here.
-******************************************************************************/
-uint8_t sd_CRC7(uint64_t ca);
 
 
 

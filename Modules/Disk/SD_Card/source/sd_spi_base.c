@@ -12,15 +12,14 @@
  * 2) void      sd_SendByte(uint8_t data)
  * 3) uint8_t   sd_ReturnByte(void)
  * 4) void      sd_SendCommand(uint8_t cmd, uint32_t arg)
- * 5) uint8_t   sd_CRC7(uint64_t tca)
- * 6) uint8_t   sd_getR1(void)
- * 7) void      sd_printR1(uint8_t R1)
- * 8) void      sd_printInitResponse(uint32_t err)
+ * 5) uint8_t   sd_getR1(void)
+ * 6) void      sd_printR1(uint8_t R1)
+ * 7) void      sd_printInitResponse(uint32_t err)
  *
  * Author: Joshua Fain
- * Date:   9/17/2020
+ * Date:   9/20/2020
  * ***************************************************************************/
- 
+
 
 
 #include <stdint.h>
@@ -30,6 +29,18 @@
 #include "../../../../general/includes/prints.h"
 
 
+
+/******************************************************************************
+ *                        "PRIVATE" FUNCTION DECLARATIONS
+******************************************************************************/
+
+uint8_t pvt_CRC7(uint64_t ca);
+
+
+
+/******************************************************************************
+ *                         "PUBLIC" FUNCTION DEFINITIONS
+******************************************************************************/
 
 // Initializes a standard capacity SD card into SPI mode
 uint32_t sd_SPI_Mode_Init(void)
@@ -214,7 +225,7 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg)
     tcacs = (tcacs | tc) << 40;
     tcacs = tcacs | ((uint64_t)(arg) << 8);
 
-    uint8_t crc = sd_CRC7(tcacs);
+    uint8_t crc = pvt_CRC7(tcacs);
  
     tcacs = tcacs | crc | 1;  //complete loading of 48-bit command into tcacs
                               //by setting CRC and stop transmission bits
@@ -230,33 +241,6 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg)
     sd_SendByte((uint8_t)tcacs);
 }
 // END  sd_SendCommand()
-
-
-
-// Generates and returns CRC7 bits for SD command/argument
-uint8_t sd_CRC7(uint64_t tca)
-{
-    uint64_t test = 0x800000000000; // test will determine if division will
-                                    // take place during a given iteration.
-    
-    //divisor 0b10001001 (0x89) used by SD standard to generate CRC7.
-    //byte 6 of divisor variable is initialized with this value.
-    uint64_t divisor = 0x890000000000;
-
-    //initialize result with transmit/cmd/arg portion of SD command.
-    uint64_t result = tca;
-
-    //calculate CRC7
-    for (int i = 0; i < 40; i++)
-    {
-        if(result&test)
-            result ^= divisor;
-        divisor  = (divisor >> 1);
-        test = (test >> 1);
-    }
-    return(result);
-}
-// END _CRC7()
 
 
 
@@ -331,3 +315,46 @@ void sd_printInitResponse(uint32_t err)
         print_str(" INIT_SUCCESS\n\r");
 }
 // END sd_printInitErrors()
+
+
+
+/******************************************************************************
+ *                        "PRIVATE" FUNCTION DEFINITIONS
+******************************************************************************/
+
+
+/******************************************************************************
+ * Description: Generates and returns CRC7 bits for SD command/argument 
+ *              combination. Should only be called from sd_SendCommand()
+ * Argument(s): 40-bit Transmission, Command, Argument (tca) bits to be sent as
+ *              command to SD Card. 24-bit leading zeros in the argument are
+ *              not used
+ * Returns:     1 byte with the 7 most significant bits corresponding to the 
+ *              calculated CRC7.  
+ * Notes:       The value of the LSB returned does not matter, it will be 
+ *              set to 1 as the transmission stop bit regardless of the value
+ *              returned here.
+******************************************************************************/
+uint8_t pvt_CRC7(uint64_t tca)
+{
+    uint64_t test = 0x800000000000; // test will determine if division will
+                                    // take place during a given iteration.
+    
+    //divisor 0b10001001 (0x89) used by SD standard to generate CRC7.
+    //byte 6 of divisor variable is initialized with this value.
+    uint64_t divisor = 0x890000000000;
+
+    //initialize result with transmit/cmd/arg portion of SD command.
+    uint64_t result = tca;
+
+    //calculate CRC7
+    for (int i = 0; i < 40; i++)
+    {
+        if(result&test)
+            result ^= divisor;
+        divisor  = (divisor >> 1);
+        test = (test >> 1);
+    }
+    return(result);
+}
+// END _CRC7()
