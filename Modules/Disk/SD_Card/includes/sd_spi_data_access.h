@@ -1,5 +1,5 @@
 /******************************************************************************
- * SD_SPI_SF.H
+ * SD_SPI_DATA_ACCESS.H
  *  
  * TARGET
  * ATmega 1280
@@ -11,28 +11,27 @@
  * with the SD card is handled by functions defined in SD_SPI_BASE
  * 
  * FUNCTION LIST
- * 1) uint32_t  sd_GetMemoryCapacity(void)
- * 2) DataBlock sd_ReadSingleDataBlock(uint32_t address)
- * 3) void      sd_PrintDataBlock(uint8_t *block)
- * 4) void      sd_PrintMultipleDataBlocks(
+ * 1) DataBlock sd_ReadSingleDataBlock(uint32_t address)
+ * 2) void      sd_PrintDataBlock(uint8_t *block)
+ * 3) void      sd_PrintMultipleDataBlocks(
  *                      uint32_t start_address,
  *                      uint32_t numOfBlocks)
- * 5) void      sd_SearchNonZeroBlocks(
+ * 4) void      sd_SearchNonZeroBlocks(
  *                      uint32_t begin_block,
  *                      uint32_t end_block)
- * 6) uint16_t  sd_WriteSingleDataBlock(
+ * 5) uint16_t  sd_WriteSingleDataBlock(
  *                      uint32_t address, 
  *                      uint8_t *dataBuffer)
- * 7) uint16_t  sd_WriteMultipleDataBlocks(
+ * 6) uint16_t  sd_WriteMultipleDataBlocks(
  *                      uint32_t address, 
  *                      uint8_t nob, 
  *                      uint8_t *dataBuffer)
  * 7) void      sd_PrintWriteError(uint16_t err)
  * 8) uint32_t  sd_NumberOfWellWrittenBlocks(void)
- * 8) uint16_t  sd_EraseBlocks(
+ * 9) uint16_t  sd_EraseBlocks(
  *                      uint32_t start_address,
  *                      uint16_t end_address)           
- * 9) void      sd_PrintEraseBlockError(uint16_t err)
+ * 10)void      sd_PrintEraseBlockError(uint16_t err)
  * 
  * 
  * Author: Joshua Fain
@@ -41,8 +40,8 @@
 
 
 
-#ifndef SD_MISC_H
-#define SD_MISC_H
+#ifndef SD_SPI_DATA_ACCESS_H
+#define SD_SPI_DATA_ACCESS_H
 
 
 
@@ -86,17 +85,6 @@ typedef struct  DataBlock {
 /******************************************************************************
  *                          FUNCTION DECLARATIONS
  *****************************************************************************/
-
-
-/******************************************************************************
- * Function:    sd_getMemoryCapacity(void) 
- * Description: Calculates and returns the capacity of the SD card in bytes
- * Argument:    VOID
- * Returns:     uint32_t capcity of the SD card in bytes, if successful,
- *              and 1 if unsuccessful.
-******************************************************************************/
-uint32_t sd_GetMemoryCapacity(void);
-
 
 
 /******************************************************************************
@@ -265,4 +253,4 @@ void sd_PrintEraseBlockError(uint16_t err);
 
 
 
-#endif // SD_MISC_H
+#endif // SD_SPI_DATA_ACCESS_H
