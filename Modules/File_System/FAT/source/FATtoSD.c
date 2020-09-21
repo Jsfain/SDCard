@@ -1,6 +1,6 @@
 #include <avr/io.h>
-#include "../includes/sd_spi.h"
-#include "../includes/sd_misc.h"
+#include "../includes/sd_spi_base.h"
+#include "../includes/sd_spi_sf.h"
 #include "../includes/fattosd.h"
 
 

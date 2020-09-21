@@ -13,8 +13,8 @@
 #include "../includes/usart.h"
 #include "../includes/spi.h"
 #include "../includes/prints.h"
-#include "../includes/sd_spi.h"
-#include "../includes/sd_misc.h"
+#include "../includes/sd_spi_base.h"
+#include "../includes/sd_spi_sf.h"
 #include "../includes/fat.h"
 
 
@@ -33,12 +33,12 @@ int main(void)
     {
         //print_str("\n\n\rSD Card Initialization Attempt: ");
         print_dec(i);
-        initResponse = sd_SPI_Mode_Init();
+        initResponse = SD_InitializeSPImode();
         if(initResponse != OUT_OF_IDLE) // If response is anything other than 0 (OUT_OF_IDLE) then initialization failed.
         {    
             print_str("\n\rSD INIT FAILED RESPONSE = 0x");
             print_hex(initResponse);
-            sd_printInitResponse(initResponse);
+            SD_PrintInitError(initResponse);
         }
         else
         {   
