@@ -9,7 +9,31 @@
  * microcontroller operating in SPI mode. Uses SD_SPI_BASE.C(H) for physical
  * interface to the SD card.
  * 
- *
+ * 
+ * FUNCTION LIST
+ * 1) DataBlock SD_ReadSingleDataBlock(uint32_t address)
+ * 2) void      SD_PrintDataBlock(uint8_t *block)
+ * 3) void      SD_PrintMultipleDataBlocks(
+ *                      uint32_t start_address,
+ *                      uint32_t numOfBlocks)
+ * 4) void      SD_SearchNonZeroBlocks(
+ *                      uint32_t begin_block,
+ *                      uint32_t end_block)
+ * 5) uint16_t  SD_WriteSingleDataBlock(
+ *                      uint32_t address, 
+ *                      uint8_t *dataBuffer)
+ * 6) uint16_t  SD_WriteMultipleDataBlocks(
+ *                      uint32_t address, 
+ *                      uint8_t nob, 
+ *                      uint8_t *dataBuffer)
+ * 7) void      SD_PrintWriteError(uint16_t err)
+ * 8) uint32_t  SD_NumberOfWellWrittenBlocks(void)
+ * 9) uint16_t  SD_EraseBlocks(
+ *                      uint32_t start_address,
+ *                      uint16_t end_address)           
+ * 10)void      SD_PrintEraseBlockError(uint16_t err)
+ * 
+ * 
  * Author: Joshua Fain
  * Date:   9/17/2020
  * ***************************************************************************/
@@ -27,62 +51,57 @@
 
 
 // Read a single block from an SD card into DataBlock struct
-DataBlock sd_ReadSingleDataBlock(uint32_t address)
+uint16_t SD_ReadSingleDataBlock(uint32_t address, DataBlock *ds)
 {
-    DataBlock ds;
+    uint8_t timeout = 0;
+    uint8_t r1;
 
-    uint8_t attempt = 0;
     CS_LOW;
     SD_SendCommand(READ_SINGLE_BLOCK,address);  //Send CMD17 to return a single block;
-    ds.R1 = SD_GetR1(); // Get R1 response
+    r1 = SD_GetR1(); // Get R1 response
 
-    //If R1 is non-zero or times out, then return without getting rest of block.
-    if(ds.R1 > 0)
+    if(r1 > 0)
     {
         CS_HIGH
-        print_str("\n\r>> ERROR:   READ_SINGLE_BLOCK (CMD17) in sd_ReadSingleDataBlock() returned error in R1 response.");
-        SD_PrintR1(ds.R1);
-        ds.ERROR = 1;
-        return ds;
+        return ( R1_ERROR | r1 );
     }
 
-    if(ds.R1 == 0)
+    if(r1 == 0)
     {
-        attempt = 0;
+        timeout = 0;
         uint8_t r = SD_ReceiveByteSPI();
-        while(r != 0xFE)//Start Block Token
+        while(r != 0xFE) //Start Block Token
         {
             r = SD_ReceiveByteSPI();
-            attempt++;
-            if(attempt > 512)
-            {
-                print_str("\n\r>> ERROR:   Timeout while waiting for Start Block Token in sd_ReadSingleDataBlock().");
-                ds.ERROR = 1;
-                return ds;
-            }
+            timeout++;
+            if(timeout > 512) 
+            { 
+                CS_HIGH;
+                return (START_TOKEN_TIMEOUT | r1)
+            };
         }
 
         // if start block token has been received and not timed out then begin reading in the data.
-        if((attempt < 0xFF) && (r== 0xFE))
+        if( (timeout < 0xFF) && (r == 0xFE) )
         {            
             for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
-                ds.data[i] = SD_ReceiveByteSPI();
+                ds->data[i] = SD_ReceiveByteSPI();
 
             for(uint8_t i = 0; i < 2; i++)
-                ds.CRC[i] = SD_ReceiveByteSPI();
+                ds->CRC[i] = SD_ReceiveByteSPI();
                 
             SD_ReceiveByteSPI(); // clear any remaining characters in SD response.
         }
     }
     CS_HIGH;
-    return ds;
+    return READ_SUCCESS;
 }
-//END sd_ReadSingleDataBlock()
+// END SD_ReadSingleDataBlock()
 
 
 
 // Print the data in the array pointed to by *block.
-void sd_PrintDataBlock(uint8_t *block)
+void SD_PrintDataBlock(uint8_t *block)
 {
     print_str("\n\n\r BLOCK OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
     uint16_t block_offset = 0;
@@ -120,12 +139,12 @@ void sd_PrintDataBlock(uint8_t *block)
     }    
     print_str("\n\n\r");
 }
-// END sd_PrintDataBlock(uint8_t *block)
+// END SD_PrintDataBlock(uint8_t *block)
 
 
 
 // Print multiple data blocks to screen.
-void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
+void SD_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
 {
     DataBlock ds;
     int attempt = 0;
@@ -137,7 +156,7 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
     if(ds.R1 > 0)
     {
         CS_HIGH
-        print_str("\n\r>> ERROR:   READ_MULTIPLE_BLOCK (CMD18) in sd_PrintMultipleDataBlocks() returned error in R1 response.");
+        print_str("\n\r>> ERROR:   READ_MULTIPLE_BLOCK (CMD18) in SD_PrintMultipleDataBlocks() returned error in R1 response.");
         SD_PrintR1(ds.R1); //print R1 response if error was returned.
     }
 
@@ -153,8 +172,7 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
                 attempt++;
                 if(attempt > 511)
                 {
-                    print_str("\n\r>> ERROR:   Timeout while waiting for Start Block Token in sd_PrintMultipleDataBlocks().");
-                    ds.ERROR = 1;
+                    print_str("\n\r>> ERROR:   Timeout while waiting for Start Block Token in SD_PrintMultipleDataBlocks().");
                     break;
                 }
             }
@@ -163,7 +181,7 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
             for(uint8_t k = 0; k < 2; k++) ds.CRC[k] = SD_ReceiveByteSPI(); // get CRC response
             print_str("\n\n\r\t\t\t\t\tBLOCK: ");
             print_dec((start_address + (i*512))/512);
-            sd_PrintDataBlock(ds.data); // print data block
+            SD_PrintDataBlock(ds.data); // print data block
         }
         
         SD_SendCommand(STOP_TRANSMISSION,0); // stop data block tranmission 
@@ -178,7 +196,7 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
 
 // Prints the block number of all blocks between begin_block and end_block 
 // that have any non-zero bytes, to assist in finding blocks that have data.
-void sd_SearchNonZeroBlocks(uint32_t begin_block, uint32_t end_block)
+void SD_SearchNonZeroBlocks(uint32_t begin_block, uint32_t end_block)
 {
     DataBlock ds;
     print_str("\n\rSearching for non-zero blocks over range ");
@@ -191,7 +209,8 @@ void sd_SearchNonZeroBlocks(uint32_t begin_block, uint32_t end_block)
     for(uint32_t block = begin_block; block < end_block + 1; block++)
     {
         Address = block * 512;
-        ds = sd_ReadSingleDataBlock(Address);                
+        //ds = SD_ReadSingleDataBlock(Address);
+        SD_ReadSingleDataBlock(Address, &ds);                
         
         for(int i = 0; i<512;i++)
         {
@@ -211,7 +230,7 @@ void sd_SearchNonZeroBlocks(uint32_t begin_block, uint32_t end_block)
 
 
 // Writes data in the array pointed at by *dataBuffer to the block at 'address' 
-uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
+uint16_t SD_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
 {
     uint8_t DataResponseToken;  // a data response token is returned from the SD card upon
                                 // completion of sending an entire block of data.  It is
@@ -227,7 +246,7 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
     if(R1 > 0)
     {
         CS_HIGH
-        print_str("\n\r>> ERROR:   WRITE_BLOCK (CMD24) in sd_WriteSingleDataBlock() returned error in R1 response.");
+        print_str("\n\r>> ERROR:   WRITE_BLOCK (CMD24) in SD_WriteSingleDataBlock() returned error in R1 response.");
         SD_PrintR1(R1);
         return (R1 | INVALID_DATA_RESPONSE);
     }
@@ -256,7 +275,7 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
             if(attempt++ > 0xFF)
             {
                 CS_HIGH;
-                print_str("\n\r>> ERROR:   Timeout while waiting for Data Response Token in sd_WriteSingleDataBlock().  Returning with INVALID_DATA_TOKEN\n\r");
+                print_str("\n\r>> ERROR:   Timeout while waiting for Data Response Token in SD_WriteSingleDataBlock().  Returning with INVALID_DATA_TOKEN\n\r");
                 return (R1 | INVALID_DATA_RESPONSE);
             }  
              
@@ -299,13 +318,13 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)
     }
     return INVALID_DATA_RESPONSE; // successful write returns 0
 }
-//END sd_WriteSingleDataBlock()
+//END SD_WriteSingleDataBlock()
 
 
 
 // Writes data in the array pointed at by *dataBuffer to multiple
 // blocks specified by 'nob' and beginning at 'address'. 
-uint16_t sd_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *dataBuffer)
+uint16_t SD_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *dataBuffer)
 {
     uint8_t DataResponseToken;  // a data response token is returned from the SD card upon
                                 // completion of sending an entire block of data.  It is
@@ -325,7 +344,7 @@ uint16_t sd_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *data
     if(R1 > 0)
     {
         CS_HIGH
-        print_str("\n\r>> ERROR:   WRITE_BLOCK (CMD24) in sd_WriteMultipleDataBlocks() returned error in R1 response.");
+        print_str("\n\r>> ERROR:   WRITE_BLOCK (CMD24) in SD_WriteMultipleDataBlocks() returned error in R1 response.");
         SD_PrintR1(R1);
         return (R1 | retVal); // retVal should be INVALID_DATA_RESPONSE here.
     }
@@ -358,7 +377,7 @@ uint16_t sd_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *data
                 if(attempt++ > 0xFF)
                 {
                     CS_HIGH;
-                    print_str("\n\r>> ERROR:   Timeout while waiting for Data Response Token in sd_WriteMultipleDataBlocks().  Returning with INVALID_DATA_TOKEN\n\r");
+                    print_str("\n\r>> ERROR:   Timeout while waiting for Data Response Token in SD_WriteMultipleDataBlocks().  Returning with INVALID_DATA_TOKEN\n\r");
                     return (R1 | retVal); // retVal should be INVALID_DATA_RESPONSE here.
                 }  
                 
@@ -410,12 +429,12 @@ uint16_t sd_WriteMultipleDataBlocks(uint32_t address, uint8_t nob, uint8_t *data
     CS_HIGH;
     return retVal; // successful write returns 0
 }
-//END sd_WriteMultipleDataBlocks()
+//END SD_WriteMultipleDataBlocks()
 
 
 
-// Prints the error code returned by sd_WriteSingleDataBlock().
-void sd_PrintWriteError(uint16_t err)
+// Prints the error code returned by SD_WriteSingleDataBlock().
+void SD_PrintWriteError(uint16_t err)
 {
     //print R1 portion of initiailzation response
     print_str("\n\r>> R1 Response returned by sd_WriteSingelDataBlock():");
@@ -441,13 +460,13 @@ void sd_PrintWriteError(uint16_t err)
             print_str("\n\r INCORRECT RESPONSE RETURNED");
     }
 }
-//END sd_PrintWriteError()
+//END SD_PrintWriteError()
 
 
 
 // Returns the number of well written blocks after a 
 // multi-block write operation is performed.
-uint32_t sd_NumberOfWellWrittenBlocks(void)
+uint32_t SD_NumberOfWellWrittenBlocks(void)
 {
     uint32_t wwwb = 0; //well written blocks. initialized to zero
     uint8_t R1; // for R1 response.
@@ -459,7 +478,7 @@ uint32_t sd_NumberOfWellWrittenBlocks(void)
     R1 = SD_GetR1();
     if(R1 > 0) 
     { 
-        print_str("\n\r>> ERROR: error returned in R1 response to APP_CMD in sd_NumberOfWellWrittenBlocks(). Returning with invalid value");
+        print_str("\n\r>> ERROR: error returned in R1 response to APP_CMD in SD_NumberOfWellWrittenBlocks(). Returning with invalid value");
         SD_PrintR1(R1);
         return 0;
     }
@@ -468,7 +487,7 @@ uint32_t sd_NumberOfWellWrittenBlocks(void)
     R1 = SD_GetR1();
     if(R1 > 0) 
     { 
-        print_str("\n\r>> ERROR: error returned in R1 response to SEND_NUM_WR_BLOCKS in sd_NumberOfWellWrittenBlocks(). Returning with invalid value");
+        print_str("\n\r>> ERROR: error returned in R1 response to SEND_NUM_WR_BLOCKS in SD_NumberOfWellWrittenBlocks(). Returning with invalid value");
         SD_PrintR1(R1);
         return 0;
     }
@@ -478,7 +497,7 @@ uint32_t sd_NumberOfWellWrittenBlocks(void)
     {
         if(count++ > 0xFE) 
         { 
-            print_str("\n\r>> ERROR: timeout while waiting for start token in sd_NumberOfWellWrittenBlocks(). Returning with invalid value"); 
+            print_str("\n\r>> ERROR: timeout while waiting for start token in SD_NumberOfWellWrittenBlocks(). Returning with invalid value"); 
             return 0;
         }
 
@@ -501,12 +520,12 @@ uint32_t sd_NumberOfWellWrittenBlocks(void)
 
     return wwwb;
 }
-//END sd_NumberOfWellWrittenBlocks()
+//END SD_NumberOfWellWrittenBlocks()
 
 
 
 // Erases blocks from start_address to end_address (inclusive)
-uint16_t sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
+uint16_t SD_EraseBlocks(uint32_t start_address, uint32_t end_address)
 {
     uint8_t R1 = 0;
     
@@ -519,7 +538,7 @@ uint16_t sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
     //If R1 is non-zero or times out, then return with R1 response.
     if(R1 > 0)
     {
-        print_str("\n\r>> ERROR:   ERASE_WR_BLOCK_START_ADDR (CMD32) in sd_EraseBlocks() returned error in R1 response.");
+        print_str("\n\r>> ERROR:   ERASE_WR_BLOCK_START_ADDR (CMD32) in SD_EraseBlocks() returned error in R1 response.");
         SD_PrintR1(R1);
         return (R1 | ERROR_ERASE_START_ADDR);
     }
@@ -532,7 +551,7 @@ uint16_t sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
     //If R1 is non-zero or times out, then return with R1 response.
     if(R1 > 0)
     {
-        print_str("\n\r>> ERROR:   ERASE_WR_BLOCK_END_ADDR (CMD33) in sd_EraseBlocks() returned error in R1 response.");
+        print_str("\n\r>> ERROR:   ERASE_WR_BLOCK_END_ADDR (CMD33) in SD_EraseBlocks() returned error in R1 response.");
         SD_PrintR1(R1);
         return (R1 | ERROR_ERASE_END_ADDR);
     }
@@ -546,7 +565,7 @@ uint16_t sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
     if(R1 > 0)
     {
         CS_HIGH;
-        print_str("\n\r>> ERROR:   ERASE (CMD38) in sd_EraseBlocks() returned error in R1 response.");
+        print_str("\n\r>> ERROR:   ERASE (CMD38) in SD_EraseBlocks() returned error in R1 response.");
         SD_PrintR1(R1);
         return (R1 | ERROR_ERASE);
     }
@@ -559,25 +578,25 @@ uint16_t sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
     {
         if(attempt++ > 0xFFFE) 
         {
-            print_str("\n\r>> ERROR:    Timeout while waiting for card to exit the busy state during block erase in sd_EraseBlockss(). Returning with error(s).\n\r");
+            print_str("\n\r>> ERROR:    Timeout while waiting for card to exit the busy state during block erase in SD_EraseBlockss(). Returning with error(s).\n\r");
             return (R1 | ERROR_BUSY);
         }
     }
     CS_HIGH;
     return ERASE_SUCCESSFUL;
 }
-// END sd_EraseBlocks()
+// END SD_EraseBlocks()
 
 
 
-// Prints the error code returned by sd_Eraseblocks()
-void sd_PrintEraseBlockError(uint16_t err)
+// Prints the error code returned by SD_Eraseblocks()
+void SD_PrintEraseBlockError(uint16_t err)
 {
     //print R1 portion of initiailzation response
-    if(SD_MSG > 1) print_str("\n\r>> INFO:    R1 Response returned by sd_EraseBlocks():");
+    if(SD_MSG > 1) print_str("\n\r>> INFO:    R1 Response returned by SD_EraseBlocks():");
     SD_PrintR1((uint8_t)(0x00FF&err));
 
-    if(SD_MSG > 1) print_str("\n\r>> INFO:    sd_EraseBlocks():");
+    if(SD_MSG > 1) print_str("\n\r>> INFO:    SD_EraseBlocks():");
     
     switch(err&0xFF00)
     {
@@ -600,4 +619,4 @@ void sd_PrintEraseBlockError(uint16_t err)
             print_str("\n\r\t    INVALID ERROR RESPONSE");
     }
 }
-//END sd_PrintWriteError()
+//END SD_PrintWriteError()

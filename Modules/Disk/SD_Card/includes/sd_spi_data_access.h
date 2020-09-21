@@ -11,27 +11,27 @@
  * with the SD card is handled by functions defined in SD_SPI_BASE
  * 
  * FUNCTION LIST
- * 1) DataBlock sd_ReadSingleDataBlock(uint32_t address)
- * 2) void      sd_PrintDataBlock(uint8_t *block)
- * 3) void      sd_PrintMultipleDataBlocks(
+ * 1) DataBlock SD_ReadSingleDataBlock(uint32_t address)
+ * 2) void      SD_PrintDataBlock(uint8_t *block)
+ * 3) void      SD_PrintMultipleDataBlocks(
  *                      uint32_t start_address,
  *                      uint32_t numOfBlocks)
- * 4) void      sd_SearchNonZeroBlocks(
+ * 4) void      SD_SearchNonZeroBlocks(
  *                      uint32_t begin_block,
  *                      uint32_t end_block)
- * 5) uint16_t  sd_WriteSingleDataBlock(
+ * 5) uint16_t  SD_WriteSingleDataBlock(
  *                      uint32_t address, 
  *                      uint8_t *dataBuffer)
- * 6) uint16_t  sd_WriteMultipleDataBlocks(
+ * 6) uint16_t  SD_WriteMultipleDataBlocks(
  *                      uint32_t address, 
  *                      uint8_t nob, 
  *                      uint8_t *dataBuffer)
- * 7) void      sd_PrintWriteError(uint16_t err)
- * 8) uint32_t  sd_NumberOfWellWrittenBlocks(void)
- * 9) uint16_t  sd_EraseBlocks(
+ * 7) void      SD_PrintWriteError(uint16_t err)
+ * 8) uint32_t  SD_NumberOfWellWrittenBlocks(void)
+ * 9) uint16_t  SD_EraseBlocks(
  *                      uint32_t start_address,
  *                      uint16_t end_address)           
- * 10)void      sd_PrintEraseBlockError(uint16_t err)
+ * 10)void      SD_PrintEraseBlockError(uint16_t err)
  * 
  * 
  * Author: Joshua Fain
@@ -55,7 +55,7 @@
 // response, and CRC returned by a data block read.
 typedef struct  DataBlock {
     uint8_t R1;
-    uint8_t ERROR;  // no specific errors defined yet.
+//    uint8_t ERROR;  // no specific errors defined yet.
     uint8_t data[DATA_BLOCK_LEN]; // 512 byte array to hold block data bytes
     uint8_t CRC[2];
 } DataBlock;
@@ -72,13 +72,18 @@ typedef struct  DataBlock {
 #define INVALID_DATA_RESPONSE  0x0F00 
 
 
-
 // Error responses returned by the function sd_Eraseblocks()      
 #define ERASE_SUCCESSFUL       0x0000
 #define ERROR_ERASE_START_ADDR 0x0100
 #define ERROR_ERASE_END_ADDR   0x0200
 #define ERROR_ERASE            0x0400
 #define ERROR_BUSY             0x0800
+
+
+// Read Block Error Flags
+#define R1_ERROR               0x0100
+#define START_TOKEN_TIMEOUT    0x0200
+#define READ_SUCCESS           0x0400
 
 
 
@@ -94,8 +99,7 @@ typedef struct  DataBlock {
  * Argument:    Address of data block to read = 512 * Block or Sector number
  * Returns:     DataBlock object.
 ******************************************************************************/
-DataBlock sd_ReadSingleDataBlock(uint32_t address);
-
+uint16_t SD_ReadSingleDataBlock(uint32_t address, DataBlock *ds);
 
 
 /******************************************************************************
@@ -112,7 +116,7 @@ DataBlock sd_ReadSingleDataBlock(uint32_t address);
  * Notes:       For the ASCII characters, a ' ' will be printed if value is
  *              < 32, '.' if > 128 and the ASCII character otherwise.
 ******************************************************************************/
-void sd_PrintDataBlock(uint8_t *block);  //only 512 byte block supported.
+void SD_PrintDataBlock(uint8_t *block);  //only 512 byte block supported.
 
 
 
@@ -130,7 +134,7 @@ void sd_PrintDataBlock(uint8_t *block);  //only 512 byte block supported.
  *              2) uint32_t number of blocks to be read in and printed.
  * Returns:     VOID
 ******************************************************************************/
-void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks);
+void SD_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks);
 
 
 
@@ -144,7 +148,7 @@ void sd_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks);
  *              2) uint32_t block number for the ending block. 
  * Returns:     VOID
 ******************************************************************************/
-void sd_SearchNonZeroBlocks(uint32_t begin_block, uint32_t end_block);
+void SD_SearchNonZeroBlocks(uint32_t begin_block, uint32_t end_block);
 
 
 
@@ -168,7 +172,7 @@ void sd_SearchNonZeroBlocks(uint32_t begin_block, uint32_t end_block);
  *                 the SEND_STATUS command should be sent in order to get the 
  *                 cause of the write error.  
 ******************************************************************************/
-uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer);
+uint16_t SD_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer);
 
 
 
@@ -196,7 +200,7 @@ uint16_t sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer);
  *              3) Call ACMD22 after this completes to get the number blocks
  *                 that were successfully written to.
 ******************************************************************************/
-uint16_t sd_WriteMultipleDataBlocks(
+uint16_t SD_WriteMultipleDataBlocks(
                 uint32_t address, 
                 uint8_t nob, 
                 uint8_t *dataBuffer);
@@ -211,7 +215,7 @@ uint16_t sd_WriteMultipleDataBlocks(
  * Argument:    err - uint16_t error response from sd_WriteSingleDataBlock()
  * Returns:     VOID
  * ***************************************************************************/
-void sd_PrintWriteError(uint16_t err);
+void SD_PrintWriteError(uint16_t err);
 
 
 
@@ -224,7 +228,7 @@ void sd_PrintWriteError(uint16_t err);
  * Argument(s): VOID
  * Returns:     uint32_t number of well written blocks. 0 if error.
  * ***************************************************************************/
-uint32_t sd_NumberOfWellWrittenBlocks();
+uint32_t SD_NumberOfWellWrittenBlocks();
 
 
 
@@ -237,7 +241,7 @@ uint32_t sd_NumberOfWellWrittenBlocks();
  * Returns:     uint16_t error code whose value is the Data Response Code in 
  *              the MSByte and the most recent R1 response in the LSByte.       
  * ***************************************************************************/
-uint16_t sd_EraseBlocks(uint32_t start_address, uint32_t end_address);
+uint16_t SD_EraseBlocks(uint32_t start_address, uint32_t end_address);
 
 
 
@@ -249,7 +253,7 @@ uint16_t sd_EraseBlocks(uint32_t start_address, uint32_t end_address);
  * Argument(s): err - uint16_t error response from sd_WriteSingleDataBlock()
  * Returns:     VOID
  * ******************************************************************************/
-void sd_PrintEraseBlockError(uint16_t err);
+void SD_PrintEraseBlockError(uint16_t err);
 
 
 

@@ -212,7 +212,7 @@ int main(void)
 
 
             start_address = DATA_BLOCK_LEN * start_sector;
-            sd_PrintMultipleDataBlocks(start_address,nos);
+            SD_PrintMultipleDataBlocks(start_address,nos);
 
             print_str("\n\r press 'q' to quit and any other key to go again: ");
             answer = USART_Receive();
