@@ -9,13 +9,13 @@
  * physical interaction with an SD card operating SPI Mode.
  * 
  * FUNCTION LIST
- * 1) uint32_t  sd_SPI_Mode_Init(void)
- * 2) void      sd_SendByte(uint8_t data)
- * 3) uint8_t   sd_ReturnByte(void)
- * 4) void      sd_SendCommand(uint8_t cmd, uint32_t arg)
- * 5) uint8_t   sd_getR1(void) 
- * 6) void      sd_printR1(uint8_t R1)
- * 7) void      sd_printInitResponse(uint32_t err)
+ * 1) uint32_t  SD_InitializeSPImode(void)
+ * 2) void      SD_SendByteSPI(uint8_t data)
+ * 3) uint8_t   SD_ReceiveByteSPI(void)
+ * 4) void      SD_SendCommand(uint8_t cmd, uint32_t arg)
+ * 5) uint8_t   SD_GetR1(void) 
+ * 6) void      SD_PrintR1(uint8_t R1)
+ * 7) void      SD_PrintInitError(uint32_t err)
  * 
  * Author: Joshua Fain
  * Date:   9/17/2020
@@ -109,7 +109,7 @@
 
 
 
-// Responses returned by sd_SPI_Mode_Init() in addition to the R1 response.
+// Responses returned by SD_InitializeSPImode() in addition to the R1 response.
 #define FAILED_GO_IDLE_STATE    0x00100   //CMD0
 #define FAILED_SEND_IF_COND     0x00200   //CMD8
 #define UNSUPPORTED_CARD_TYPE   0x00400   //Card version and/or capacity
@@ -131,33 +131,33 @@
 
 
 /******************************************************************************
- * Function:    sd_SPI_Mode_Init(void) 
+ * Function:    SD_InitializeSPImode(void) 
  * Description: Initializes a standard capacity SD card into SPI mode
  * Argument(s): VOID
  * Returns:     uint32_t initialization response. The lowest byte of the 
  *              response is the last R1 response received. 
- *              Use sd_printInitResponse(response) to print the response.
+ *              Use SD_PrintInitError(response) to print the response.
 ******************************************************************************/
-uint32_t sd_SPI_Mode_Init(void);
+uint32_t SD_InitializeSPImode(void);
 
 
 
 /******************************************************************************
- * Function:    sd_SendByte(uint8_t data)
+ * Function:    SD_SendByteSPI(uint8_t data)
  * Description: Send single byte to SD card via SPI.
- *              This, along with the sd_ReturnByte(), are the functions used to 
+ *              This, along with the SD_ReceiveByteSPI(), are the functions used to 
  *              interface directly with the SPI module.
  * Argument(s): uint8_t data byte to be sent to SD card.
  * Returns:     VOID
  * Notes:       Call this function as many times as necessary to send a command
  *              to the SD card in single byte packets.
 *******************************************************************************/
-void sd_SendByte(uint8_t data);
+void SD_SendByteSPI(uint8_t data);
 
 
 
 /******************************************************************************
- * Function:    sd_SendCommand(uint8_t cmd, uint32_t arg)
+ * Function:    SD_SendCommand(uint8_t cmd, uint32_t arg)
  * Description: sends SD command, argument, and CRC via SPI.
  * Argument(s): 8-bit SD card command from the command list.
  *              32-bit argument.
@@ -165,14 +165,14 @@ void sd_SendByte(uint8_t data);
  * Notes:       sd_CRC7 is called in this function to calculate the CRC7 value
  *              to send with the corresponding Command/Argument combination.
 ******************************************************************************/
-void sd_SendCommand(uint8_t cmd, uint32_t arg);
+void SD_SendCommand(uint8_t cmd, uint32_t arg);
 
 
 
 /******************************************************************************
- * Function:    sd_ReturnByte(void)
+ * Function:    SD_ReceiveByteSPI(void)
  * Description: Get byte returned by SD card via SPI.
- *              This, along with the sd_SendByte(), are the only functions that
+ *              This, along with the SD_SendByteSPI(), are the only functions that
  *              explicitly interface with the SPI specific functions.
  * Argument(s): VOID
  * Returns:     8-bit SD Card response.
@@ -183,12 +183,12 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg);
  *                 is up to the calling function to determine if the returned 
  *                 value is valid.
 ******************************************************************************/
-uint8_t sd_ReturnByte(void);
+uint8_t SD_ReceiveByteSPI(void);
 
 
 
 /******************************************************************************
- * Function:    sd_getR1(void)
+ * Function:    SD_GetR1(void)
  * Description: Gets the R1 response returned by an SD card for a given command.
  * Argument(s): VOID
  * Returns:     uint8_t byte corresponding to the R1 response.
@@ -198,12 +198,12 @@ uint8_t sd_ReturnByte(void);
  *              response, otherwise the returned value will not be the R1
  *              response of the SD Card.
 ******************************************************************************/
-uint8_t sd_getR1(void);
+uint8_t SD_GetR1(void);
 
 
 
 /******************************************************************************
- * Function:    sd_printR1(uint8_t R1)
+ * Function:    SD_PrintR1(uint8_t R1)
  * Description: Prints the R1 response in readable form.
  * Argument(s): uint8_t R1 response
  * Returns:     VOID
@@ -213,21 +213,21 @@ uint8_t sd_getR1(void);
  *              flag and will be set to 1 if it takes too long for the SD card
  *              to return the R1 response
 ******************************************************************************/
-void sd_printR1(uint8_t R1);
+void SD_PrintR1(uint8_t R1);
 
 
 
 /******************************************************************************
- * Function:    sd_printInitResponse(uint32_t err)
- * Description: Prints the response returned by sd_SPI_Mode_Init() in a
+ * Function:    SD_PrintInitError(uint32_t err)
+ * Description: Prints the response returned by SD_InitializeSPImode() in a
  *              readable form.
- * Argument(s): 32-bit response of sd_SPI_Mode_Init()
+ * Argument(s): 32-bit response of SD_InitializeSPImode()
  * Returns:     VOID
- * Notes:       The sd_SPI_Mode_Init() response includes the last R1 response 
+ * Notes:       The SD_InitializeSPImode() response includes the last R1 response 
  *              returned by the SD card as well as the other initialization 
  *              errors.       
  * ***************************************************************************/
-void sd_printInitResponse(uint32_t err);
+void SD_PrintInitError(uint32_t err);
 
 
 #endif //SD_SPI_H

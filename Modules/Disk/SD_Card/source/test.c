@@ -35,20 +35,20 @@ int main(void)
     {
         print_str("\n\n\rSD Card Initialization Attempt: ");
         print_dec(i);
-        initResponse = sd_SPI_Mode_Init();
+        initResponse = SD_InitializeSPImode();
         if(initResponse != OUT_OF_IDLE) // If response is anything other than 0 (OUT_OF_IDLE) then initialization failed.
         {    
             print_str("\n\n\rSD INITIALIZATION FAILED with Response 0x");
             print_hex(initResponse);
-            sd_printInitResponse(initResponse);
+            SD_PrintInitError(initResponse);
         }
         else
         {   print_str("\n\rSD Card Successfully Initialized\n\r");
             break;
         }
     }
-    print_str("Printing R1 Response for init = "); sd_printR1((uint8_t)(0x000FF&initResponse));
-    print_str("\n\rinitialization response = "); sd_printInitResponse(initResponse);
+    print_str("Printing R1 Response for init = "); SD_PrintR1((uint8_t)(0x000FF&initResponse));
+    print_str("\n\rinitialization response = "); SD_PrintInitError(initResponse);
 
 
 
@@ -57,12 +57,12 @@ int main(void)
         
         
         // ***** test sd_GetMemoryCapcity() function in sd_misc.c  *****
-        /*
+        
         uint32_t mc = sd_GetMemoryCapacity();
         print_str("\n\rmemory capacity = ");
         print_dec(mc);
         print_str(" Bytes\n\r");
-        */
+        
         // ***** END test sd_GetMemoryCapcity()
         
 
@@ -72,13 +72,12 @@ int main(void)
 
 
         // ***** test read/print multiple data block *******
-        /*
-        int nob = 3;
-        uint32_t block = 10;
+        
+        int nob = 5;
+        uint32_t block = 0;
         uint32_t address = block * DATA_BLOCK_LEN; // the address of first byte in block.   
         sd_PrintMultipleDataBlocks(address,nob);
-        */
-
+        
 
 
         /*
