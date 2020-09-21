@@ -59,8 +59,8 @@ else
 fi
 
 
-echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/test.elf "$buildDir"/test.o  "$buildDir"/spi.o "$buildDir"/sd_spi_base.o "$buildDir"/sd_spi_sf.o "$buildDir"/usart.o "$buildDir"/prints.o "$buildDir"/fat.o "$buildDir"/fattosd.o"
-"${Link[@]}" $buildDir/test.elf $buildDir/test.o $buildDir/spi.o $buildDir/sd_spi_base.o $buildDir/sd_spi_sf.o $buildDir/usart.o $buildDir/prints.o $buildDir/fat.o $buildDir/fattosd.o
+echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/test.elf "$buildDir"/test.o  "$buildDir"/spi.o "$buildDir"/sd_spi_base.o "$buildDir"/sd_spi_data_access.o "$buildDir"/usart.o "$buildDir"/prints.o "$buildDir"/fat.o "$buildDir"/fattosd.o"
+"${Link[@]}" $buildDir/test.elf $buildDir/test.o $buildDir/spi.o $buildDir/sd_spi_base.o $buildDir/sd_spi_data_access.o $buildDir/usart.o $buildDir/prints.o $buildDir/fat.o $buildDir/fattosd.o
 status=$?
 sleep $t
 if [ $status -gt 0 ]

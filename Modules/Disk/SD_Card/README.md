@@ -13,7 +13,7 @@ Compiled, built, and downloaded using AVR Toolchain available at [Homebrew-AVR](
 
 
 # Overview
-* This module is separated into base functions (SD_SPI_BASE) and special functions (SD_SPI_SF) requiring SD_SPI_BASE.
+* This module is separated into base functions (SD_SPI_BASE) and special functions (SD_SPI_DATA_ACCESS) requiring SD_SPI_BASE.
 
 * SD_SPI_BASE: 
 Any implmentation of this module requires SD_SPI_BASE. These functions are intended to be only those essential for interaction with the SD card in SPI mode, and a few error printing functions.  These include routines for the following tasks:
@@ -22,7 +22,7 @@ Any implmentation of this module requires SD_SPI_BASE. These functions are inten
 * Receiving the card's returned bytes in response to any command.
 * Error printing.
 
-* SD_SPI_SF 
+* SD_SPI_DATA_ACCESS 
 This is basically a repository for specialized SD card functions, which requires SD_SPI_BASE to execute.  These functions are not required for implementation of the module, but do include routines that issue commands to take care of the following tasks and then hanlde the card's response:
 * Reading / Writing / Erasing data blocks.
 * Data block print functions.
@@ -30,7 +30,7 @@ This is basically a repository for specialized SD card functions, which requires
 * Others.
 
 * The diagram below gives an idea of how this module is intended to be implemented:
-    Example:  SD Card <--> SPI Module  <-->  SD_SPI_BASE <--> SD_SPI_SF <--> File System Module
+    Example:  SD Card <--> SPI Module  <-->  SD_SPI_BASE <--> SD_SPI_DATA_ACCESS <--> File System Module
 
 * As this module is for the opeation of an SD card in SPI mode, it requires an SPI module to handle the phyiscal sending and receiving of data bytes on an AVR's SPI line.  An SPI module is not included explicitly here, but one is available under the 'General' subdirectory of this repository.  The requirements of the SPI module by this SD card module will be discussed later. 
     
