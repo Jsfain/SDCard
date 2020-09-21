@@ -10,11 +10,11 @@
  * 
  * FUNCTION LIST
  * 1) uint32_t  SD_InitializeSPImode(void)
- * 2) void      SD_SendByteSPI(uint8_t data)
+ * 2) void      SD_SendByteSPI(uint8_t byte)
  * 3) uint8_t   SD_ReceiveByteSPI(void)
  * 4) void      SD_SendCommand(uint8_t cmd, uint32_t arg)
  * 5) uint8_t   SD_GetR1(void) 
- * 6) void      SD_PrintR1(uint8_t R1)
+ * 6) void      SD_PrintR1(uint8_t r1)
  * 7) void      SD_PrintInitError(uint32_t err)
  * 
  * Author: Joshua Fain
@@ -152,7 +152,7 @@ uint32_t SD_InitializeSPImode(void);
  * Notes:       Call this function as many times as necessary to send a command
  *              to the SD card in single byte packets.
 *******************************************************************************/
-void SD_SendByteSPI(uint8_t data);
+void SD_SendByteSPI(uint8_t byte);
 
 
 
@@ -213,7 +213,7 @@ uint8_t SD_GetR1(void);
  *              flag and will be set to 1 if it takes too long for the SD card
  *              to return the R1 response
 ******************************************************************************/
-void SD_PrintR1(uint8_t R1);
+void SD_PrintR1(uint8_t r1);
 
 
 

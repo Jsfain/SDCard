@@ -126,8 +126,8 @@ Pass the response to SD_PrintR1(R1) to print the returned response to the screen
 example: send command/argument, get R1 and print R1.
 
 SD_SendCommand(GO_IDLE_STATE, 0);
-uint8_t R1 = SD_GetR1();
-SD_PrintR1(R1)
+uint8_t r1 = SD_GetR1();
+SD_PrintR1(r1)
 
 
 Initialization Error Responses:
@@ -180,7 +180,7 @@ SD_PrintInitError(resp);
 ******************************************
 
 
-void SD_SendByteSPI(uint8_t data);
+void SD_SendByteSPI(uint8_t byte);
 
 DESCRIPTION:
 Send a single byte to the SD card via SPI.  This function, along with SD_ReceiveByteSPI() are the SPI interfaceing functions. All other functions interacting with the SD card must call this function to send a byte to the SD card.
@@ -255,7 +255,7 @@ The R1 response is the first resopnse byte returned by an SD card in response to
 ******************************************
 
 
-void SD_PrintR1(uint8_t R1);
+void SD_PrintR1(uint8_t r1);
 
 DESCRIPTION:
 Prints the R1 response.
