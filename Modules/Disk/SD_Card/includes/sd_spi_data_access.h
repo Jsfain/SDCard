@@ -114,7 +114,7 @@ uint16_t SD_ReadSingleDataBlock(uint32_t address, Block *ds);
  * Notes:       For the ASCII characters, a ' ' will be printed if value is
  *              < 32, '.' if > 128 and the ASCII character otherwise.
 ******************************************************************************/
-void SD_PrintDataBlock(uint8_t *block);  //only 512 byte block supported.
+void SD_PrintDataBlock(uint8_t *byte);  //only 512 byte block supported.
 
 
 
@@ -132,21 +132,7 @@ void SD_PrintDataBlock(uint8_t *block);  //only 512 byte block supported.
  *              2) uint32_t number of blocks to be read in and printed.
  * Returns:     VOID
 ******************************************************************************/
-void SD_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks);
-
-
-
-/******************************************************************************
- * Function:    sd_SearchNonZeroBlocks(
- *                      uint32_t begin_block, 
- *                      uint32_t end_block)
- * Description: Searches between a specified range of blocks for any blocks that
- *              have non-zero values and prints those block numbers to screen.
- * Argument:    1) uint32_t block number for the first block.
- *              2) uint32_t block number for the ending block. 
- * Returns:     VOID
-******************************************************************************/
-void SD_SearchNonZeroBlocks(uint32_t begin_block, uint32_t end_block);
+uint16_t SD_PrintMultipleDataBlocks(uint32_t startAddress, uint32_t numberOfBlocks);
 
 
 

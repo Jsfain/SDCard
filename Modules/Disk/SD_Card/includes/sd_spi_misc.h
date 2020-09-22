@@ -23,6 +23,7 @@
 #define SD_SPI_MISC_H
 
 
+
 /******************************************************************************
  *                          FUNCTION DECLARATIONS
  *****************************************************************************/
@@ -37,6 +38,19 @@
 ******************************************************************************/
 uint32_t sd_GetMemoryCapacity(void);
 
+
+
+/******************************************************************************
+ * Function:    sd_SearchNonZeroBlocks(
+ *                      uint32_t begin_block, 
+ *                      uint32_t end_block)
+ * Description: Searches between a specified range of blocks for any blocks that
+ *              have non-zero values and prints those block numbers to screen.
+ * Argument:    1) uint32_t block number for the first block.
+ *              2) uint32_t block number for the ending block. 
+ * Returns:     VOID
+******************************************************************************/
+void SD_SearchNonZeroBlocks(uint32_t firstBlock, uint32_t lastBlock);
 
 
 #endif // SD_SPI_MISC_H

@@ -16,22 +16,19 @@
  * 3) void      SD_PrintMultipleDataBlocks(
  *                      uint32_t start_address,
  *                      uint32_t numOfBlocks)
- * 4) void      SD_SearchNonZeroBlocks(
- *                      uint32_t begin_block,
- *                      uint32_t end_block)
- * 5) uint16_t  SD_WriteSingleDataBlock(
+ * 4) uint16_t  SD_WriteSingleDataBlock(
  *                      uint32_t address, 
  *                      uint8_t *dataBuffer)
- * 6) uint16_t  SD_WriteMultipleDataBlocks(
+ * 5) uint16_t  SD_WriteMultipleDataBlocks(
  *                      uint32_t address, 
  *                      uint8_t nob, 
  *                      uint8_t *dataBuffer)
- * 7) void      SD_PrintWriteError(uint16_t err)
- * 8) uint32_t  SD_NumberOfWellWrittenBlocks(void)
- * 9) uint16_t  SD_EraseBlocks(
+ * 6) void      SD_PrintWriteError(uint16_t err)
+ * 7) uint32_t  SD_NumberOfWellWrittenBlocks(void)
+ * 8) uint16_t  SD_EraseBlocks(
  *                      uint32_t start_address,
  *                      uint16_t end_address)           
- * 10)void      SD_PrintEraseBlockError(uint16_t err)
+ * 9) void      SD_PrintEraseBlockError(uint16_t err)
  * 
  * 
  * Author: Joshua Fain
@@ -50,15 +47,104 @@
 
 
 
-// Read in a single block (512 bytes) to a  from an SD card
+// Read single block (512 bytes) from SD card into array
 uint16_t SD_ReadSingleDataBlock(uint32_t address, Block *ds)
 {
     uint8_t timeout = 0;
     uint8_t r1;
 
     CS_LOW;
-    SD_SendCommand(READ_SINGLE_BLOCK,address);  //Send CMD17 to return a single block;
-    r1 = SD_GetR1(); // Get R1 response
+    SD_SendCommand(READ_SINGLE_BLOCK,address);  //CMD17
+    r1 = SD_GetR1();
+
+    if(r1 > 0)
+    {
+        CS_HIGH;
+        return ( R1_ERROR | r1 );
+    }
+
+    if(r1 == 0)
+    {
+        timeout = 0;
+        uint8_t sbt = SD_ReceiveByteSPI(); 
+        while(sbt != 0xFE) // wait for Start Block Token
+        {
+            sbt = SD_ReceiveByteSPI();
+            timeout++;
+            if(timeout > 0xFE) 
+            { 
+                CS_HIGH;
+                return (START_TOKEN_TIMEOUT | r1);
+            }
+        }
+
+        // start block token has been received         
+        for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
+            ds->byte[i] = SD_ReceiveByteSPI();
+
+        for(uint8_t i = 0; i < 2; i++)
+            ds->CRC[i] = SD_ReceiveByteSPI();
+            
+        SD_ReceiveByteSPI(); // clear any remaining bytes in SPDR
+    }
+    CS_HIGH;
+    return READ_SUCCESS;
+}
+// END SD_ReadSingleDataBlock()
+
+
+
+// Print columnized address offset | HEX | ASCII values in *byte array
+void SD_PrintDataBlock(uint8_t *byte)
+{
+    print_str("\n\n\r BLOCK OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
+    uint16_t offset = 0;
+    uint16_t space = 0;
+    for( uint16_t row = 0; row < DATA_BLOCK_LEN/16; row++ )
+    {
+        print_str("\n\r   ");
+        if(offset<0x100){print_str("0x0"); print_hex(offset);}
+        else if(offset<0x1000){print_str("0x"); print_hex(offset);}
+        
+        print_str("\t ");
+        space = 0;
+        for( offset = row * 16; offset < (row*16)+16; offset++ )
+        {
+            //every 4 bytes print an extra space.
+            if(space%4==0) 
+                print_str(" ");
+
+            print_str(" ");
+            print_hex(byte[offset]);
+            space++;
+        }
+        
+        print_str("\t\t");
+        offset = offset-16;
+        for( offset = row * 16; offset < (row*16) + 16; offset++ )
+        {
+            if( byte[offset] < 32 ) { USART_Transmit( ' ' ); }
+            else if( byte[offset] < 128 ) { USART_Transmit( byte[offset] ); }
+            else USART_Transmit('.');
+        }
+    }    
+    print_str("\n\n\r");
+}
+// END SD_PrintDataBlock(uint8_t *byte)
+
+
+
+// Print multiple data blocks to screen.
+uint16_t SD_PrintMultipleDataBlocks(
+                uint32_t startAddress, 
+                uint32_t numberOfBlocks)
+{
+    Block ds;
+    uint8_t timeout = 0;
+
+    CS_LOW;
+    SD_SendCommand(READ_MULTIPLE_BLOCK,startAddress); // CMD18
+    uint8_t r1 = SD_GetR1();
 
     if(r1 > 0)
     {
@@ -68,120 +154,25 @@ uint16_t SD_ReadSingleDataBlock(uint32_t address, Block *ds)
 
     if(r1 == 0)
     {
-        timeout = 0;
-        uint8_t r = SD_ReceiveByteSPI();
-        while(r != 0xFE) //Start Block Token
+        for ( int i = 0; i < numberOfBlocks; i++ )
         {
-            r = SD_ReceiveByteSPI();
-            timeout++;
-            if(timeout > 254) 
-            { 
-                CS_HIGH;
-                return (START_TOKEN_TIMEOUT | r1);
-            }
-        }
-
-        // if start block token has been received and not timed out then begin reading in the data.
-        if( (timeout < 0xFF) && (r == 0xFE) )
-        {            
-            for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
-                ds->byte[i] = SD_ReceiveByteSPI();
-
-            for(uint8_t i = 0; i < 2; i++)
-                ds->CRC[i] = SD_ReceiveByteSPI();
-                
-            SD_ReceiveByteSPI(); // clear any remaining characters in SD response.
-        }
-    }
-    CS_HIGH;
-    return READ_SUCCESS;
-}
-// END SD_ReadSingleDataBlock()
-
-
-
-// Print the data in the array pointed to by *block.
-void SD_PrintDataBlock(uint8_t *block)
-{
-    print_str("\n\n\r BLOCK OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
-    uint16_t block_offset = 0;
-    int space = 0;
-    for(uint16_t row=0; row<DATA_BLOCK_LEN/16; row++)
-    {
-        print_str("\n\r   ");
-        if(block_offset<0x100)  { print_str("0x0"); print_hex(block_offset); }
-        else if(block_offset<0x1000) { print_str("0x"); print_hex(block_offset); }
-        
-        print_str("\t ");
-        space = 0;
-        for(block_offset = row*16;block_offset<(row*16)+16;block_offset++)
-        {
-            //every 4 bytes print an extra space.
-            if(space%4==0) 
-                print_str(" ");
-
-            print_str(" ");
-            print_hex(block[block_offset]);
-            space++;
-        }
-        
-        print_str("\t\t");
-        block_offset = block_offset-16;
-        for(block_offset = row*16;block_offset<(row*16)+16;block_offset++)
-        {
-            if(block[block_offset]<32)
-                USART_Transmit(' ');
-            else if(block[block_offset]<128)
-                USART_Transmit(block[block_offset]);
-            else
-                USART_Transmit('.');
-        }
-    }    
-    print_str("\n\n\r");
-}
-// END SD_PrintDataBlock(uint8_t *block)
-
-
-
-// Print multiple data blocks to screen.
-void SD_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
-{
-    Block ds;
-    int timeout = 0;
-
-    CS_LOW;
-    SD_SendCommand(READ_MULTIPLE_BLOCK,start_address); // CMD18
-    uint8_t r1 = SD_GetR1(); //get R1 response
-
-    if(r1 > 0)
-    {
-        CS_HIGH
-        print_str("\n\r>> ERROR:   READ_MULTIPLE_BLOCK (CMD18) in SD_PrintMultipleDataBlocks() returned error in R1 response.");
-        SD_PrintR1(r1); //print R1 response if error was returned.
-    }
-
-    // if R1 response has no errors then read in / print the data block
-    if(r1 == 0)
-    {
-        for (int i=0;i<numOfBlocks;i++)
-        {
-            // prior to returning each data block, a start block token must be sent.
             timeout = 0;
-            while(SD_ReceiveByteSPI() != 0xFE) // wait for start block token.
+            while( SD_ReceiveByteSPI() != 0xFE ) // wait for start block token.
             {
                 timeout++;
-                if(timeout > 511)
-                {
-                    print_str("\n\r>> ERROR:   Timeout while waiting for Start Block Token in SD_PrintMultipleDataBlocks().");
-                    break;
-                }
+                if(timeout > 0xFE) return (START_TOKEN_TIMEOUT | r1);
             }
 
-            for(uint16_t k = 0; k < DATA_BLOCK_LEN; k++) ds.byte[k] = SD_ReceiveByteSPI(); // get data block
-            for(uint8_t k = 0; k < 2; k++) ds.CRC[k] = SD_ReceiveByteSPI(); // get CRC response
+            for(uint16_t k = 0; k < DATA_BLOCK_LEN; k++) 
+                { ds.byte[k] = SD_ReceiveByteSPI(); } // get block
+
+            for(uint8_t k = 0; k < 2; k++) 
+                { ds.CRC[k] = SD_ReceiveByteSPI(); } // get CRC response
+
+            
             print_str("\n\n\r\t\t\t\t\tBLOCK: ");
-            print_dec((start_address + (i*512))/512);
-            SD_PrintDataBlock(ds.byte); // print data block
+            print_dec( (startAddress + (i * 512)) / 512 );
+            SD_PrintDataBlock(ds.byte);
         }
         
         SD_SendCommand(STOP_TRANSMISSION,0); // stop data block tranmission 
@@ -189,43 +180,9 @@ void SD_PrintMultipleDataBlocks(uint32_t start_address, uint32_t numOfBlocks)
     }
 
     CS_HIGH;
+    return READ_SUCCESS;
 }
 // END sd_PrintMultiplDataBlocks()
-
-
-
-// Prints the block number of all blocks between begin_block and end_block 
-// that have any non-zero bytes, to assist in finding blocks that have data.
-void SD_SearchNonZeroBlocks(uint32_t begin_block, uint32_t end_block)
-{
-    Block ds;
-    print_str("\n\rSearching for non-zero blocks over range ");
-    print_dec(begin_block);
-    print_str(" to ");
-    print_dec(end_block);
-    int tab = 0; //used for printing format
-    uint32_t Address = 0;
-    //for(uint32_t block = begin_block; block<end_block+1; block++)
-    for(uint32_t block = begin_block; block < end_block + 1; block++)
-    {
-        Address = block * 512;
-        //ds = SD_ReadSingleDataBlock(Address);
-        SD_ReadSingleDataBlock(Address, &ds);                
-        
-        for(int i = 0; i<512;i++)
-        {
-            if(ds.byte[i]!=0)
-            {
-                if(tab%5==0) print_str("\n\r");
-                print_str("\t\t");print_dec(block);
-                tab++;
-                break;
-            }
-        }        
-    }
-    print_str("\n\rDone searching non-zero blocks.");
-}
-// END sd_SearchNonZeroDataBlocks()
 
 
 
