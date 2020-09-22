@@ -6,7 +6,7 @@
 
 void fat_ReadSingleSector( uint32_t address, uint8_t *sectorByteArray)
 {
-    DataBlock db;
+    Block db;
     SD_ReadSingleDataBlock(address, &db);
-    for(int k = 0; k < 512; k++) { sectorByteArray[k] = db.data[k]; }
+    for(int k = 0; k < 512; k++) { sectorByteArray[k] = db.byte[k]; }
 };

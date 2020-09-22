@@ -53,10 +53,10 @@
 
 // Struct whose members are the raw data bytes, R1 
 // response, and CRC returned by a data block read.
-typedef struct  DataBlock {
-    uint8_t data[DATA_BLOCK_LEN]; // 512 byte array to hold block data bytes
+typedef struct  Block {
+    uint8_t byte[DATA_BLOCK_LEN]; // 512 byte array to hold block data bytes
     uint8_t CRC[2];
-} DataBlock;
+} Block;
 
 
 
@@ -97,7 +97,7 @@ typedef struct  DataBlock {
  * Argument:    Address of data block to read = 512 * Block or Sector number
  * Returns:     DataBlock object.
 ******************************************************************************/
-uint16_t SD_ReadSingleDataBlock(uint32_t address, DataBlock *ds);
+uint16_t SD_ReadSingleDataBlock(uint32_t address, Block *ds);
 
 
 /******************************************************************************

@@ -9,12 +9,13 @@
 
 #include <stdint.h>
 #include <avr/io.h>
-#include "../includes/sd_spi_base.h"
-#include "../includes/sd_spi_data_access.h"
-#include "../includes/sd_spi_misc.h"
 #include "../../../../general/includes/usart.h"
 #include "../../../../general/includes/spi.h"
 #include "../../../../general/includes/prints.h"
+#include "../includes/sd_spi_base.h"
+#include "../includes/sd_spi_data_access.h"
+#include "../includes/sd_spi_misc.h"
+
 
 
 
@@ -70,12 +71,12 @@ int main(void)
         // **** test SD_SearchNonZeroBlocks()
         SD_SearchNonZeroBlocks(0,100);
 
-        DataBlock ds; //data block struct
+        Block ds; //data block struct
         uint32_t block = 0;
         uint32_t address = block * DATA_BLOCK_LEN; // the address of first byte in block.
         
         SD_ReadSingleDataBlock(address, &ds);
-        SD_PrintDataBlock(ds.data);
+        SD_PrintDataBlock(ds.byte);
 
 
         // ***** test read/print multiple data block *******
