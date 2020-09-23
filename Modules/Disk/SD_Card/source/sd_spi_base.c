@@ -47,6 +47,7 @@ uint32_t SD_InitializeSPImode(void)
 {
     uint8_t r1 = 0; //R1 response returned for every SD Command
     uint8_t R7[5];  //R7 response returned by SEND_IF_COND (CMD8)
+    //uint8_t version; // card version 1.x or 2.x. For possible future use.
 
     //Wait up to 80 clock cycles for power up to complete.
     for(int i=0;i<=10;i++) { SD_SendByteSPI(0xFF); }
@@ -61,7 +62,7 @@ uint32_t SD_InitializeSPImode(void)
     // END GO_IDLE_STATE (CMD0)
     // *******************
 
-
+    print_str("\n\rHERE");
 
     // *******************
     // SEND_IF_COND (CMD8)
@@ -70,7 +71,7 @@ uint32_t SD_InitializeSPImode(void)
     
     CS_LOW;
     SD_SendCommand(SEND_IF_COND,
-                  ((uint16_t)voltageSupplyRange << 8 ) | checkPattern );
+            ((uint16_t)voltageSupplyRange << 8 ) | checkPattern );
 
     //Get R7 response
     R7[0] = SD_GetR1(); // First R7 byte is R1 response.
@@ -80,10 +81,20 @@ uint32_t SD_InitializeSPImode(void)
     R7[4] = SD_ReceiveByteSPI();
     
     CS_HIGH;
-    if (R7[0] != 1) { return (FAILED_SEND_IF_COND | R7[0]); }
-
-    if ( (R7[3] != voltageSupplyRange ) || (R7[4] != checkPattern) )
-    { return (FAILED_SEND_IF_COND | UNSUPPORTED_CARD_TYPE | R7[0]); }
+    if ( R7[0] == (ILLEGAL_COMMAND | IN_IDLE_STATE) ) 
+    {
+        // This will be to handle version 1 cards, if support
+        // is implemented.  For now it is UNSUPPORTED_CARD_TYPE
+        //version = 1;
+        return (FAILED_SEND_IF_COND | UNSUPPORTED_CARD_TYPE | R7[0]);
+    }
+    else if (R7[0] == IN_IDLE_STATE) 
+    {
+        //version == 2;
+        if ( (R7[3] != voltageSupplyRange ) || (R7[4] != checkPattern) )
+        { return (FAILED_SEND_IF_COND | UNSUPPORTED_CARD_TYPE | R7[0]); }
+    }
+    else  { return (FAILED_SEND_IF_COND | R7[0]); }
     // END SEND_IF_COND (CMD8)
     // **********************
 
@@ -115,7 +126,7 @@ uint32_t SD_InitializeSPImode(void)
         do{
             r1 = 0;
             CS_LOW;
-            SD_SendCommand(APP_CMD,0); //first send APP_CMD before any ACMD
+            SD_SendCommand(APP_CMD,0); // send APP_CMD before any ACMD
             r1 = SD_GetR1();
             CS_HIGH;
             if (r1 != 1) { return (FAILED_APP_CMD | r1); }
@@ -126,8 +137,9 @@ uint32_t SD_InitializeSPImode(void)
             r1 = SD_GetR1();
             CS_HIGH;
             if (r1 > 1) { return (FAILED_SD_SEND_OP_COND | r1); }
-
-            if(timeout++ >= 0x05)
+            print_str("\n\rR1 = "); print_dec(r1);
+            print_str("\n\r");print_dec(timeout);
+            if( (timeout++ >= 0xFE) && ( r1 > 0 ) )
             { return (FAILED_SD_SEND_OP_COND | OUT_OF_IDLE_TIMEOUT | r1); }
         }while( r1 & 1 );
     }
@@ -135,7 +147,7 @@ uint32_t SD_InitializeSPImode(void)
     // ************************
 
 
-
+    
     // ************************
     // READ_OCR (CMD 58)
 
@@ -230,7 +242,9 @@ void SD_SendCommand(uint8_t cmd, uint32_t arg)
     tcacs = tcacs | crc | 1;  //complete loading of 48-bit command into tcacs
                               //by setting CRC and stop transmission bits
 
-    for(int i=0;i<=2;i++) { SD_SendByteSPI(0xFF); } // Wait 16 clk cycles.
+    // ensuring a small buffer window between when CS is asserted and sending
+    // the command seems to help reduce the number of failed command responses.
+    for(int i=0;i<=10;i++) { SD_SendByteSPI(0xFF); }
     
     // Send command to SD Card via SPI
     SD_SendByteSPI((uint8_t)(tcacs >> 40));

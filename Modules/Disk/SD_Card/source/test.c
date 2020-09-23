@@ -18,6 +18,8 @@
 
 
 
+uint32_t enterBlockNumber();
+
 
 //  *******   MAIN   ********
 int main(void)
@@ -33,7 +35,7 @@ int main(void)
     uint32_t initResponse;
 
     //attempt to initialize sd card.
-    for(int i = 0; i<2; i++)
+    for(int i = 0; i<10; i++)
     {
         print_str("\n\n\rSD Card Initialization Attempt: ");
         print_dec(i);
@@ -49,15 +51,13 @@ int main(void)
             break;
         }
     }
-    print_str("Printing R1 Response for init = "); SD_PrintR1((uint8_t)(0x000FF&initResponse));
+    print_str("\n\rPrinting R1 Response for init = "); SD_PrintR1((uint8_t)(0x000FF&initResponse));
     print_str("\n\rinitialization response = "); SD_PrintInitError(initResponse);
 
 
 
     if(initResponse==OUT_OF_IDLE) // initialization successful
     {      
-        
-        
         // ***** test sd_GetMemoryCapcity() function in sd_misc.c  *****
         
         uint32_t mc = sd_GetMemoryCapacity();
@@ -80,12 +80,12 @@ int main(void)
 
 
         // ***** test read/print multiple data block *******
-        /*
-        int nob = 5;
-        uint32_t block = 0;
-        uint32_t address = block * DATA_BLOCK_LEN; // the address of first byte in block.   
-        SD_PrintMultipleDataBlocks(address,nob);
-        */
+        //USART_Receive();
+        //int nob = 5;
+        //uint32_t block = 0;
+        //uint32_t address = block * DATA_BLOCK_LEN; // the address of first byte in block.   
+        //SD_PrintMultipleDataBlocks(address,nob);
+        
 
 
         /*
@@ -209,7 +209,36 @@ int main(void)
         //SD_PrintMultipleDataBlocks(erase_start_address,noeb+2);
         // ***** END Test Erase Blocks *****
         */
-        
+        uint32_t start_sector;
+        uint32_t start_address;
+        uint32_t nos;
+        uint8_t answer;
+        uint16_t err;
+        do{
+            do{
+                print_str("\n\rEnter Start Sector\n\r");
+                start_sector = enterBlockNumber();
+                print_str("\n\rhow many sectors do you want to print?\n\r");
+                nos = enterBlockNumber();
+                print_str("\n\rYou want to print "); print_dec(nos);
+                print_str(" sectors beginning at sector "); print_dec(start_sector);
+                print_str("\n\ris this correct? (y/n)");
+                answer = USART_Receive();
+                USART_Transmit(answer);
+                print_str("\n\r");
+            }while(answer != 'y');
+
+
+            start_address = DATA_BLOCK_LEN * start_sector;
+            err = SD_PrintMultipleDataBlocks(start_address,nos);
+            print_str("\n\rerr = 0x"); print_hex(err);
+
+            print_str("\n\r press 'q' to quit and any other key to go again: ");
+            answer = USART_Receive();
+            USART_Transmit(answer);
+
+        }while(answer != 'q');
+
     }
 
     // Something to do after SD card testing has completed.
@@ -217,4 +246,32 @@ int main(void)
         USART_Transmit(USART_Receive());
     
     return 0;
+}
+
+
+
+uint32_t enterBlockNumber()
+{
+    uint8_t x;
+    uint8_t c;
+    uint32_t sector = 0;
+
+    //print_str("Specify data block (data block = 512 bytes) and press enter\n\r");
+    c = USART_Receive();
+    
+    while(c!='\r')
+    {
+        x = c - '0';
+        sector = sector*10;
+        sector += x;
+        print_str("\r");
+        print_dec(sector);
+        c = USART_Receive();
+        if(sector >= 4194304)
+        {
+            sector = 0;
+            print_str("sector value is too large.\n\rEnter value < 4194304\n\r");
+        }
+    }
+    return sector;
 }

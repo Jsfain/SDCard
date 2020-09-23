@@ -59,29 +59,47 @@ typedef struct  Block {
 } Block;
 
 
+// Error flags / tokens used explicitly by functions defined here.
+// The lowest byte in each flag / token is 0 as this byte will be
+// occupied by the R1 response in the returned values.
+// Call the specific 'Print Error' function on the upper bytes to 
+// to print specific errors here, call 'SD_PrintR1(r1) on the lowest
+// byte to print the R1 response.
+
+
+ 
+// used to indicate the returned value has 
+// an error in the R1 response portion.
+#define R1_ERROR               0x8000
+
+// Read Block Error Flags
+#define START_TOKEN_TIMEOUT    0x0200
+#define READ_SUCCESS           0x0400
+
 
 // Error responses returned by sd_WriteSingleDataBlock(). All except 
 // INVALID_DATA_RESPONSE, correspond to valid value of the 3-bit data response 
 // token returned after an attempt to write data to a single block. Low byte will
 // hold the R1 response.
-#define DATA_ACCEPTED          0x0200
-#define CRC_ERROR              0x0500
-#define WRITE_ERROR            0x0600
-#define INVALID_DATA_RESPONSE  0x0F00 
+#define DATA_ACCEPTED_TOKEN             0x0100
+#define CRC_ERROR_TOKEN                 0x0200
+#define WRITE_ERROR_TOKEN               0x0400
+#define INVALID_DATA_RESPONSE           0x0800
+#define MAX_WRITE_BLOCK_NUMBER_EXCEEDED 0x1000
+#define DATA_RESPONSE_TIMEOUT           0x2000
+#define CARD_BUSY_TIMEOUT               0x4000
+//#define R1_ERROR                      0x8000 //defined above
+
+
+//Well Written Block Error Flags
 
 
 // Error responses returned by the function sd_Eraseblocks()      
-#define ERASE_SUCCESSFUL       0x0000
-#define ERROR_ERASE_START_ADDR 0x0100
-#define ERROR_ERASE_END_ADDR   0x0200
-#define ERROR_ERASE            0x0400
-#define ERROR_BUSY             0x0800
-
-
-// Read Block Error Flags
-#define R1_ERROR               0x0100
-#define START_TOKEN_TIMEOUT    0x0200
-#define READ_SUCCESS           0x0400
+#define ERASE_SUCCESSFUL           0x0000
+#define SET_ERASE_START_ADDR_ERROR 0x0100
+#define SET_ERASE_END_ADDR_ERROR   0x0200
+#define ERROR_ERASE                0x0400
+#define ERASE_BUSY_TIMEOUT         0x0800
 
 
 
@@ -115,6 +133,10 @@ uint16_t SD_ReadSingleDataBlock(uint32_t address, Block *ds);
  *              < 32, '.' if > 128 and the ASCII character otherwise.
 ******************************************************************************/
 void SD_PrintDataBlock(uint8_t *byte);  //only 512 byte block supported.
+
+
+
+void SD_PrintReadError(uint16_t err);
 
 
 
@@ -156,7 +178,7 @@ uint16_t SD_PrintMultipleDataBlocks(uint32_t startAddress, uint32_t numberOfBloc
  *                 the SEND_STATUS command should be sent in order to get the 
  *                 cause of the write error.  
 ******************************************************************************/
-uint16_t SD_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer);
+uint16_t SD_WriteSingleDataBlock(uint32_t address, uint8_t *data);
 
 
 
@@ -186,8 +208,12 @@ uint16_t SD_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer);
 ******************************************************************************/
 uint16_t SD_WriteMultipleDataBlocks(
                 uint32_t address, 
-                uint8_t nob, 
+                uint32_t numberOfBlocks, 
                 uint8_t *dataBuffer);
+
+
+
+void SD_PrintWriteError(uint16_t err);
 
 
 
@@ -212,7 +238,7 @@ void SD_PrintWriteError(uint16_t err);
  * Argument(s): VOID
  * Returns:     uint32_t number of well written blocks. 0 if error.
  * ***************************************************************************/
-uint32_t SD_NumberOfWellWrittenBlocks();
+uint16_t SD_NumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks);
 
 
 

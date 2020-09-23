@@ -139,7 +139,7 @@ uint32_t sd_GetMemoryCapacity(void)
     uint32_t memoryCapacity = BLOCKNR*BLOCK_LEN;
     return memoryCapacity; //bytes
 }
-//END sd_MemoryCapacity()
+// END sd_MemoryCapacity()
 
 
 // Prints the block number of all blocks between firstBlock and lastBlock 
@@ -160,7 +160,7 @@ void SD_SearchNonZeroBlocks(uint32_t firstBlock, uint32_t lastBlock)
                   blockNumber++ )
     {
         address = blockNumber * DATA_BLOCK_LEN;
-        SD_ReadSingleDataBlock(address, &ds);                
+        SD_ReadSingleDataBlock(address, &ds);       
         
         for(int i = 0; i < DATA_BLOCK_LEN; i++)
         {
@@ -171,7 +171,7 @@ void SD_SearchNonZeroBlocks(uint32_t firstBlock, uint32_t lastBlock)
                 tab++;
                 break;
             }
-        }        
+        }
     }
     print_str("\n\rDone searching non-zero blocks.");
 }
