@@ -43,14 +43,14 @@ uint8_t pvt_CRC7(uint64_t ca);
 ******************************************************************************/
 
 // Initializes a standard capacity SD card into SPI mode
-uint32_t SD_InitializeSPImode(void)
+uint32_t SD_InitializeSPImode(CardTypeVersion *ctv)
 {
     uint8_t r1 = 0; //R1 response returned for every SD Command
-    uint8_t R7[5];  //R7 response returned by SEND_IF_COND (CMD8)
-    //uint8_t version; // card version 1.x or 2.x. For possible future use.
+    uint8_t r7[5];  //R7 response returned by SEND_IF_COND (CMD8)
 
     //Wait up to 80 clock cycles for power up to complete.
     for(int i=0;i<=10;i++) { SD_SendByteSPI(0xFF); }
+
 
     // ********************
     // GO_IDLE_STATE (CMD0)
@@ -60,10 +60,9 @@ uint32_t SD_InitializeSPImode(void)
     CS_HIGH;
     if (r1 != 1) { return (FAILED_GO_IDLE_STATE | r1); }
     // END GO_IDLE_STATE (CMD0)
-    // *******************
+    // ************************
 
-    print_str("\n\rHERE");
-
+       
     // *******************
     // SEND_IF_COND (CMD8)
     uint8_t checkPattern = 0xAA;
@@ -74,81 +73,73 @@ uint32_t SD_InitializeSPImode(void)
             ((uint16_t)voltageSupplyRange << 8 ) | checkPattern );
 
     //Get R7 response
-    R7[0] = SD_GetR1(); // First R7 byte is R1 response.
-    R7[1] = SD_ReceiveByteSPI();
-    R7[2] = SD_ReceiveByteSPI();
-    R7[3] = SD_ReceiveByteSPI();
-    R7[4] = SD_ReceiveByteSPI();
+    r7[0] = SD_GetR1(); // First R7 byte is R1 response.
+    r7[1] = SD_ReceiveByteSPI();
+    r7[2] = SD_ReceiveByteSPI();
+    r7[3] = SD_ReceiveByteSPI();
+    r7[4] = SD_ReceiveByteSPI();
     
     CS_HIGH;
-    if ( R7[0] == (ILLEGAL_COMMAND | IN_IDLE_STATE) ) 
+    if ( r7[0] == (ILLEGAL_COMMAND | IN_IDLE_STATE) ) ctv->version = 1;
+    else if (r7[0] == IN_IDLE_STATE) 
     {
-        // This will be to handle version 1 cards, if support
-        // is implemented.  For now it is UNSUPPORTED_CARD_TYPE
-        //version = 1;
-        return (FAILED_SEND_IF_COND | UNSUPPORTED_CARD_TYPE | R7[0]);
+        ctv->version = 2;
+
+        if ( (r7[3] != voltageSupplyRange ) || (r7[4] != checkPattern) )
+            { return (FAILED_SEND_IF_COND | UNSUPPORTED_CARD_TYPE | r7[0]); }
     }
-    else if (R7[0] == IN_IDLE_STATE) 
-    {
-        //version == 2;
-        if ( (R7[3] != voltageSupplyRange ) || (R7[4] != checkPattern) )
-        { return (FAILED_SEND_IF_COND | UNSUPPORTED_CARD_TYPE | R7[0]); }
-    }
-    else  { return (FAILED_SEND_IF_COND | R7[0]); }
+    else  { return (FAILED_SEND_IF_COND | r7[0]); }
     // END SEND_IF_COND (CMD8)
-    // **********************
+    // ***********************
 
 
-
-    // **********************
+    // ******************
     // CRC_ON_OFF (CMD59)
     r1 = 0;
     CS_LOW;
-    SD_SendCommand(CRC_ON_OFF,0);  //arg = 0 CRC OFF (default)
-                                   //arg = 1 CRC ON
+    SD_SendCommand(CRC_ON_OFF,0);  //0 CRC OFF (default)
+                                   //1 CRC ON
     r1 = SD_GetR1();
     CS_HIGH;
     if (r1 != 1) { return (FAILED_CRC_ON_OFF | r1); }
     // END CRC_ON_OFF (CMD59)
-    // ***********************
-
+    // **********************
 
 
     // ************************
     // SD_SEND_OP_COND (ACMD41)
-    uint32_t acmd41_arg = 0; // = 0x40000000 if HCS supported;
-    if(HCS) { return (UNSUPPORTED_CARD_TYPE | r1); } // HCS is not supported
-    else
-    {
-        // Continue sending host capacity info to SD card until card signals it
-        // is no longer in the idle state (r1 != 1) or times out.
-        uint8_t timeout = 0;
-        do{
-            r1 = 0;
-            CS_LOW;
-            SD_SendCommand(APP_CMD,0); // send APP_CMD before any ACMD
-            r1 = SD_GetR1();
-            CS_HIGH;
-            if (r1 != 1) { return (FAILED_APP_CMD | r1); }
-
-            r1 = 0;
-            CS_LOW;
-            SD_SendCommand(SD_SEND_OP_COND,acmd41_arg);
-            r1 = SD_GetR1();
-            CS_HIGH;
-            if (r1 > 1) { return (FAILED_SD_SEND_OP_COND | r1); }
-            print_str("\n\rR1 = "); print_dec(r1);
-            print_str("\n\r");print_dec(timeout);
-            if( (timeout++ >= 0xFE) && ( r1 > 0 ) )
-            { return (FAILED_SD_SEND_OP_COND | OUT_OF_IDLE_TIMEOUT | r1); }
-        }while( r1 & 1 );
-    }
-    // END SEND_OP_COND (ACMD41)
-    // ************************
-
-
     
-    // ************************
+    uint32_t acmd41Arg;
+
+    // HCS - High Capacity Supported by host. Default TRUE.
+    if(HCS) acmd41Arg = 0x40000000; 
+    else acmd41Arg = 0; 
+
+    // Continue sending host capacity info to SD card until card
+    // signals it is no longer in the idle state or times out.
+    uint8_t timeout = 0;
+    do{
+        r1 = 0;
+        CS_LOW;
+        SD_SendCommand(APP_CMD,0); // send APP_CMD before any ACMD
+        r1 = SD_GetR1();
+        CS_HIGH;
+        if (r1 != 1) { return (FAILED_APP_CMD | r1); }
+
+        r1 = 0;
+        CS_LOW;
+        SD_SendCommand(SD_SEND_OP_COND,acmd41Arg);
+        r1 = SD_GetR1();
+        CS_HIGH;
+        if (r1 > 1) { return (FAILED_SD_SEND_OP_COND | r1); }
+        if( (timeout++ >= 0xFE) && ( r1 > 0 ) )
+        { return (FAILED_SD_SEND_OP_COND | OUT_OF_IDLE_TIMEOUT | r1); }
+    }while( r1 & IN_IDLE_STATE );
+    // END SEND_OP_COND (ACMD41)
+    // *************************
+
+
+    // *****************
     // READ_OCR (CMD 58)
 
     // Final initialization step is to read CCS (Card Capactity Status)
@@ -159,7 +150,7 @@ uint32_t SD_InitializeSPImode(void)
     r1 = SD_GetR1();
     if (r1 != 0) { return (FAILED_READ_OCR | r1); }
 
-    uint8_t resp = SD_ReceiveByteSPI();  //Get the rest of the response to READ_OCR
+    uint8_t resp = SD_ReceiveByteSPI();  //Rest of OCR
 
     //POWER_UP_STATUS
     if( (resp >> 7) != 1 )
@@ -177,16 +168,15 @@ uint32_t SD_InitializeSPImode(void)
     uint16_t voltagRangesAccepted = SD_ReceiveByteSPI();
              voltagRangesAccepted <<= 1;
              voltagRangesAccepted |= (SD_ReceiveByteSPI()>>7);
+    
 
-    if(ccs > 0) // currently only non-HCS supported.
-    {
-        CS_HIGH;
-        return (FAILED_READ_OCR | UNSUPPORTED_CARD_TYPE | r1) ;
-    }
+    if ( ccs == 1 ) ctv->type = SDHC;
+    else ctv->type = SDSC;
 
-    if( (uhsii !=  0) || //0 - only non-UHSII supported
-        (co2t  !=  0) || //0 - Over 2TB NOT supported
-        (s18a  !=  0) || //0 - NO switching to 1.8V Accepted.
+    // Current implementation does not handle any of these options.
+    if( (uhsii !=  0) || // UHSII not supported
+        (co2t  !=  0) || // Over 2TB not supported
+        (s18a  !=  0) || // Switching to 1.8V not supported
         (voltagRangesAccepted != 0x1FF)  ) // Voltage range of
                                            // 2.7 to 3.6V supported.
     {
@@ -196,7 +186,7 @@ uint32_t SD_InitializeSPImode(void)
     CS_HIGH;
     // END READ_OCR (CMD58)
     // ************************
-
+    
     return OUT_OF_IDLE; //initialization succeded
 }
 // END SD_InitializeSPImode()
@@ -212,8 +202,7 @@ void SD_SendByteSPI(uint8_t byte)
 
 
 
-// Gets a single byte response return by SD card. If a multi-byte value is
-// expected, then call enough times to read in the full response.
+// Gets a single byte returned by the SD card.
 uint8_t SD_ReceiveByteSPI(void)
 {
     SD_SendByteSPI(0xFF);
@@ -223,7 +212,7 @@ uint8_t SD_ReceiveByteSPI(void)
 
 
 
-// Sends SD command, argument, and CRC via SPI.
+// Sends SD command/argument/CRC via SPI.
 void SD_SendCommand(uint8_t cmd, uint32_t arg)
 {
     // Structure of command / argument sent to an
@@ -242,8 +231,7 @@ void SD_SendCommand(uint8_t cmd, uint32_t arg)
     tcacs = tcacs | crc | 1;  //complete loading of 48-bit command into tcacs
                               //by setting CRC and stop transmission bits
 
-    // ensuring a small buffer window between when CS is asserted and sending
-    // the command seems to help reduce the number of failed command responses.
+    // buffer window before sending command.
     for(int i=0;i<=10;i++) { SD_SendByteSPI(0xFF); }
     
     // Send command to SD Card via SPI
@@ -266,7 +254,8 @@ uint8_t SD_GetR1(void)
 
     while((r1 = SD_ReceiveByteSPI()) == 0xFF)
     {
-        if(timeout++ >= 0xFF) return R1_TIMEOUT;
+        if(timeout++ >= 0xFF) 
+        return R1_TIMEOUT;
     }
     return r1;
 }

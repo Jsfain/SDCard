@@ -32,14 +32,21 @@ int main(void)
 
     print_str("\n\n\n\r ******  BEGIN TESTING *********\n\n\n\r");
 
+
+    CardTypeVersion ctv = {.version = 0, .type = SDSC};
+    print_str("\n\r ctv.version = "); print_dec(ctv.version);
+    print_str("\n\r ctv.type    = "); 
+    if(ctv.type == SDSC) print_str("SDSC");
+    else if (ctv.type == SDHC) print_str("SDHC");
+
     uint32_t initResponse;
 
     //attempt to initialize sd card.
-    for(int i = 0; i<10; i++)
+    for(int i = 0; i<1; i++)
     {
         print_str("\n\n\rSD Card Initialization Attempt: ");
         print_dec(i);
-        initResponse = SD_InitializeSPImode();
+        initResponse = SD_InitializeSPImode(&ctv);
         if(initResponse != OUT_OF_IDLE) // If response is anything other than 0 (OUT_OF_IDLE) then initialization failed.
         {    
             print_str("\n\n\rSD INITIALIZATION FAILED with Response 0x");
@@ -54,31 +61,47 @@ int main(void)
     print_str("\n\rPrinting R1 Response for init = "); SD_PrintR1((uint8_t)(0x000FF&initResponse));
     print_str("\n\rinitialization response = "); SD_PrintInitError(initResponse);
 
+    print_str("\n\r ctv.version = "); print_dec(ctv.version);
+    print_str("\n\r ctv.type    = "); 
+    if(ctv.type == SDSC) print_str("SDSC");
+    else if (ctv.type == SDHC) print_str("SDHC");
 
 
     if(initResponse==OUT_OF_IDLE) // initialization successful
     {      
         // ***** test sd_GetMemoryCapcity() function in sd_misc.c  *****
-        
+        /*
         uint32_t mc = sd_GetMemoryCapacity();
         print_str("\n\rmemory capacity = ");
         print_dec(mc);
         print_str(" Bytes\n\r");
-        
+        */
         // ***** END test sd_GetMemoryCapcity()
         
 
         // **** test SD_SearchNonZeroBlocks()
+        
         SD_SearchNonZeroBlocks(0,100);
-
+        
         Block ds; //data block struct
         uint32_t block = 0;
+        uint16_t err;
         uint32_t address = block * DATA_BLOCK_LEN; // the address of first byte in block.
         
-        SD_ReadSingleDataBlock(address, &ds);
+        err = SD_ReadSingleDataBlock(0, &ds);
+        print_str(" err = ");SD_PrintReadError(err);
         SD_PrintDataBlock(ds.byte);
 
-
+        /*
+        err = SD_ReadSingleDataBlock(1, &ds);
+        print_str(" err = ");SD_PrintReadError(err);
+        SD_PrintDataBlock(ds.byte);
+        
+        
+        err = SD_ReadSingleDataBlock(16 * 512, &ds);
+        print_str(" err = ");SD_PrintReadError(err);
+        SD_PrintDataBlock(ds.byte);
+        */
         // ***** test read/print multiple data block *******
         //USART_Receive();
         //int nob = 5;
@@ -209,11 +232,12 @@ int main(void)
         //SD_PrintMultipleDataBlocks(erase_start_address,noeb+2);
         // ***** END Test Erase Blocks *****
         */
+       
         uint32_t start_sector;
         uint32_t start_address;
         uint32_t nos;
         uint8_t answer;
-        uint16_t err;
+        //uint16_t err;
         do{
             do{
                 print_str("\n\rEnter Start Sector\n\r");
@@ -231,13 +255,15 @@ int main(void)
 
             start_address = DATA_BLOCK_LEN * start_sector;
             err = SD_PrintMultipleDataBlocks(start_address,nos);
-            print_str("\n\rerr = 0x"); print_hex(err);
+            //print_str("\n\rerr = 0x"); print_hex(err);
+            SD_PrintReadError(err);
 
             print_str("\n\r press 'q' to quit and any other key to go again: ");
             answer = USART_Receive();
             USART_Transmit(answer);
 
         }while(answer != 'q');
+        
 
     }
 

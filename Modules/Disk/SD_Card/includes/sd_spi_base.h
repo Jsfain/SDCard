@@ -33,19 +33,9 @@
  *****************************************************************************/
 
 
-
-// Set to print messages to assist with debugging.
-#define SD_MSG 1 //   0  = NO messages
-                 //   1  = ERROR messages
-                 //   2  = INFO messages
-                 //   3  = DEBUG messages
-                 //  >3  = VERBOSE messages
-
-
-
 // Host Capcity Support. Should always be set to 0. 
-#define HCS 0  // 0 = host supports SDSC. 
-               // 1 = host supports SDHC or SDXC.
+#define HCS 1  // 0 = host only supports SDSC. 
+               // 1 = host also supports SDHC or SDXC.
               
 
 
@@ -124,9 +114,40 @@
 
 
 
+// Card Types
+#define SDHC 1 // or SDXC
+#define SDSC 0 // standard capacity
+
+typedef struct CardTypeVersion {
+    uint8_t version;
+    uint8_t type;
+} CardTypeVersion;
+
+
 /******************************************************************************
  *                           FUNCTION DECLARATIONS
 ******************************************************************************/
+
+
+
+uint32_t SD_InitializeSPImode(CardTypeVersion * ctv);
+
+void SD_SendByteSPI(uint8_t byte);
+
+void SD_SendCommand(uint8_t cmd, uint32_t arg);
+
+uint8_t SD_ReceiveByteSPI(void);
+
+uint8_t SD_GetR1(void);
+
+void SD_PrintR1(uint8_t r1);
+
+void SD_PrintInitError(uint32_t err);
+
+#endif //SD_SPI_H
+
+
+
 
 
 
@@ -138,9 +159,6 @@
  *              response is the last R1 response received. 
  *              Use SD_PrintInitError(response) to print the response.
 ******************************************************************************/
-uint32_t SD_InitializeSPImode(void);
-
-
 
 /******************************************************************************
  * Function:    SD_SendByteSPI(uint8_t data)
@@ -152,8 +170,6 @@ uint32_t SD_InitializeSPImode(void);
  * Notes:       Call this function as many times as necessary to send a command
  *              to the SD card in single byte packets.
 *******************************************************************************/
-void SD_SendByteSPI(uint8_t byte);
-
 
 
 /******************************************************************************
@@ -165,10 +181,6 @@ void SD_SendByteSPI(uint8_t byte);
  * Notes:       sd_CRC7 is called in this function to calculate the CRC7 value
  *              to send with the corresponding Command/Argument combination.
 ******************************************************************************/
-void SD_SendCommand(uint8_t cmd, uint32_t arg);
-
-
-
 /******************************************************************************
  * Function:    SD_ReceiveByteSPI(void)
  * Description: Get byte returned by SD card via SPI.
@@ -183,9 +195,6 @@ void SD_SendCommand(uint8_t cmd, uint32_t arg);
  *                 is up to the calling function to determine if the returned 
  *                 value is valid.
 ******************************************************************************/
-uint8_t SD_ReceiveByteSPI(void);
-
-
 
 /******************************************************************************
  * Function:    SD_GetR1(void)
@@ -198,10 +207,6 @@ uint8_t SD_ReceiveByteSPI(void);
  *              response, otherwise the returned value will not be the R1
  *              response of the SD Card.
 ******************************************************************************/
-uint8_t SD_GetR1(void);
-
-
-
 /******************************************************************************
  * Function:    SD_PrintR1(uint8_t R1)
  * Description: Prints the R1 response in readable form.
@@ -213,9 +218,6 @@ uint8_t SD_GetR1(void);
  *              flag and will be set to 1 if it takes too long for the SD card
  *              to return the R1 response
 ******************************************************************************/
-void SD_PrintR1(uint8_t r1);
-
-
 
 /******************************************************************************
  * Function:    SD_PrintInitError(uint32_t err)
@@ -227,7 +229,3 @@ void SD_PrintR1(uint8_t r1);
  *              returned by the SD card as well as the other initialization 
  *              errors.       
  * ***************************************************************************/
-void SD_PrintInitError(uint32_t err);
-
-
-#endif //SD_SPI_H

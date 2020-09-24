@@ -147,6 +147,19 @@ These responses are returned by the intialization routine, SD_InitializeSPImode(
 
 Use SD_PrintInitError( uint32_t initError ) to print the initialization error response.  This will not print the R1 portion of the response. To do that pass the bits 0 to 7 to SD_PrintR1( (uin8_t) initError )
 
+
+
+// Card Types
+#define SDHC 1 // or SDXC
+#define SDSC 0 // standard capacity
+
+typedef struct CardTypeVersion {
+    uint8_t version;
+    uint8_t type;
+} CardTypeVersion;
+
+
+
 example:
 uint32_t resp = SD_InitializeSPImode(void);
 SD_PrintR1( (uint8_t)resp );
@@ -154,25 +167,26 @@ SD_PrintInitError(resp);
 
 
 FUNCTIONS
+******************************************
 
 
-uint32_t SD_InitializeSPImode(void);
+uint32_t SD_InitializeSPImode(CardTypeVersion *ctv)
 
 DESCRIPTION: 
-Initializes a standard capacity SD card into SPI mode.  The SD card is successfully initialized if 0 is returned, i.e. no initialization error response flag is set and OUT_OF_IDLE is returned in the R1 portion of the response.
+Initializes an SD card into SPI mode and establishes the card type and version in *ctv.  The SD card is successfully initialized if INIT_SUCCESS and OUT_OF_IDLE are the initialization error and R1 portions of the initialization reponse, respectively.
+
+The Initialization routine will also set the Type and Version in the CardTypeVersion struct passed in as the argument, which will be required for certain functions.  Once these are set they should not be changed.
 
 ARGUMENTS:
-none
+pointer to CardTypeVersion struct.
 
 RETURN:
-uint32_t initialization response. The lowest byte of the response is the most recent R1 response received from the SD card during execution of the initialization routine.
+uint32_t initialization response. This response is separated into two portions.  The lowest byte of the response is the most recent R1 response received from the SD card, with bits 8 to 19 is the initialization error response.
 
-NOTES:
-Use SD_PrintInitError(err) to print the initialization error response returned, and SD_PrintR1( (uint8_t)err ) to print the R1 portion of the response.
-
+Use SD_PrintInitError(err) to print the initialization error response returned, and SD_PrintR1( (uint8_t) err) to print the R1 portion of the response.
 
 EXAMPLE:
-uint32_t resp = SD_InitializeSPImode(void);
+uint32_t resp = SD_InitializeSPImode(CardTypeVersion *cvt);
 SD_PrintR1( (uint8_t)resp );
 SD_PrintInitError(resp);
 
