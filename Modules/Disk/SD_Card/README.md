@@ -1,36 +1,22 @@
 # SD Card Module
-Used to execute the SPI mode-specific SD card command set using an AVR host.
+For executing the SPI mode-specific SD card command set using an AVR host.
 
 
 # Purpose
-To establish a set of functions for access and control of an SD card in SPI mode by an AVR microcontroller. This module is intended to be used as a phyiscal disk layer operating underneath a file system module, however, it can be simply used by itself for raw data access (e.g. read/write/erase) and any other disk operations allowed by the SD card SPI mode command set.
+To establish a set of functions for access and control of an SD card in SPI mode by an AVR microcontroller. The module can is intended to be implemented as either a standalone raw data access module or as a phyiscal disk layer operating underneath a file system layer.
 
 
 # Details
-TARGET: AVR ATmega1280 microcontroller
-Written in C
-Compiled, built, and downloaded using AVR Toolchain available at [Homebrew-AVR](https://github.com/osx-cross/homebrew-avr)
+TARGET: ATmega1280
+LANGUAGE: C
+The [AVR Toolchain](https://github.com/osx-cross/homebrew-avr) (AVR-GCC, AVR-LIBC, AVRDUDE) are used to compile, build, and ultimately download the project to the microcontroller. See the link above for specifics about this.
 
 
 # Overview
-* This module is separated into base functions (SD_SPI_BASE) and special functions (SD_SPI_DATA_ACCESS) requiring SD_SPI_BASE.
-
-* SD_SPI_BASE: 
-Any implmentation of this module requires SD_SPI_BASE. These functions are intended to be only those essential for interaction with the SD card in SPI mode, and a few error printing functions.  These include routines for the following tasks:
-* Initialization of the SD card into SPI Mode.
-* Sending SPI-specific SD card commands/arguments to the SD card.
-* Receiving the card's returned bytes in response to any command.
-* Error printing.
-
-* SD_SPI_DATA_ACCESS 
-This is basically a repository for specialized SD card functions, which requires SD_SPI_BASE to execute.  These functions are not required for implementation of the module, but do include routines that issue commands to take care of the following tasks and then hanlde the card's response:
-* Reading / Writing / Erasing data blocks.
-* Data block print functions.
-* Calculation of card capacity.
-* Others.
-
-* The diagram below gives an idea of how this module is intended to be implemented:
-    Example:  SD Card <--> SPI Module  <-->  SD_SPI_BASE <--> SD_SPI_DATA_ACCESS <--> File System Module
+* The module is separated into base functions in SD_SPI_BASE and special functions in SD_SPI_DATA_ACCESS and SD_SPI_MISC. 
+* SD_SPI_BASE provides the basic functions required for any interaction with the SD card, such as the SPI mode initialization, sending commands, and getting the response.  
+* SD_SPI_DATA_ACCESS (requires SD_SPI_BASE) holds some SD card data block READ, WRITE, ERASE and related functions.
+* SD_SPI_MISC (requires SD_SPI_BASE and SD_SPI_DATA_ACCESS) is intended to hold some additional miscellaneous functions
 
 * As this module is for the opeation of an SD card in SPI mode, it requires an SPI module to handle the phyiscal sending and receiving of data bytes on an AVR's SPI line.  An SPI module is not included explicitly here, but one is available under the 'General' subdirectory of this repository.  The requirements of the SPI module by this SD card module will be discussed later. 
     
