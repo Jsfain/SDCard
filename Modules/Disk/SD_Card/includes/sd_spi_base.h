@@ -5,20 +5,21 @@
  * ATmega 1280
  *
  * DESCRIPTION
- * Base-level SD card functions, objects, and definition MACROS used for 
- * physical interaction with an SD card operating SPI Mode.
+ * Base-level SD card function declarations and struct and macro definitions  
+ * that will be used to handle the basic physical interaction with an SD card
+ * operating in SPI Mode.
  * 
- * FUNCTION LIST
- * 1) uint32_t  SD_InitializeSPImode(void)
+ * "PUBLIC" FUNCTION LIST
+ * 1) uint32_t  uint32_t SD_InitializeSPImode(CardTypeVersion *ctv)
  * 2) void      SD_SendByteSPI(uint8_t byte)
  * 3) uint8_t   SD_ReceiveByteSPI(void)
  * 4) void      SD_SendCommand(uint8_t cmd, uint32_t arg)
- * 5) uint8_t   SD_GetR1(void) 
+ * 5) uint8_t   SD_GetR1(void)
  * 6) void      SD_PrintR1(uint8_t r1)
  * 7) void      SD_PrintInitError(uint32_t err)
  * 
  * Author: Joshua Fain
- * Date:   9/17/2020
+ * Date:   9/24/2020
  * ***************************************************************************/
 
 
@@ -29,28 +30,24 @@
 
 
 /******************************************************************************
- *                          MACROS / DEFINITIONS / FLAGS
+ *                         DEFINE MACROS / FLAGS
  *****************************************************************************/
 
 
-// Host Capcity Support. Should always be set to 0. 
+// Host Capcity Support.
 #define HCS 1  // 0 = host only supports SDSC. 
                // 1 = host also supports SDHC or SDXC.
               
-
-
-// Data Block Length. Should always be 512.
+// Data Block Length. Currently only supports values of 512.
 #define DATA_BLOCK_LEN 512
 
-
-
-// Macros for asserting / deasserting the (CS) pin.
-#define CS_LOW    SPI_PORT &= ~(1<<SS);  // Assert CS
-#define CS_HIGH   SPI_PORT |= (1<<SS);   // Deassert CS
+// Asserting / deasserting the (CS) pin.
+#define CS_LOW    SPI_PORT &= ~(1<<SS);  // Assert
+#define CS_HIGH   SPI_PORT |= (1<<SS);   // Deassert
 
 
 
-// SD Card Commands available in SPI Mode.     
+// SD card commands available in SPI Mode.     
 #define GO_IDLE_STATE               0       //CMD0
 #define SEND_OP_COND                1       //CMD1
 #define SWITCH_FUNC                 6       //CMD6
@@ -76,6 +73,7 @@
 #define GEN_CMD                     56      //CMD56
 #define READ_OCR                    58      //CMD58
 #define CRC_ON_OFF                  59      //CMD59
+
 // Application Specific Commands. To activate, first call APP_CMD.
 #define SD_STATUS                   13      //ACMD13
 #define SEND_NUM_WR_BLOCKS          22      //ACMD22
@@ -86,8 +84,10 @@
 
 
 
-// R1 Response Flags (OUT_OF_IDLE and R1_TIMEOUT are not standard R1 responses)
-#define OUT_OF_IDLE             0x00000   // No errors and out of idle state
+// R1 Response Flags. 
+// OUT_OF_IDLE and R1_TIMEOUT are not part of the SD card's R1
+// responses, but are used here to indicate additional states. 
+#define OUT_OF_IDLE             0x00000   // No errors & out of idle
 #define IN_IDLE_STATE           0x00001
 #define ERASE_RESET             0x00002
 #define ILLEGAL_COMMAND         0x00004
@@ -99,18 +99,19 @@
 
 
 
-// Responses returned by SD_InitializeSPImode() in addition to the R1 response.
+// Initialization Error Responses returned by initialization function.
+// The lowest byte is zero to accommodate the R1 response.
 #define FAILED_GO_IDLE_STATE    0x00100   //CMD0
 #define FAILED_SEND_IF_COND     0x00200   //CMD8
-#define UNSUPPORTED_CARD_TYPE   0x00400   //Card version and/or capacity
+#define UNSUPPORTED_CARD_TYPE   0x00400
 #define FAILED_CRC_ON_OFF       0x00800   //CMD59
 #define FAILED_APP_CMD          0x01000   //CMD55
 #define FAILED_SD_SEND_OP_COND  0x02000   //ACMD41
 #define OUT_OF_IDLE_TIMEOUT     0x04000
 #define FAILED_READ_OCR         0x08000   //CMD58
 #define POWER_UP_NOT_COMPLETE   0x10000
-#define FAILED_SET_BLOCKLEN     0x20000
-#define FAILED_SEND_CSD         0x40000
+#define FAILED_SET_BLOCKLEN     0x20000   // not currently used
+#define FAILED_SEND_CSD         0x40000   // not currently used
 
 
 
@@ -118,114 +119,41 @@
 #define SDHC 1 // or SDXC
 #define SDSC 0 // standard capacity
 
-typedef struct CardTypeVersion {
+
+// THe SD card's version and type will be held in an object of this struct.
+// The members should only be set by initialization routine.
+typedef struct {
     uint8_t version;
     uint8_t type;
 } CardTypeVersion;
 
 
-/******************************************************************************
+/************************************************************s******************
  *                           FUNCTION DECLARATIONS
 ******************************************************************************/
 
 
-
+// Initializes the SD card into SPI mode and gets the card type and version.
 uint32_t SD_InitializeSPImode(CardTypeVersion * ctv);
 
+// Sends single byte argument to SD card via SPI.
 void SD_SendByteSPI(uint8_t byte);
 
-void SD_SendCommand(uint8_t cmd, uint32_t arg);
-
+// Gets a single byte returned by the SD card.
 uint8_t SD_ReceiveByteSPI(void);
 
+// Sends SD command/argument/CRC via SPI.
+void SD_SendCommand(uint8_t cmd, uint32_t arg);
+
+// Gets the R1 response returned by an SD card for a given command.
 uint8_t SD_GetR1(void);
 
+// Prints the results of the R1 response in readable form.
 void SD_PrintR1(uint8_t r1);
 
+// Prints the initialization error response 
+// returned by SD_InitializeSPImode().
 void SD_PrintInitError(uint32_t err);
 
+
 #endif //SD_SPI_H
-
-
-
-
-
-
-/******************************************************************************
- * Function:    SD_InitializeSPImode(void) 
- * Description: Initializes a standard capacity SD card into SPI mode
- * Argument(s): VOID
- * Returns:     uint32_t initialization response. The lowest byte of the 
- *              response is the last R1 response received. 
- *              Use SD_PrintInitError(response) to print the response.
-******************************************************************************/
-
-/******************************************************************************
- * Function:    SD_SendByteSPI(uint8_t data)
- * Description: Send single byte to SD card via SPI.
- *              This, along with the SD_ReceiveByteSPI(), are the functions used to 
- *              interface directly with the SPI module.
- * Argument(s): uint8_t data byte to be sent to SD card.
- * Returns:     VOID
- * Notes:       Call this function as many times as necessary to send a command
- *              to the SD card in single byte packets.
-*******************************************************************************/
-
-
-/******************************************************************************
- * Function:    SD_SendCommand(uint8_t cmd, uint32_t arg)
- * Description: sends SD command, argument, and CRC via SPI.
- * Argument(s): 8-bit SD card command from the command list.
- *              32-bit argument.
- * Returns:     VOID
- * Notes:       sd_CRC7 is called in this function to calculate the CRC7 value
- *              to send with the corresponding Command/Argument combination.
-******************************************************************************/
-/******************************************************************************
- * Function:    SD_ReceiveByteSPI(void)
- * Description: Get byte returned by SD card via SPI.
- *              This, along with the SD_SendByteSPI(), are the only functions that
- *              explicitly interface with the SPI specific functions.
- * Argument(s): VOID
- * Returns:     8-bit SD Card response.
- * Notes:       1) If a multi-byte value is expected to be returned then this
- *                 function should be called at least that many times.
- *              2) This function will return whatever byte value is present in 
- *                 the SPDR when the SPIF flag is set in SPI_MasterRead(). It 
- *                 is up to the calling function to determine if the returned 
- *                 value is valid.
-******************************************************************************/
-
-/******************************************************************************
- * Function:    SD_GetR1(void)
- * Description: Gets the R1 response returned by an SD card for a given command.
- * Argument(s): VOID
- * Returns:     uint8_t byte corresponding to the R1 response.
- * Notes:       The R1 response is the first response byte sent by an SD Card
- *              in response to any command, therefore, this function should 
- *              not be called at any other time except to get the first byte 
- *              response, otherwise the returned value will not be the R1
- *              response of the SD Card.
-******************************************************************************/
-/******************************************************************************
- * Function:    SD_PrintR1(uint8_t R1)
- * Description: Prints the R1 response in readable form.
- * Argument(s): uint8_t R1 response
- * Returns:     VOID
- * Notes:       The true SD card SPI mode R1 response only occupies bits 0 to 
- *              7 of the first byte returned by the SD card in response to any
- *              command. In this implementation, bit 8 is used as a R1_TIMEOUT
- *              flag and will be set to 1 if it takes too long for the SD card
- *              to return the R1 response
-******************************************************************************/
-
-/******************************************************************************
- * Function:    SD_PrintInitError(uint32_t err)
- * Description: Prints the response returned by SD_InitializeSPImode() in a
- *              readable form.
- * Argument(s): 32-bit response of SD_InitializeSPImode()
- * Returns:     VOID
- * Notes:       The SD_InitializeSPImode() response includes the last R1 response 
- *              returned by the SD card as well as the other initialization 
- *              errors.       
- * ***************************************************************************/

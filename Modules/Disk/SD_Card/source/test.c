@@ -28,16 +28,11 @@ int main(void)
     SPI_MasterInit();
 
     // Clear screen:
-    for(int k=0;k<0xFF;k++) print_str("\n\r");
+    for(int k=0;k<0xFF;k++) print_str("\n");
+    print_str("\r");
 
-    print_str("\n\n\n\r ******  BEGIN TESTING *********\n\n\n\r");
-
-
-    CardTypeVersion ctv = {.version = 0, .type = SDSC};
-    print_str("\n\r ctv.version = "); print_dec(ctv.version);
-    print_str("\n\r ctv.type    = "); 
-    if(ctv.type == SDSC) print_str("SDSC");
-    else if (ctv.type == SDHC) print_str("SDHC");
+    // Initializing crv
+    CardTypeVersion ctv = {.version = 0, .type = 0};
 
     uint32_t initResponse;
 
@@ -70,28 +65,32 @@ int main(void)
     if(initResponse==OUT_OF_IDLE) // initialization successful
     {      
         // ***** test sd_GetMemoryCapcity() function in sd_misc.c  *****
-        /*
+        
         uint32_t mc = sd_GetMemoryCapacity();
         print_str("\n\rmemory capacity = ");
         print_dec(mc);
         print_str(" Bytes\n\r");
-        */
+        
+        
         // ***** END test sd_GetMemoryCapcity()
         
 
         // **** test SD_SearchNonZeroBlocks()
+        SD_PrintNonZeroBlockNumbers( (16*512) ,(16 * 512) + 2);
         
-        SD_SearchNonZeroBlocks(0,100);
-        
+
         Block ds; //data block struct
-        uint32_t block = 0;
+        uint32_t blockNumber = 3;
         uint16_t err;
-        uint32_t address = block * DATA_BLOCK_LEN; // the address of first byte in block.
+        uint32_t blockAddress;
         
-        err = SD_ReadSingleDataBlock(0, &ds);
+        if (ctv.type == SDHC) blockAddress = blockNumber;
+        else blockAddress = blockNumber * DATA_BLOCK_LEN;
+        
+        err = SD_ReadSingleDataBlock(blockAddress, &ds);
         print_str(" err = ");SD_PrintReadError(err);
         SD_PrintDataBlock(ds.byte);
-
+        
         /*
         err = SD_ReadSingleDataBlock(1, &ds);
         print_str(" err = ");SD_PrintReadError(err);
@@ -111,35 +110,37 @@ int main(void)
         
 
 
-        /*
+        
         // ***** test sd_WriteSingleDataBlock() function in sd_misc.c *****
         
-        DataBlock ds; //data block struct
-        uint32_t block = 0;
-        uint32_t address = block * DATA_BLOCK_LEN; // the address of first byte in block.
+        /*
+        //Block ds; //data block struct
+        //uint32_t block = 0;
+        //uint32_t address = block; // * DATA_BLOCK_LEN; // the address of first byte in block.
         uint16_t wr; // write response
 
         // data to write to block
         uint8_t db[DATA_BLOCK_LEN] = "HELLO WORLD......"; 
     
         //see what is currently written to block we will be writing to. 
-        ds = SD_ReadSingleDataBlock(address);
-        SD_PrintDataBlock(ds.data);
+        err = SD_ReadSingleDataBlock(address, &ds);
+        print_str(" err = ");SD_PrintReadError(err);
+        SD_PrintDataBlock(ds.byte);
 
         print_str("\n\r *** WRITING SINGLE BLOCK *** \n\r");
         wr = SD_WriteSingleDataBlock(address,db);
 
         //Get R2 response (SEND_STATUS) if there is a write error.    
-        if ((wr&0x0F00)==WRITE_ERROR)
+        if ((wr&0x0F00)==WRITE_ERROR_TOKEN)
         {
             print_str("\n\r Write error detected");
             uint16_t r2;
         
             CS_LOW;             
             SD_SendCommand(SEND_STATUS,0);
-            r2 = SD_getR1(); // The first byte of the R2 response is same as the R1 response.
+            r2 = SD_GetR1(); // The first byte of the R2 response is same as the R1 response.
             r2 <<= 8;
-            r2 |= SD_getR1(); // can use the sd_getR1 to get second byte of R2 response as well.
+            r2 |= SD_GetR1(); // can use the sd_getR1 to get second byte of R2 response as well.
             print_dec(r2);
             CS_HIGH;
             print_str("\n\r R2 Response = ");
@@ -150,10 +151,12 @@ int main(void)
         
         else // No write error, then verify data has been written to block at address
         {
-            ds = SD_ReadSingleDataBlock(address);
-            SD_PrintDataBlock(ds.data);
+            SD_ReadSingleDataBlock(address,&ds);
+            print_str(" err = ");SD_PrintReadError(err);
+            SD_PrintDataBlock(ds.byte);
         }
         */
+        
 
 
         

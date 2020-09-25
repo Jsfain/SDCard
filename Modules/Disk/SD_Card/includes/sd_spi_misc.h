@@ -50,7 +50,7 @@ uint32_t sd_GetMemoryCapacity(void);
  *              2) uint32_t block number for the last block. 
  * Returns:     VOID
 ******************************************************************************/
-void SD_SearchNonZeroBlocks(uint32_t firstBlock, uint32_t lastBlock);
+void SD_PrintNonZeroBlockNumbers(uint32_t firstBlock, uint32_t lastBlock);
 
 
 #endif // SD_SPI_MISC_H

@@ -144,22 +144,22 @@ uint32_t sd_GetMemoryCapacity(void)
 
 // Prints the block number of all blocks between firstBlock and lastBlock 
 // that have any non-zero bytes, to assist in finding blocks that have data.
-void SD_SearchNonZeroBlocks(uint32_t firstBlock, uint32_t lastBlock)
+void SD_PrintNonZeroBlockNumbers(uint32_t firstBlockAddress, uint32_t lastBlockAddress)
 {
     Block ds;
     print_str("\n\rSearching for non-zero blocks over range ");
-    print_dec(firstBlock);
+    print_dec(firstBlockAddress);
     print_str(" to ");
-    print_dec(lastBlock);
+    print_dec(lastBlockAddress);
 
     uint16_t tab = 0; //used for printing format
     uint32_t address = 0;
 
-    for( uint32_t blockNumber = firstBlock; 
-                  blockNumber <= lastBlock; 
+    for( uint32_t blockNumber = firstBlockAddress;
+                  blockNumber <= lastBlockAddress;
                   blockNumber++ )
     {
-        address = blockNumber * DATA_BLOCK_LEN;
+        address = blockNumber;
         SD_ReadSingleDataBlock(address, &ds);       
         
         for(int i = 0; i < DATA_BLOCK_LEN; i++)

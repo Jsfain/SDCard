@@ -47,14 +47,14 @@
 
 
 
-// Read single block (512 bytes) from SD card into array
-uint16_t SD_ReadSingleDataBlock(uint32_t address, Block *ds)
+// Read single block at address from SD card into array.
+uint16_t SD_ReadSingleDataBlock(uint32_t blockAddress, Block *ds)
 {
     uint8_t timeout = 0;
     uint8_t r1;
 
     CS_LOW;
-    SD_SendCommand(READ_SINGLE_BLOCK, address);  //CMD17
+    SD_SendCommand(READ_SINGLE_BLOCK, blockAddress); //CMD17
     r1 = SD_GetR1();
 
     if(r1 > 0)
@@ -136,7 +136,7 @@ void SD_PrintDataBlock(uint8_t *byte)
 
 // Print multiple data blocks to screen.
 uint16_t SD_PrintMultipleDataBlocks(
-                uint32_t startAddress,
+                uint32_t startBlockAddress,
                 uint32_t numberOfBlocks)
 {
     Block ds;
@@ -144,7 +144,7 @@ uint16_t SD_PrintMultipleDataBlocks(
     uint8_t r1;
 
     CS_LOW;
-    SD_SendCommand(READ_MULTIPLE_BLOCK, startAddress); // CMD18
+    SD_SendCommand(READ_MULTIPLE_BLOCK, startBlockAddress); // CMD18
     r1 = SD_GetR1();
     print_str("\n\rprinting R1 = ");SD_PrintR1(r1);
     if(r1 > 0)
@@ -172,7 +172,7 @@ uint16_t SD_PrintMultipleDataBlocks(
 
             
             print_str("\n\n\r\t\t\t\t\tBLOCK: ");
-            print_dec( (startAddress + (i * DATA_BLOCK_LEN)) / DATA_BLOCK_LEN );
+            print_dec( (startBlockAddress + (i * DATA_BLOCK_LEN)) / DATA_BLOCK_LEN );
             SD_PrintDataBlock(ds.byte);
         }
         
@@ -191,11 +191,11 @@ uint16_t SD_PrintMultipleDataBlocks(
 
 
 // Writes data in array pointed at by *data to the block at 'address'
-uint16_t SD_WriteSingleDataBlock(uint32_t address, uint8_t *data)
+uint16_t SD_WriteSingleDataBlock(uint32_t blockAddress, uint8_t *data)
 {
     uint8_t  r1;
     CS_LOW;    
-    SD_SendCommand(WRITE_BLOCK,address); // CMD24
+    SD_SendCommand(WRITE_BLOCK,blockAddress); // CMD24
     r1 = SD_GetR1();
 
     if(r1 > 0)
@@ -272,7 +272,7 @@ uint16_t SD_WriteSingleDataBlock(uint32_t address, uint8_t *data)
 // Writes data in the array pointed at by *data to multiple blocks
 // specified by 'numberOfBlocks' and starting at 'address'.
 uint16_t SD_WriteMultipleDataBlocks(
-                uint32_t address, 
+                uint32_t blockAddress, 
                 uint32_t numberOfBlocks, 
                 uint8_t *data)
 {
@@ -281,7 +281,7 @@ uint16_t SD_WriteMultipleDataBlocks(
     uint16_t timeout = 0;
 
     CS_LOW;    
-    SD_SendCommand(WRITE_MULTIPLE_BLOCK,address);  //CMD25
+    SD_SendCommand(WRITE_MULTIPLE_BLOCK,blockAddress);  //CMD25
     uint8_t r1 = SD_GetR1();
     
     if(r1 > 0)
@@ -367,11 +367,8 @@ uint16_t SD_WriteMultipleDataBlocks(
 
 
 
-
-
-// Returns the number of well written blocks after a 
-// multi-block write operation is performed.
-// use SD_PrintReadError(err) 
+// Returns the number of well written blocks after a multi-block
+// write operation is performed. Use SD_PrintReadError(err) 
 uint16_t SD_NumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks)
 {
     uint8_t r1;
@@ -425,25 +422,25 @@ uint16_t SD_NumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks)
 
 
 // Erases blocks from start_address to end_address (inclusive)
-uint16_t SD_EraseBlocks(uint32_t start_address, uint32_t end_address)
+uint16_t SD_EraseBlocks(uint32_t startBlockAddress, uint32_t endBlockAddress)
 {
     uint8_t r1 = 0;
     
     // set start address for erase block
     CS_LOW;
-    SD_SendCommand(ERASE_WR_BLK_START_ADDR,start_address);
+    SD_SendCommand(ERASE_WR_BLK_START_ADDR,startBlockAddress);
     r1 = SD_GetR1();
     CS_HIGH;
     if(r1 > 0) return (SET_ERASE_START_ADDR_ERROR | R1_ERROR | r1);
     
     // set end address for erase block
     CS_LOW;
-    SD_SendCommand(ERASE_WR_BLK_END_ADDR,end_address);
+    SD_SendCommand(ERASE_WR_BLK_END_ADDR,endBlockAddress);
     r1 = SD_GetR1();
     CS_HIGH;
     if(r1 > 0) return (SET_ERASE_END_ADDR_ERROR | R1_ERROR | r1);
 
-    // erase all blocks in range of start address to end address
+    // erase all blocks in range
     CS_LOW;
     SD_SendCommand(ERASE,0);
     r1 = SD_GetR1();
@@ -455,14 +452,10 @@ uint16_t SD_EraseBlocks(uint32_t start_address, uint32_t end_address)
 
     uint16_t timeout = 0; 
 
-    // DO (Data Out) line will be held low by card while it completes erase of data blocks.
-    // once it is complete the DO line will be any non-zero value to signal it is out of the busy state.
+    // wait for card not to finish erasing blocks.
     while(SD_ReceiveByteSPI() == 0)
     {
-        if(timeout++ > 0xFFFE) 
-        {
-            return (ERASE_BUSY_TIMEOUT | r1);
-        }
+        if(timeout++ > 0xFFFE) return (ERASE_BUSY_TIMEOUT | r1);
     }
     CS_HIGH;
     return ERASE_SUCCESSFUL;

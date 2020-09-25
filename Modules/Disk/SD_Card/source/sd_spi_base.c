@@ -2,13 +2,13 @@
  * SD_SPI_BASE.C
  *
  * TARGET
- * ATmega 1280
+ * Tested against ATmega 1280
  *
  * DESCRIPTION
- * Defines the base-level SD card functions for SPI mode.
+ * Defines the base-level SPI mode SD card functions.
  *
- * FUNCTION LIST
- * 1) uint32_t  SD_InitializeSPImode(void)
+ * "PUBLIC" FUNCTION LIST
+ * 1) uint32_t  uint32_t SD_InitializeSPImode(CardTypeVersion *ctv)
  * 2) void      SD_SendByteSPI(uint8_t byte)
  * 3) uint8_t   SD_ReceiveByteSPI(void)
  * 4) void      SD_SendCommand(uint8_t cmd, uint32_t arg)
@@ -34,6 +34,8 @@
  *                        "PRIVATE" FUNCTION DECLARATIONS
 ******************************************************************************/
 
+// Private function to calculate the CRC7 for any command/argument combination.
+// Only meant to be called by SD_SendCommand()
 uint8_t pvt_CRC7(uint64_t ca);
 
 
@@ -42,7 +44,8 @@ uint8_t pvt_CRC7(uint64_t ca);
  *                         "PUBLIC" FUNCTION DEFINITIONS
 ******************************************************************************/
 
-// Initializes a standard capacity SD card into SPI mode
+// Initializes the SD card into SPI mode and set card type and version in the 
+// ctv argument.  It returns an initialization error | R1 response.
 uint32_t SD_InitializeSPImode(CardTypeVersion *ctv)
 {
     uint8_t r1 = 0; //R1 response returned for every SD Command
@@ -108,7 +111,6 @@ uint32_t SD_InitializeSPImode(CardTypeVersion *ctv)
 
     // ************************
     // SD_SEND_OP_COND (ACMD41)
-    
     uint32_t acmd41Arg;
 
     // HCS - High Capacity Supported by host. Default TRUE.
@@ -142,7 +144,7 @@ uint32_t SD_InitializeSPImode(CardTypeVersion *ctv)
     // *****************
     // READ_OCR (CMD 58)
 
-    // Final initialization step is to read CCS (Card Capactity Status)
+    // Final init step is to read CCS (Card Capactity Status)
     // bit of the OCR (Operating Condition Register).
     r1 = 0;
     CS_LOW;
@@ -150,10 +152,10 @@ uint32_t SD_InitializeSPImode(CardTypeVersion *ctv)
     r1 = SD_GetR1();
     if (r1 != 0) { return (FAILED_READ_OCR | r1); }
 
-    uint8_t resp = SD_ReceiveByteSPI();  //Rest of OCR
+    uint8_t ocr = SD_ReceiveByteSPI(); 
 
     //POWER_UP_STATUS
-    if( (resp >> 7) != 1 )
+    if( (ocr >> 7) != 1 )
     {
         CS_HIGH;
         return (POWER_UP_NOT_COMPLETE | r1);
@@ -161,10 +163,10 @@ uint32_t SD_InitializeSPImode(CardTypeVersion *ctv)
     
     // Confirm rest of OCR returned is valid, though, technically
     // only CCS is needed to complete initialization.
-    uint8_t ccs   = ((resp&0x40)>>6);
-    uint8_t uhsii = ((resp&0x20)>>5);
-    uint8_t co2t  = ((resp&0x10)>>3);
-    uint8_t s18a  = (resp&0x01);
+    uint8_t ccs   = ((ocr&0x40)>>6);
+    uint8_t uhsii = ((ocr&0x20)>>5);
+    uint8_t co2t  = ((ocr&0x10)>>3);
+    uint8_t s18a  = (ocr&0x01);
     uint16_t voltagRangesAccepted = SD_ReceiveByteSPI();
              voltagRangesAccepted <<= 1;
              voltagRangesAccepted |= (SD_ReceiveByteSPI()>>7);
@@ -202,7 +204,7 @@ void SD_SendByteSPI(uint8_t byte)
 
 
 
-// Gets a single byte returned by the SD card.
+// Gets a single byte returned by the SD card from the SPDR.
 uint8_t SD_ReceiveByteSPI(void)
 {
     SD_SendByteSPI(0xFF);
@@ -263,7 +265,7 @@ uint8_t SD_GetR1(void)
 
 
 
-// Prints the results of the r1 response in readable form.
+// Prints the results of the R1 response in readable form.
 void SD_PrintR1(uint8_t r1)
 {
     if(r1&R1_TIMEOUT)
@@ -282,14 +284,15 @@ void SD_PrintR1(uint8_t r1)
         print_str(" ERASE RESET");
     if(r1&IN_IDLE_STATE)
         print_str(" IN IDLE STATE");
-    if(r1==0) // r1 = 0 NO ERRORS;
+    if(r1==OUT_OF_IDLE); // == 0. No errors.
         print_str(" OUT OF IDLE");
 }
 // END SD_Printr1()
 
 
 
-// Prints the response returned by SD_InitializeSPImode() in a
+// Prints the initialization error response 
+// returned by SD_InitializeSPImode().
 void SD_PrintInitError(uint32_t err)
 {
     if(err&FAILED_GO_IDLE_STATE)
@@ -328,20 +331,18 @@ void SD_PrintInitError(uint32_t err)
 
 
 /******************************************************************************
- * Description: Generates and returns CRC7 bits for SD command/argument 
+ * Description: Generate and returns CRC7 bits for SD command/argument 
  *              combination. Should only be called from SD_SendCommand()
  * Argument(s): 40-bit Transmission, Command, Argument (tca) bits to be sent as
  *              command to SD Card. 24-bit leading zeros in the argument are
- *              not used
- * Returns:     1 byte with the 7 most significant bits corresponding to the 
- *              calculated CRC7.  
- * Notes:       The value of the LSB returned does not matter, it will be 
- *              set to 1 as the transmission stop bit regardless of the value
- *              returned here.
+ *              not used.
+ * Returns:     uint8_t byte - 7 most significant bits are the CRC7.  
+ * Notes:       LSBit does not matter, it will be set to 1 as the transmission
+ *              stop bit regardless of the value returned here.
 ******************************************************************************/
 uint8_t pvt_CRC7(uint64_t tca)
 {
-    uint64_t test = 0x800000000000; // test will determine if division will
+    uint64_t test = 0x800000000000; // 'test' will determine if division will
                                     // take place during a given iteration.
     
     //divisor 0b10001001 (0x89) used by SD standard to generate CRC7.

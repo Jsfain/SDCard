@@ -115,7 +115,7 @@ typedef struct  Block {
  * Argument:    Address of data block to read = 512 * Block or Sector number
  * Returns:     DataBlock object.
 ******************************************************************************/
-uint16_t SD_ReadSingleDataBlock(uint32_t address, Block *ds);
+uint16_t SD_ReadSingleDataBlock(uint32_t blockAddress, Block *ds);
 
 
 /******************************************************************************
@@ -154,7 +154,9 @@ void SD_PrintReadError(uint16_t err);
  *              2) uint32_t number of blocks to be read in and printed.
  * Returns:     VOID
 ******************************************************************************/
-uint16_t SD_PrintMultipleDataBlocks(uint32_t startAddress, uint32_t numberOfBlocks);
+uint16_t SD_PrintMultipleDataBlocks(
+                    uint32_t startBlockAddress, 
+                    uint32_t numberOfBlocks);
 
 
 
@@ -178,7 +180,7 @@ uint16_t SD_PrintMultipleDataBlocks(uint32_t startAddress, uint32_t numberOfBloc
  *                 the SEND_STATUS command should be sent in order to get the 
  *                 cause of the write error.  
 ******************************************************************************/
-uint16_t SD_WriteSingleDataBlock(uint32_t address, uint8_t *data);
+uint16_t SD_WriteSingleDataBlock(uint32_t blockAddress, uint8_t *data);
 
 
 
@@ -207,7 +209,7 @@ uint16_t SD_WriteSingleDataBlock(uint32_t address, uint8_t *data);
  *                 that were successfully written to.
 ******************************************************************************/
 uint16_t SD_WriteMultipleDataBlocks(
-                uint32_t address, 
+                uint32_t blockAddress, 
                 uint32_t numberOfBlocks, 
                 uint8_t *dataBuffer);
 
@@ -251,7 +253,7 @@ uint16_t SD_NumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks);
  * Returns:     uint16_t error code whose value is the Data Response Code in 
  *              the MSByte and the most recent R1 response in the LSByte.       
  * ***************************************************************************/
-uint16_t SD_EraseBlocks(uint32_t start_address, uint32_t end_address);
+uint16_t SD_EraseBlocks(uint32_t startBlockAddress, uint32_t endBlockAddress);
 
 
 
