@@ -21,9 +21,9 @@
 #include "../includes/sd_spi_base.h"
 #include "../includes/sd_spi_data_access.h"
 #include "../includes/sd_spi_misc.h"
-#include "../../../../general/includes/usart.h"
-#include "../../../../general/includes/spi.h"
-#include "../../../../general/includes/prints.h"
+#include "..//includes/usart.h"
+#include "../includes/spi.h"
+#include "../includes/prints.h"
 
 
 

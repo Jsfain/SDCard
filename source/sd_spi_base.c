@@ -25,8 +25,8 @@
 #include <stdint.h>
 #include <avr/io.h>
 #include "../includes/sd_spi_base.h"
-#include "../../../../general/includes/spi.h"
-#include "../../../../general/includes/prints.h"
+#include "../includes/spi.h"
+#include "../includes/prints.h"
 
 
 
@@ -284,7 +284,7 @@ void SD_PrintR1(uint8_t r1)
         print_str(" ERASE RESET");
     if(r1&IN_IDLE_STATE)
         print_str(" IN IDLE STATE");
-    if(r1==OUT_OF_IDLE); // == 0. No errors.
+    if(r1==OUT_OF_IDLE) // == 0. No errors.
         print_str(" OUT OF IDLE");
 }
 // END SD_Printr1()

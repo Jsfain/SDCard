@@ -1,7 +1,7 @@
 clear
 
 #directory to store build/compiled files
-buildDir=build
+buildDir=../untracked/build
 
 #directory for source files
 sourceDir=source
@@ -71,6 +71,48 @@ then
     exit $status
 else
     echo -e "Compiling SD_SPI_MISC.C successful"
+fi
+
+
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/spi.o" $sourceDir"/spi.c"
+"${Compile[@]}" $buildDir/spi.o $sourceDir/spi.c
+status=$?
+sleep $t
+if [ $status -gt 0 ]
+then
+    echo -e "error compiling spi.c"
+    echo -e "program exiting with code $status"
+    exit $status
+else
+    echo -e "Compiling SPI.C successful"
+fi
+
+
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/usart.o" $sourceDir"/usart.c"
+"${Compile[@]}" $buildDir/usart.o $sourceDir/usart.c
+status=$?
+sleep $t
+if [ $status -gt 0 ]
+then
+    echo -e "error compiling usart.c"
+    echo -e "program exiting with code $status"
+    exit $status
+else
+    echo -e "Compiling USART.C successful"
+fi
+
+
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/prints.o" $sourceDir"/prints.c"
+"${Compile[@]}" $buildDir/prints.o $sourceDir/prints.c
+status=$?
+sleep $t
+if [ $status -gt 0 ]
+then
+    echo -e "error compiling prints.c"
+    echo -e "program exiting with code $status"
+    exit $status
+else
+    echo -e "Compiling PRINTS.C successful"
 fi
 
 
