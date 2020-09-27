@@ -1,29 +1,31 @@
-# SD Card Module
-Used for executing the SPI mode-specific SD card command set using an AVR host.
+# AVR-SD Card Module
+For executing SPI mode SD card commands running on an AVR host.
 
 
-# Purpose
+## Purpose
 To establish a set of functions for SD card access and control in SPI mode from an AVR microcontroller. The module is intended for standalone raw data access, but may be used in other situations, e.g. a physical disk layer for a file system.
 
 
-# Disclaimers
-* This is just a project I did for fun during quaratine. It has been tested against SDSC and SDHC type micro SD cards, and I expect full-sized cards to work as well, but no guarantee of functionality is made. I may or may not update in the future, though any feedback or suggestions are welcome.
-* This module has only been tested against an ATmega1280 target, though it is expected it would be easily portable to other AVR targets with modification of SPI and USART ports, assuming sufficient memory.
+## Technologies
+* LANGUAGE - C
+* TARGET - ATmega1280 - other AVR targets may be used, with modification of ports and assuming memory is sufficient.
+* AVR-Toolchain 9.3.0 - complete set of tools used for compiling/building the module and downloading it to the AVR. 
+* AVR-GCC 9.3.0 - required to compile and build the module. Included in the AVR-Toolchain.
+* AVRDUDE 6.3 - required to download the build to the AVR. Included in the AVR-Toolchain.
+
+### Comments
+* This project was originally built on a MAC with the [AVR-Toolchain](https://github.com/osx-cross/homebrew-avr) available from Homebrew.  For Windows, Atmel Studio should come with a version of the toolchain, but I have no experience with this version.
 
 
-# Warning
-Use at your own risk. It is possible to write and erase data on an SD card using this module, so I suggest backing up any data you do not want to lose before using.
+## How to use
+NOTE: This is intended to run as is on an ATmega1280 Target.  It should be simple to run this from other AVR targets with a change in port specifications (SPI, USART), but it is only been tested against an ATmega1280 Target.  
+
+To use this module, copy the source and header files to your system and then build/download the project using the AVR Toolchain.  
+*   Building from a Windows OS using Atmel Studio should only require including the files in a project and then build it from there (though I have not verified this).  
+*   Building from a Mac (or Linux) you'll need to implement the components of the AVR-Toolchain explicitly from the terminal to build the module using avr-gcc and then download the generated hex file to the AVR using AVRDUDE.  A MAKE.sh file is included to provide an example (and only an example) for how to compile the source files, generate the hex file, and download it to an AVR microcontroller for an ATmega1280 Target.
 
 
-# Details
-TARGET: ATmega1280 
-LANGUAGE: C
-The [AVR Toolchain](https://github.com/osx-cross/homebrew-avr) (AVR-GCC, AVR-LIBC, AVRDUDE) are used to compile, build, and ultimately download the project to the microcontroller. See the link above for specifics about this.
-
-
-# SD Module Files
-This SD card module includes the following source / header files
-
+## Overview
 1) SD_SPI_BASE.C(H) - Basic functions required for interaction with the SD card. This includes an SD card initialization routine,  as well as functions for sending SD commands and get its response, and some error printing functions.
 2) SD_SPI_DATA_ACCESS.C(H) - Some specialized functions for data access: READ/WRITE/ERASE. Requires SD_SPI_BASE
 3) SD_SPI_MISC.C(H) - Some miscellaneous functions. Requires SD_SPI_BASE and SD_SPI_DATA_ACCESS.
@@ -36,6 +38,21 @@ The following files are also required by the SD Card module and so are included 
 2) USART.C(H) - required to interface with the AVR's USART port used to print messages and data to the screen.
 3) PRINTS.H(C) - required to print integers (decimal, hex, binary) and strings to the screen via the USART.
     
+
+# Warning
+Use at your own risk. It is possible to write and erase data on an SD card using this module, so I suggest backing up any data you do not want to lose before using.
+
+
+
+## Disclaimers
+* This is just a project I did for fun during quaratine. It has been tested against SDSC and SDHC type micro SD cards, and I expect full-sized cards to work as well, but no guarantee of functionality is made. I may or may not update in the future, though any feedback or suggestions are welcome.
+* This module has only been tested against an ATmega1280 target, though it is expected it would be easily portable to other AVR targets with modification of SPI and USART ports, assuming sufficient memory.
+
+
+# SD Module Files
+This SD card module includes the following source / header files
+
+
 
 # Who can use
 Anyone. Use it. Modify it for specific purposes/systems, and if you want you can let me know if you found it helpful.
@@ -310,7 +327,7 @@ The SD_InitializeSPImode() response includes the most recent R1 response. The R1
 
 
 # Requirements
-[AVR Toolchain](https://github.com/osx-cross/homebrew-avr)
+
 
 # Reference Documents:
 1) Atmel ATmega640/V-1280/V-1281/V-2560/V-2561/V Datasheet
