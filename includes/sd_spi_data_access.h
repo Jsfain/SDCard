@@ -9,30 +9,7 @@
  * hosted on an AVR microcontroller and operating in SPI mode such as reading,
  * writing, erasing, and printing raw data blocks. The physical interaction
  * with the SD card is handled by functions defined in SD_SPI_BASE
- * 
- * FUNCTION LIST
- * 1) DataBlock SD_ReadSingleDataBlock(uint32_t address)
- * 2) void      SD_PrintDataBlock(uint8_t *block)
- * 3) void      SD_PrintMultipleDataBlocks(
- *                      uint32_t start_address,
- *                      uint32_t numOfBlocks)
- * 4) void      SD_SearchNonZeroBlocks(
- *                      uint32_t begin_block,
- *                      uint32_t end_block)
- * 5) uint16_t  SD_WriteSingleDataBlock(
- *                      uint32_t address, 
- *                      uint8_t *dataBuffer)
- * 6) uint16_t  SD_WriteMultipleDataBlocks(
- *                      uint32_t address, 
- *                      uint8_t nob, 
- *                      uint8_t *dataBuffer)
- * 7) void      SD_PrintWriteError(uint16_t err)
- * 8) uint32_t  SD_NumberOfWellWrittenBlocks(void)
- * 9) uint16_t  SD_EraseBlocks(
- *                      uint32_t start_address,
- *                      uint16_t end_address)           
- * 10)void      SD_PrintEraseBlockError(uint16_t err)
- * 
+ *  
  * 
  * Author: Joshua Fain
  * Date:   9/17/2020
@@ -54,7 +31,7 @@
 // Struct whose members are the raw data bytes, R1 
 // response, and CRC returned by a data block read.
 typedef struct {
-    uint8_t byte[DATA_BLOCK_LEN]; // 512 byte array to hold block data bytes
+    uint8_t byte[BLOCK_LEN]; // 512 byte array to hold block data bytes
     uint8_t CRC[2];
 } Block;
 
@@ -108,17 +85,17 @@ typedef struct {
 
 
 /******************************************************************************
- * Function:    sd_ReadSingleDataBlock(uint32_t address)
+ * Function:    sd_ReadSingleBlock(uint32_t address)
  * Description: Reads in a single data block from the SD card at 'address'
  *              and stores in a DataBlock struct's data[] member.
  * Argument:    Address of data block to read = 512 * Block or Sector number
  * Returns:     DataBlock object.
 ******************************************************************************/
-uint16_t SD_ReadSingleDataBlock(uint32_t blockAddress, Block *ds);
+uint16_t SD_ReadSingleBlock(uint32_t blockAddress, Block *ds);
 
 
 /******************************************************************************
- * Function:    sd_PrintDataBlock(uint8_t *block)
+ * Function:    sd_PrintBlock(uint8_t *block)
  * Description: Prints the contents of the SD data block array pointed at by 
  *              *block. The block's contents are printed in rows of 32 bytes 
  *              each. The byte contents are printed in hexadecimal and ASCII
@@ -131,7 +108,7 @@ uint16_t SD_ReadSingleDataBlock(uint32_t blockAddress, Block *ds);
  * Notes:       For the ASCII characters, a ' ' will be printed if value is
  *              < 32, '.' if > 128 and the ASCII character otherwise.
 ******************************************************************************/
-void SD_PrintDataBlock(uint8_t *byte);  //only 512 byte block supported.
+void SD_PrintBlock(uint8_t *byte);  //only 512 byte block supported.
 
 
 
@@ -140,20 +117,20 @@ void SD_PrintReadError(uint16_t err);
 
 
 /******************************************************************************
- * Function:    sd_PrintMultipleDataBlocks(
+ * Function:    sd_PrintMultipleBlocks(
  *                      uint32_t start_address, 
  *                      uint32_t numOfBlocks)
  * Description: Prints multiple, consecutive data blocks using by requesting 
  *              sd_SendCommand send the READ_MULTIPLE_BLOCK command, and prints
  *              the returned blocks to the screen by calling 
- *              sd_PrintDataBlock(). The range of data blocks to be printed 
+ *              sd_PrintBlock(). The range of data blocks to be printed 
  *              begin at start_address and end at 
  *              start_address + (numOfBlocks - 1).
  * Argument:    1) uint32_t start address (512 * block number) 
  *              2) uint32_t number of blocks to be read in and printed.
  * Returns:     VOID
 ******************************************************************************/
-uint16_t SD_PrintMultipleDataBlocks(
+uint16_t SD_PrintMultipleBlocks(
                     uint32_t startBlockAddress, 
                     uint32_t numberOfBlocks);
 
@@ -257,14 +234,14 @@ uint16_t SD_EraseBlocks(uint32_t startBlockAddress, uint32_t endBlockAddress);
 
 
 /********************************************************************************
- * Function:    sd_PrintEraseBlockError(uint16_t err)
+ * Function:    sd_PrintEraseError(uint16_t err)
  * Description: Prints the response returned by sd_EraseBlocks() in readable form.
  *              Includes the R1 response as well as other errors specific to the 
  *              Erase function.
  * Argument(s): err - uint16_t error response from sd_WriteSingleDataBlock()
  * Returns:     VOID
  * ******************************************************************************/
-void SD_PrintEraseBlockError(uint16_t err);
+void SD_PrintEraseError(uint16_t err);
 
 
 

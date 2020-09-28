@@ -66,7 +66,7 @@ int main(void)
     {      
         // ***** test sd_GetMemoryCapcity() function in sd_misc.c  *****
         
-        uint32_t mc = sd_GetMemoryCapacity();
+        uint32_t mc = SD_GetMemoryCapacity();
         print_str("\n\rmemory capacity = ");
         print_dec(mc);
         print_str(" Bytes\n\r");
@@ -85,19 +85,19 @@ int main(void)
         uint32_t blockAddress;
         
         if (ctv.type == SDHC) blockAddress = blockNumber;
-        else blockAddress = blockNumber * DATA_BLOCK_LEN;
+        else blockAddress = blockNumber * BLOCK_LEN;
         
-        err = SD_ReadSingleDataBlock(blockAddress, &ds);
+        err = SD_ReadSingleBlock(blockAddress, &ds);
         print_str(" err = ");SD_PrintReadError(err);
-        SD_PrintDataBlock(ds.byte);
+        SD_PrintBlock(ds.byte);
         
         /*
-        err = SD_ReadSingleDataBlock(1, &ds);
+        err = SD_ReadSingleBlock(1, &ds);
         print_str(" err = ");SD_PrintReadError(err);
-        SD_PrintDataBlock(ds.byte);
+        SD_PrintBlock(ds.byte);
         
         
-        err = SD_ReadSingleDataBlock(16 * 512, &ds);
+        err = SD_ReadSingleBlock(16 * 512, &ds);
         print_str(" err = ");SD_PrintReadError(err);
         SD_PrintDataBlock(ds.byte);
         */
@@ -105,8 +105,8 @@ int main(void)
         //USART_Receive();
         //int nob = 5;
         //uint32_t block = 0;
-        //uint32_t address = block * DATA_BLOCK_LEN; // the address of first byte in block.   
-        //SD_PrintMultipleDataBlocks(address,nob);
+        //uint32_t address = block * BLOCK_LEN; // the address of first byte in block.   
+        //SD_PrintMultipleBlocks(address,nob);
         
 
 
@@ -116,16 +116,16 @@ int main(void)
         /*
         //Block ds; //data block struct
         //uint32_t block = 0;
-        //uint32_t address = block; // * DATA_BLOCK_LEN; // the address of first byte in block.
+        //uint32_t address = block; // * BLOCK_LEN; // the address of first byte in block.
         uint16_t wr; // write response
 
         // data to write to block
-        uint8_t db[DATA_BLOCK_LEN] = "HELLO WORLD......"; 
+        uint8_t db[BLOCK_LEN] = "HELLO WORLD......"; 
     
         //see what is currently written to block we will be writing to. 
-        err = SD_ReadSingleDataBlock(address, &ds);
+        err = SD_ReadSingleBlock(address, &ds);
         print_str(" err = ");SD_PrintReadError(err);
-        SD_PrintDataBlock(ds.byte);
+        SD_PrintBlock(ds.byte);
 
         print_str("\n\r *** WRITING SINGLE BLOCK *** \n\r");
         wr = SD_WriteSingleDataBlock(address,db);
@@ -151,9 +151,9 @@ int main(void)
         
         else // No write error, then verify data has been written to block at address
         {
-            SD_ReadSingleDataBlock(address,&ds);
+            SD_ReadSingleBlock(address,&ds);
             print_str(" err = ");SD_PrintReadError(err);
-            SD_PrintDataBlock(ds.byte);
+            SD_PrintBlock(ds.byte);
         }
         */
         
@@ -161,22 +161,22 @@ int main(void)
 
         
         /*
-        // ***** test sd_WriteMultipleDataBlocks() function in sd_misc.c *****
+        // ***** test SD_WriteMultipleBlocks() function in sd_misc.c *****
 
         //DataBlock ds; //data block struct
         uint32_t write_start_block = 20;
-        uint32_t write_start_address = write_start_block * DATA_BLOCK_LEN; // the address of first byte in block.
+        uint32_t write_start_address = write_start_block * BLOCK_LEN; // the address of first byte in block.
         uint16_t mwr; // multiple write response
 
         int nowb = 4; // number of write blocks
         
-        uint8_t mdb[DATA_BLOCK_LEN] = "Well            Hello           There!          I               see             you             brought         a               PIE :) ";
+        uint8_t mdb[BLOCK_LEN] = "Well            Hello           There!          I               see             you             brought         a               PIE :) ";
 
         print_str("\n\r ***** Read Multiple Blocks *****");
-        //SD_PrintMultipleDataBlocks(write_start_address,nowb);
+        //SD_PrintMultipleBlocks(write_start_address,nowb);
         
         print_str("\n\r **** Write Multiple Blocks *****");
-        mwr = SD_WriteMultipleDataBlocks(write_start_address,nowb,mdb);
+        mwr = SD_WriteMultipleBlocks(write_start_address,nowb,mdb);
 
         //Get R2 response (SEND_STATUS) if there is a write error.    
         if ((mwr&0x0F00)==WRITE_ERROR)
@@ -199,13 +199,13 @@ int main(void)
         
         
         print_str("\n\rDone Writing Data Blocks");
-        //SD_PrintMultipleDataBlocks(write_start_address,nowb);
+        //SD_PrintMultipleBlocks(write_start_address,nowb);
         
 
         uint32_t nwwb = SD_NumberOfWellWrittenBlocks();
         print_str("\n\r Number of well written write blocks = ");
         print_dec(nwwb);
-        // ***** END test SD_WriteMultipleDataBlocks() *****
+        // ***** END test SD_WriteMultipleBlocks() *****
         */
 
 
@@ -218,21 +218,21 @@ int main(void)
 
         uint32_t noeb = 400; // number of erase blocks
         uint32_t erase_start_block = 0;
-        uint32_t erase_start_address = erase_start_block * DATA_BLOCK_LEN; // the address of first byte in block.
-        uint32_t erase_end_address = erase_start_address + ((noeb - 1) * DATA_BLOCK_LEN); // "noeb-1 to ensure the noeb is the number of blocks erased"
+        uint32_t erase_start_address = erase_start_block * BLOCK_LEN; // the address of first byte in block.
+        uint32_t erase_end_address = erase_start_address + ((noeb - 1) * BLOCK_LEN); // "noeb-1 to ensure the noeb is the number of blocks erased"
 
         uint16_t er; // erase response
 
         print_dec(noeb*512);
         //print_str("\n\r ***** Read Multiple Blocks *****");
-        //SD_PrintMultipleDataBlocks(erase_start_address,noeb);
+        //SD_PrintMultipleBlocks(erase_start_address,noeb);
         
         print_str("\n\r ***** Erase Multiple Blocks *****\n\r");
         er = sd_EraseBlocks(erase_start_address,erase_end_address);
         SD_PrintEraseBlockError(er);
         
         //print_str("\n\r ***** Read Multiple Blocks *****");
-        //SD_PrintMultipleDataBlocks(erase_start_address,noeb+2);
+        //SD_PrintMultipleBlocks(erase_start_address,noeb+2);
         // ***** END Test Erase Blocks *****
         */
        
@@ -256,18 +256,15 @@ int main(void)
             }while(answer != 'y');
 
 
-            start_address = DATA_BLOCK_LEN * start_sector;
-            err = SD_PrintMultipleDataBlocks(start_address,nos);
+            start_address = BLOCK_LEN * start_sector;
+            err = SD_PrintMultipleBlocks(start_address,nos);
             //print_str("\n\rerr = 0x"); print_hex(err);
             SD_PrintReadError(err);
 
             print_str("\n\r press 'q' to quit and any other key to go again: ");
             answer = USART_Receive();
             USART_Transmit(answer);
-
         }while(answer != 'q');
-        
-
     }
 
     // Something to do after SD card testing has completed.

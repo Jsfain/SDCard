@@ -7,14 +7,11 @@ To establish a set of functions for SD card access and control in SPI mode from 
 
 
 ## Technologies
-* LANGUAGE - C
-* TARGET - ATmega1280 - other AVR targets may be used with modification of ports assignments, assuming memory is sufficient.
-* AVR-Toolchain 9.3.0 - includes AVR-GCC and AVRDUDE. 
+* LANGUAGE: C
+* TARGET: ATmega1280 - other AVR targets may be used with modification of ports assignments, assuming memory is sufficient.
+* [AVR-Toolchain](https://github.com/osx-cross/homebrew-avr) 9.3.0 - includes AVR-GCC and AVRDUDE. 
 * AVR-GCC 9.3.0 - required to compile and build the module. Included in the AVR-Toolchain.
 * AVRDUDE 6.3 - required to download the build to the AVR. Included in the AVR-Toolchain.
-
-### Comments
-* This project was originally built on a MAC with the [AVR-Toolchain](https://github.com/osx-cross/homebrew-avr) available from Homebrew.  For Windows, Atmel Studio should come with a version of the toolchain, but I have no experience with this version.
 
 
 ## Overview
@@ -37,7 +34,7 @@ See the implementation guide for details regarding the available functions and h
 
 
 ## How to use
-### NOTE: This is intended to run as is on an ATmega1280 Target.  It should be simple to run this from other AVR targets with a change in port assignments (SPI, USART), but it has only been tested against an ATmega1280 Target.  
+NOTE: This is intended to run as is on an ATmega1280 Target.  It should be simple to run this from other AVR targets with a change in port assignments (SPI, USART), but it has only been tested against an ATmega1280 Target.  
 
 To use, copy the source/header files and build/download the module using the AVR Toolchain.  
 *  Primarily for Mac/Linux users, a "MAKE" file is included (for reference only) for building the module from the source files and downloading it to an AVR target - specifically ATmega1280.

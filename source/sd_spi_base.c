@@ -7,15 +7,6 @@
  * DESCRIPTION
  * Defines the base-level SPI mode SD card functions.
  *
- * "PUBLIC" FUNCTION LIST
- * 1) uint32_t  uint32_t SD_InitializeSPImode(CardTypeVersion *ctv)
- * 2) void      SD_SendByteSPI(uint8_t byte)
- * 3) uint8_t   SD_ReceiveByteSPI(void)
- * 4) void      SD_SendCommand(uint8_t cmd, uint32_t arg)
- * 5) uint8_t   SD_GetR1(void)
- * 6) void      SD_PrintR1(uint8_t r1)
- * 7) void      SD_PrintInitError(uint32_t err)
- *
  * Author: Joshua Fain
  * Date:   9/20/2020
  * ***************************************************************************/
@@ -313,10 +304,6 @@ void SD_PrintInitError(uint32_t err)
         print_str(" FAILED_READ_OCR");
     if(err&POWER_UP_NOT_COMPLETE)
         print_str(" POWER_UP_NOT_COMPLETE");
-    if(err&FAILED_SET_BLOCKLEN)
-        print_str(" FAILED_SET_BLOCKLEN");
-    if(err&FAILED_SEND_CSD)
-        print_str(" FAILED_SEND_CSD");
     if(err == 0) // NO ERRORS
         print_str(" INIT_SUCCESS\n\r");
 }

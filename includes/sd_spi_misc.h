@@ -36,21 +36,21 @@
  * Returns:     uint32_t capcity of the SD card in bytes, if successful,
  *              and 1 if unsuccessful.
 ******************************************************************************/
-uint32_t sd_GetMemoryCapacity(void);
+uint32_t SD_GetMemoryCapacity(void);
 
 
 
 /******************************************************************************
  * Function:    sd_SearchNonZeroBlocks(
- *                      uint32_t firstBlock, 
- *                      uint32_t lastBlock)
+ *                      uint32_t startBlock, 
+ *                      uint32_t endBlock)
  * Description: Searches between a specified range of blocks for any blocks that
  *              have non-zero values and prints those block numbers to screen.
- * Argument:    1) uint32_t block number for the first block.
- *              2) uint32_t block number for the last block. 
+ * Argument:    1) uint32_t block number for the start block.
+ *              2) uint32_t block number for the end block. 
  * Returns:     VOID
 ******************************************************************************/
-void SD_PrintNonZeroBlockNumbers(uint32_t firstBlock, uint32_t lastBlock);
+void SD_PrintNonZeroBlockNumbers(uint32_t startBlock, uint32_t endBlock);
 
 
 #endif // SD_SPI_MISC_H

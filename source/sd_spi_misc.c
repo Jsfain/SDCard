@@ -28,7 +28,7 @@
 
 
 // Calculate and return the memory capacity of the SD Card in Bytes.
-uint32_t sd_GetMemoryCapacity(void)
+uint32_t SD_GetMemoryCapacity(void)
 {
     //Initialize parameter values needed for memory capacity calculation.
     uint8_t READ_BL_LEN = 0;
@@ -131,12 +131,14 @@ uint32_t sd_GetMemoryCapacity(void)
     CS_HIGH;
 
     // ***** Calculate and return memory capacity of SD Card.
-    uint32_t BLOCK_LEN = 1;
-    for (uint8_t i = 0; i< READ_BL_LEN; i++) BLOCK_LEN = BLOCK_LEN*2;
+    
+    uint32_t blockLen = 1;
+    for (uint8_t i = 0; i < READ_BL_LEN; i++) blockLen = blockLen * 2;
     uint32_t MULT = 1;
-    for (uint8_t i = 0; i< C_SIZE_MULT+2; i++) MULT = MULT*2;
-    uint32_t BLOCKNR = (C_SIZE+1)*MULT;
-    uint32_t memoryCapacity = BLOCKNR*BLOCK_LEN;
+    for (uint8_t i = 0; i< C_SIZE_MULT+2; i++) MULT = MULT * 2;
+    uint32_t BLOCKNR = (C_SIZE+1) * MULT;
+    uint32_t memoryCapacity = BLOCKNR * blockLen;
+    
     return memoryCapacity; //bytes
 }
 // END sd_MemoryCapacity()
@@ -144,25 +146,25 @@ uint32_t sd_GetMemoryCapacity(void)
 
 // Prints the block number of all blocks between firstBlock and lastBlock 
 // that have any non-zero bytes, to assist in finding blocks that have data.
-void SD_PrintNonZeroBlockNumbers(uint32_t firstBlockAddress, uint32_t lastBlockAddress)
+void SD_PrintNonZeroBlockNumbers(uint32_t startBlockAddress, uint32_t endBlockAddress)
 {
     Block ds;
     print_str("\n\rSearching for non-zero blocks over range ");
-    print_dec(firstBlockAddress);
+    print_dec(startBlockAddress);
     print_str(" to ");
-    print_dec(lastBlockAddress);
+    print_dec(endBlockAddress);
 
     uint16_t tab = 0; //used for printing format
     uint32_t address = 0;
 
-    for( uint32_t blockNumber = firstBlockAddress;
-                  blockNumber <= lastBlockAddress;
+    for( uint32_t blockNumber = startBlockAddress;
+                  blockNumber <= endBlockAddress;
                   blockNumber++ )
     {
         address = blockNumber;
-        SD_ReadSingleDataBlock(address, &ds);       
+        SD_ReadSingleBlock(address, &ds);       
         
-        for(int i = 0; i < DATA_BLOCK_LEN; i++)
+        for(int i = 0; i < BLOCK_LEN; i++)
         {
             if(ds.byte[i]!=0)
             {

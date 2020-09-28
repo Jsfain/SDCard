@@ -10,27 +10,6 @@
  * interface to the SD card.
  * 
  * 
- * FUNCTION LIST
- * 1) DataBlock SD_ReadSingleDataBlock(uint32_t address)
- * 2) void      SD_PrintDataBlock(uint8_t *block)
- * 3) void      SD_PrintMultipleDataBlocks(
- *                      uint32_t start_address,
- *                      uint32_t numOfBlocks)
- * 4) uint16_t  SD_WriteSingleDataBlock(
- *                      uint32_t address, 
- *                      uint8_t *dataBuffer)
- * 5) uint16_t  SD_WriteMultipleDataBlocks(
- *                      uint32_t address, 
- *                      uint8_t nob, 
- *                      uint8_t *dataBuffer)
- * 6) void      SD_PrintWriteError(uint16_t err)
- * 7) uint32_t  SD_NumberOfWellWrittenBlocks(void)
- * 8) uint16_t  SD_EraseBlocks(
- *                      uint32_t start_address,
- *                      uint16_t end_address)           
- * 9) void      SD_PrintEraseBlockError(uint16_t err)
- * 
- * 
  * Author: Joshua Fain
  * Date:   9/17/2020
  * ***************************************************************************/
@@ -48,7 +27,7 @@
 
 
 // Read single block at address from SD card into array.
-uint16_t SD_ReadSingleDataBlock(uint32_t blockAddress, Block *ds)
+uint16_t SD_ReadSingleBlock(uint32_t blockAddress, Block *bl)
 {
     uint8_t timeout = 0;
     uint8_t r1;
@@ -79,28 +58,28 @@ uint16_t SD_ReadSingleDataBlock(uint32_t blockAddress, Block *ds)
         }
 
         // start block token has been received         
-        for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
-            ds->byte[i] = SD_ReceiveByteSPI();
+        for(uint16_t i = 0; i < BLOCK_LEN; i++)
+            bl->byte[i] = SD_ReceiveByteSPI();
 
         for(uint8_t i = 0; i < 2; i++)
-            ds->CRC[i] = SD_ReceiveByteSPI();
+            bl->CRC[i] = SD_ReceiveByteSPI();
             
         SD_ReceiveByteSPI(); // clear any remaining bytes in SPDR
     }
     CS_HIGH;
     return ( READ_SUCCESS | r1 );
 }
-// END SD_ReadSingleDataBlock()
+// END SD_ReadSingleBlock()
 
 
 
 // Print columnized address offset | HEX | ASCII values in *byte array
-void SD_PrintDataBlock(uint8_t *byte)
+void SD_PrintBlock(uint8_t *byte)
 {
     print_str("\n\n\r BLOCK OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
     uint16_t offset = 0;
     uint16_t space = 0;
-    for( uint16_t row = 0; row < DATA_BLOCK_LEN/16; row++ )
+    for( uint16_t row = 0; row < BLOCK_LEN/16; row++ )
     {
         print_str("\n\r   ");
         if(offset<0x100){print_str("0x0"); print_hex(offset);}
@@ -130,16 +109,16 @@ void SD_PrintDataBlock(uint8_t *byte)
     }    
     print_str("\n\n\r");
 }
-// END SD_PrintDataBlock(uint8_t *byte)
+// END SD_PrintBlock(uint8_t *byte)
 
 
 
 // Print multiple data blocks to screen.
-uint16_t SD_PrintMultipleDataBlocks(
+uint16_t SD_PrintMultipleBlocks(
                 uint32_t startBlockAddress,
                 uint32_t numberOfBlocks)
 {
-    Block ds;
+    Block bl;
     uint16_t timeout = 0;
     uint8_t r1;
 
@@ -164,16 +143,16 @@ uint16_t SD_PrintMultipleDataBlocks(
                 if(timeout > 0x500) return (START_TOKEN_TIMEOUT | r1);
             }
 
-            for(uint16_t k = 0; k < DATA_BLOCK_LEN; k++) 
-                ds.byte[k] = SD_ReceiveByteSPI();
+            for(uint16_t k = 0; k < BLOCK_LEN; k++) 
+                bl.byte[k] = SD_ReceiveByteSPI();
 
             for(uint8_t k = 0; k < 2; k++) 
-                ds.CRC[k] = SD_ReceiveByteSPI();
+                bl.CRC[k] = SD_ReceiveByteSPI();
 
             
             print_str("\n\n\r\t\t\t\t\tBLOCK: ");
-            print_dec( (startBlockAddress + (i * DATA_BLOCK_LEN)) / DATA_BLOCK_LEN );
-            SD_PrintDataBlock(ds.byte);
+            print_dec( (startBlockAddress + (i * BLOCK_LEN)) / BLOCK_LEN );
+            SD_PrintBlock(bl.byte);
         }
         
         SD_SendCommand(STOP_TRANSMISSION,0);
@@ -209,7 +188,7 @@ uint16_t SD_WriteSingleDataBlock(uint32_t blockAddress, uint8_t *data)
         SD_SendByteSPI(0xFE); // Send Start Block Token initiates data transfer
 
         // send data to write to SD card.
-        for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++) SD_SendByteSPI(data[i]);
+        for(uint16_t i = 0; i < BLOCK_LEN; i++) SD_SendByteSPI(data[i]);
 
         // Send 16-bit CRC. CRC is off by default so these do not matter.
         SD_SendByteSPI(0xFF);
@@ -271,7 +250,7 @@ uint16_t SD_WriteSingleDataBlock(uint32_t blockAddress, uint8_t *data)
 
 // Writes data in the array pointed at by *data to multiple blocks
 // specified by 'numberOfBlocks' and starting at 'address'.
-uint16_t SD_WriteMultipleDataBlocks(
+uint16_t SD_WriteMultipleBlocks(
                 uint32_t blockAddress, 
                 uint32_t numberOfBlocks, 
                 uint8_t *data)
@@ -299,7 +278,7 @@ uint16_t SD_WriteMultipleDataBlocks(
             SD_SendByteSPI(0xFC); // Start Block Token initiates data transfer
 
             // send data in 'data' to SD card.
-            for(uint16_t i = 0; i < DATA_BLOCK_LEN; i++)
+            for(uint16_t i = 0; i < BLOCK_LEN; i++)
                 SD_SendByteSPI(data[i]);
 
             // Send 16-bit CRC. CRC is off by default so these do not matter.
@@ -521,7 +500,7 @@ void SD_PrintReadError(uint16_t err)
 
 
 // Prints the error code returned by SD_Eraseblocks()
-void SD_PrintEraseBlockError(uint16_t err)
+void SD_PrintEraseError(uint16_t err)
 {
     switch(err&0xFF00)
     {
