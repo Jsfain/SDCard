@@ -36,8 +36,7 @@
  * Returns:     uint32_t capcity of the SD card in bytes, if successful,
  *              and 1 if unsuccessful.
 ******************************************************************************/
-uint32_t SD_GetMemoryCapacity(void);
-
+uint32_t SD_GetMemoryCapacitySC(void);
 
 
 /******************************************************************************

@@ -66,7 +66,7 @@ int main(void)
     {      
         // ***** test sd_GetMemoryCapcity() function in sd_misc.c  *****
         
-        uint32_t mc = SD_GetMemoryCapacity();
+        uint64_t mc = SD_GetMemoryCapacitySC();
         print_str("\n\rmemory capacity = ");
         print_dec(mc);
         print_str(" Bytes\n\r");

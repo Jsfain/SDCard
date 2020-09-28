@@ -27,8 +27,9 @@
 
 
 
-// Calculate and return the memory capacity of the SD Card in Bytes.
-uint32_t SD_GetMemoryCapacity(void)
+// Calculate and return the memory capacity 
+// of a standard capacity SD Card in Bytes.
+uint32_t SD_GetMemoryCapacitySC(void)
 {
     //Initialize parameter values needed for memory capacity calculation.
     uint8_t READ_BL_LEN = 0;
@@ -142,6 +143,7 @@ uint32_t SD_GetMemoryCapacity(void)
     return memoryCapacity; //bytes
 }
 // END sd_MemoryCapacity()
+
 
 
 // Prints the block number of all blocks between firstBlock and lastBlock 
