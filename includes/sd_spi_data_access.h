@@ -53,7 +53,7 @@
 
 // Struct whose members are the raw data bytes, R1 
 // response, and CRC returned by a data block read.
-typedef struct  Block {
+typedef struct {
     uint8_t byte[DATA_BLOCK_LEN]; // 512 byte array to hold block data bytes
     uint8_t CRC[2];
 } Block;
@@ -85,9 +85,8 @@ typedef struct  Block {
 #define CRC_ERROR_TOKEN                 0x0200
 #define WRITE_ERROR_TOKEN               0x0400
 #define INVALID_DATA_RESPONSE           0x0800
-#define MAX_WRITE_BLOCK_NUMBER_EXCEEDED 0x1000
-#define DATA_RESPONSE_TIMEOUT           0x2000
-#define CARD_BUSY_TIMEOUT               0x4000
+#define DATA_RESPONSE_TIMEOUT           0x1000
+#define CARD_BUSY_TIMEOUT               0x2000
 //#define R1_ERROR                      0x8000 //defined above
 
 
