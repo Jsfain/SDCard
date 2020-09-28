@@ -52,7 +52,7 @@ void print_dec(uint32_t n)
     else if(n <  100000000)   len = 8;
     else if(n <  1000000000)  len = 9;
     else if(n <= 4294967295)  len = 10; //largest 32-bit integer value
-
+    
     char dec[len]; //array to hold integer digit characters
     for (int i = 0; i < len; i++) dec[i] = '0'; // initialize each digit to 0.
 

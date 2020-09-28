@@ -39,6 +39,9 @@
 uint32_t SD_GetMemoryCapacitySC(void);
 
 
+uint64_t SD_GetMemoryCapacityHC(void);
+
+
 /******************************************************************************
  * Function:    sd_SearchNonZeroBlocks(
  *                      uint32_t startBlock, 
