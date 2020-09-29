@@ -39,7 +39,7 @@
 uint32_t SD_GetMemoryCapacitySC(void);
 
 
-uint64_t SD_GetMemoryCapacityHC(void);
+uint32_t SD_GetMemoryCapacityHC(void);
 
 
 /******************************************************************************

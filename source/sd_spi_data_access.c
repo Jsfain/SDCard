@@ -64,7 +64,7 @@ uint16_t SD_ReadSingleBlock(uint32_t blockAddress, Block *bl)
         for(uint8_t i = 0; i < 2; i++)
             bl->CRC[i] = SD_ReceiveByteSPI();
             
-        SD_ReceiveByteSPI(); // clear any remaining bytes in SPDR
+        SD_ReceiveByteSPI(); // clear any remaining bytes from SPDR
     }
     CS_HIGH;
     return ( READ_SUCCESS | r1 );
@@ -73,7 +73,7 @@ uint16_t SD_ReadSingleBlock(uint32_t blockAddress, Block *bl)
 
 
 
-// Print columnized address offset | HEX | ASCII values in *byte array
+// Print columnized (address) OFFSET | HEX | ASCII values in *byte array
 void SD_PrintBlock(uint8_t *byte)
 {
     print_str("\n\n\r BLOCK OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
@@ -156,10 +156,7 @@ uint16_t SD_PrintMultipleBlocks(
         }
         
         SD_SendCommand(STOP_TRANSMISSION,0);
-        // response should be R1b, which is R1 and number of busy signal bytes.
-        // may include code to hanlde this later, but right now just emptying
-        // the SPDR of the response.
-        SD_ReceiveByteSPI(); 
+        SD_ReceiveByteSPI(); // R1b response. Don't care.
     }
 
     CS_HIGH;

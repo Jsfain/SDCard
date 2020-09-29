@@ -27,50 +27,45 @@ int main(void)
     USART_Init();
     SPI_MasterInit();
 
-    // Clear screen:
-    for(int k=0;k<0xFF;k++) print_str("\n");
-    print_str("\r");
-
-    // Initializing crv
-    CardTypeVersion ctv = {.version = 0, .type = 0};
+    // Initializing ctv. These members will be set by the SD card's
+    // initialization routine. They should only be set there.
+    CardTypeVersion ctv = {.version = 1, .type = SDSC};
 
     uint32_t initResponse;
 
-    //attempt to initialize sd card.
-    for(int i = 0; i<1; i++)
+    //Attempt, up to 10 times, to initialize the SD card.
+    for(int i = 0; i < 10; i++)
     {
-        print_str("\n\n\rSD Card Initialization Attempt: ");
-        print_dec(i);
+        print_str("\n\n\rSD Card Initialization Attempt # "); print_dec(i);
         initResponse = SD_InitializeSPImode(&ctv);
-        if(initResponse != OUT_OF_IDLE) // If response is anything other than 0 (OUT_OF_IDLE) then initialization failed.
+        if( ( (initResponse & 0xFF) != OUT_OF_IDLE) && ( (initResponse & 0xFFF00) != 0 ) )  // If response is anything other than 0 (OUT_OF_IDLE) then initialization failed.
         {    
-            print_str("\n\n\rSD INITIALIZATION FAILED with Response 0x");
-            print_hex(initResponse);
-            SD_PrintInitError(initResponse);
+            print_str("\n\n\rFAILED INITIALIZING SD CARD");
+            print_str("\n\rInitialization Error Response: "); SD_PrintInitError(initResponse);
+            print_str("\n\rR1 Response: "); SD_PrintR1(initResponse);
         }
         else
-        {   print_str("\n\rSD Card Successfully Initialized\n\r");
+        {   print_str("\n\rSUCCESSFULLY INITIALIZED SD CARD");
             break;
         }
     }
-    print_str("\n\rPrinting R1 Response for init = "); SD_PrintR1((uint8_t)(0x000FF&initResponse));
-    print_str("\n\rinitialization response = "); SD_PrintInitError(initResponse);
-
-    print_str("\n\r ctv.version = "); print_dec(ctv.version);
-    print_str("\n\r ctv.type    = "); 
-    if(ctv.type == SDSC) print_str("SDSC");
-    else if (ctv.type == SDHC) print_str("SDHC");
-
 
     if(initResponse==OUT_OF_IDLE) // initialization successful
     {      
-        // ***** test sd_GetMemoryCapcity() function in sd_misc.c  *****
-        
-        uint64_t mc = SD_GetMemoryCapacityHC();
-        print_str("\n\rmemory capacity = ");
-        print_dec(mc);
-        print_str(" Bytes\n\r");
-        
+        // ****************************************************
+        // Calling one of these functions will return the
+        // SD card's memory capacity. 
+        // SD_GetMemoryCapcitySC() and  SD_GetMemoryCapcitySC()
+        // are in sd_misc.c
+    
+        print_str("\n\n\n\rmemory capacity = ");
+
+        if (ctv.type == SDHC) 
+            print_dec(SD_GetMemoryCapacityHC());
+        else
+            print_dec(SD_GetMemoryCapacitySC());
+
+        print_str(" Bytes");
         
         // ***** END test sd_GetMemoryCapcity()
         

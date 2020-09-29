@@ -31,114 +31,107 @@
 // of a standard capacity SD Card in Bytes.
 uint32_t SD_GetMemoryCapacitySC(void)
 {
-    //Initialize parameter values needed for memory capacity calculation.
-    uint8_t READ_BL_LEN = 0;
-    uint16_t C_SIZE = 0;
-    uint8_t C_SIZE_MULT = 0;
+    uint8_t r1 = 0;
 
-    //Initialize other variables
-    uint8_t resp;
-    uint8_t R1 = 0;
-    uint8_t attempt = 0;
-
-    // ***** Send command SEND_CSD (CMD9) and get R1 response.
+    // SEND_CSD (CMD9)
     CS_LOW;
-    SD_SendCommand(SEND_CSD,0); //CMD9 - Request CSD Register from SD card.
-    R1 = SD_GetR1(); // Get R1 response
+    SD_SendCommand(SEND_CSD,0);
+    r1 = SD_GetR1(); // Get R1 response
+    if(r1 > 0) { CS_HIGH; return 1; }
 
-    //If R1 is non-zero or times out, then return without getting rest of CSD.
-    if(R1 > 0)
-    {
-        CS_HIGH
-        print_str("\n\r>> ERROR:   SEND_CSD (CMD9) in sd_getMemoryCapacity() returned error in R1 response.");
-        return 1;
-    }
-
-    
     // ***** Get rest of the response bytes which are the CSD Register and CRC.
     
-    
-    attempt = 0;
-    do{ // get CSD_STRUCTURE (Not used for memory calculation)
-        if((SD_ReceiveByteSPI()>>6) <= 2) break; //check for valid CSD_STRUCTURE returned
-        if(attempt++ >= 0xFF){ CS_HIGH; return 1;} // Timeout returning valid CSD_STRUCTURE 
-    }while(1);
-    
-    attempt = 0;
-    do{ // get TAAC (Not used for memory calculation)
-        if(!(SD_ReceiveByteSPI()>>7)) break; // check for valid TAAC (bit 7 is rsvd should = 0)
-        if(attempt++ >= 0xFF) { CS_HIGH; return 1;} //Timeout returning valid TAAC
+    // CSD fields
+    uint8_t readBlockLength = 0;
+    uint16_t cSize = 0;
+    uint8_t cSizeMult = 0;
+
+    // Other variables
+    uint8_t resp;
+    uint8_t timeout = 0;
+
+    do{ // CSD_STRUCTURE - Must be 0 for SDSC types.
+        if( (SD_ReceiveByteSPI() >> 6) == 0 ) break;
+        if(timeout++ >= 0xFF){ CS_HIGH; return 1; }
     }while(1);
 
-    SD_ReceiveByteSPI();  // get NSAC of CSD. Any value could be valid. (Not used for memory calculation)
+    timeout = 0;
+    do{ // TAAC - Bit 7 is reserved so must be 0
+        if(!(SD_ReceiveByteSPI()>>7)) break;
+        if(timeout++ >= 0xFF) { CS_HIGH; return 1;}
+    }while(1);
 
-    attempt = 0;
-    do{ // get TRAN_SPEED. (Not used for memory calculation)
+    // NSAC - Any value could be here
+    SD_ReceiveByteSPI();
+
+    timeout = 0;
+    do{ // TRAN_SPEED
         resp = SD_ReceiveByteSPI();  
-        if((resp == 0x32) || (resp == 0x5A)) break; //TRAN_SPEED must be 0x32 or 0x5A.
-        if(attempt++ >= 0xFF) { CS_HIGH; return 1;} //Timeout returning valid TRAN_SPEED
+        if((resp == 0x32) || (resp == 0x5A)) break;
+        if(timeout++ >= 0xFF) { CS_HIGH; return 1;}
     }while(1);
 
 
-    //Next 2 bytes include 12 bit CCC and 4 bit READ_BL_LENGTH.  
-    //CCC is of the form 01_110110101 and is NOT used for memory calculation
-    //READ_BL_LEN is needed to calculate memory capacity and must by 9, 10, or 11.
+    // Next 2 bytes are the 12-bit CCC and 4-bit READ_BL_LEN. CCC is of the
+    // form 01_110110101. READ_BL_LEN is needed to calculate memory capacity.
+    // It's value must be 9, 10, or 11.
     uint8_t flag = 1;
     while(flag == 1)
     {
-        if((resp = SD_ReceiveByteSPI())&0x7B) //CCC 8 most significant bits must be of the form 01_11011;
+        if((resp = SD_ReceiveByteSPI())&0x7B) //CCC[11:4] 
         {
-            if(((resp = SD_ReceiveByteSPI())>>4) == 0x05) //CCC least sig. 4 bits and 4 bit READ_BL_LEN.
+            if(((resp = SD_ReceiveByteSPI())>>4) == 0x05) //CCC[3:0]
             {
-                READ_BL_LEN = resp&0b00001111;
-                if ((READ_BL_LEN < 9) || (READ_BL_LEN > 11)) { CS_HIGH; return 1; }
+                readBlockLength = resp & 0b00001111;
+                if ((readBlockLength < 9) || (readBlockLength > 11)) 
+                    { CS_HIGH; return 1; }
                 flag = 0;
             }
         }
-        if(attempt++ >= 0xFF) { CS_HIGH; return 1;}
+        if(timeout++ >= 0xFF) { CS_HIGH; return 1;}
     }
 
 
-    //This section gets the remaining bits of the CSD.
-    //C_SIZE and C_SIZE_MULT are needed for memory capacity calculation.
+    // Gets the remaining fields needed: C_SIZE and C_SIZE_MULT
     flag = 1;
-    attempt = 0;
+    timeout = 0;
     while(flag == 1)
     {
-        if((resp = SD_ReceiveByteSPI())&0xF3) //MASK of 0xF3 is based on the following. X is 1 or 0.
-                                        //READ_BLK_PARTIAL[7] = 1;
-                                        //WRITE_BLK_MISALIGN[6] = X;
-                                        //READ_BLK_MISALIGN[5] = X;
-                                        //DSR_IMP[4] = X;
-                                        //RESERVERED[3:2] = 0;
-                                        //C_SIZE - 2 Most Significant Bits[1:0] = X.  (Used for memory capacity calculation.)
-        {
-            //get and parse C_SIZE            
-            C_SIZE = (resp&0x03);           
-            C_SIZE <<= 8;           
-            C_SIZE |= SD_ReceiveByteSPI(); //get next 8 bits of C_SIZE
-            C_SIZE <<= 2;        
-            C_SIZE |= ((SD_ReceiveByteSPI())>>6);
+        if((resp = SD_ReceiveByteSPI()) & 0xF3) //READ_BLK_PARTIAL[7]   = 1;
+                                                //WRITE_BLK_MISALIGN[6] = X;
+                                                //READ_BLK_MISALIGN[5]  = X;
+                                                //DSR_IMP[4] = X;
+                                                //RESERVERED[3:2] = 0;
+        {           
+            cSize = (resp & 0x03);         
+            cSize <<= 8;           
+            cSize |= SD_ReceiveByteSPI();
+            cSize <<= 2;        
+            cSize |= (SD_ReceiveByteSPI() >> 6);
             
-            //get C_SIZE_MULT
-            C_SIZE_MULT = ((SD_ReceiveByteSPI()&0x03)<<1);
-            C_SIZE_MULT |= (SD_ReceiveByteSPI()>>7);
+            cSizeMult = ( (SD_ReceiveByteSPI() & 0x03) << 1);
+            cSizeMult |= (SD_ReceiveByteSPI() >> 7);
             
             flag = 0;
         }
-        if(attempt++ >= 0xFF) { CS_HIGH; return 1; }
+        if(timeout++ >= 0xFF) { CS_HIGH; return 1; }
     }
 
     CS_HIGH;
 
-    // ***** Calculate and return memory capacity of SD Card.
+    // ******* Calculate memory capacity ******
     
+    // BLOCK_LEN = 2^READ_BL_LEN
     uint32_t blockLen = 1;
-    for (uint8_t i = 0; i < READ_BL_LEN; i++) blockLen = blockLen * 2;
-    uint32_t MULT = 1;
-    for (uint8_t i = 0; i< C_SIZE_MULT+2; i++) MULT = MULT * 2;
-    uint32_t BLOCKNR = (C_SIZE+1) * MULT;
-    uint32_t memoryCapacity = BLOCKNR * blockLen;
+    for (uint8_t i = 0; i < readBlockLength; i++) blockLen = blockLen * 2;
+
+    // MULT = 2^(C_SIZE_MULT + 2)
+    uint32_t mult = 1;
+    for (uint8_t i = 0; i < cSizeMult+2; i++) mult = mult * 2;
+
+    uint32_t blockNr = (cSize + 1) * mult;
+
+    uint32_t memoryCapacity = blockNr * blockLen;
     
     return memoryCapacity; //bytes
 }
@@ -146,107 +139,92 @@ uint32_t SD_GetMemoryCapacitySC(void)
 
 
 
-// Calculate and return the memory capacity
-// of a standard capacity SD Card in Bytes.
-uint64_t SD_GetMemoryCapacityHC(void)
+// Calculate memory capacity of a high capacity SD Card
+// from CSD and and return the memory capacity in Bytes.
+uint32_t SD_GetMemoryCapacityHC(void)
 {
-    //Initialize parameter values needed for memory capacity calculation.
-    uint8_t READ_BL_LEN = 0;
-    uint64_t C_SIZE = 0;
+    uint8_t r1 = 0;
 
-    //Initialize other variables
-    uint8_t resp;
-    uint8_t R1 = 0;
-    uint8_t attempt = 0;
-
-    // ***** Send command SEND_CSD (CMD9) and get R1 response.
+    // SEND_CSD (CMD9)
     CS_LOW;
-    SD_SendCommand(SEND_CSD,0); //CMD9 - Request CSD Register from SD card.
-    R1 = SD_GetR1(); // Get R1 response
+    SD_SendCommand(SEND_CSD,0);
+    r1 = SD_GetR1(); // Get R1 response
+    if(r1 > 0) { CS_HIGH; return 1; }
+    
 
-    //If R1 is non-zero or times out, then return without getting rest of CSD.
-    if(R1 > 0)
-    {
-        CS_HIGH
-        print_str("\n\r>> ERROR:   SEND_CSD (CMD9) in sd_getMemoryCapacity() returned error in R1 response.");
-        return 1;
-    }
+    // Only C_SIZE value is needed to calculate the memory capacity of a SDHC/
+    // SDXC type card. The CSD fields prior to the C_SIZE are used here to 
+    // verfiy CSD is accurately being read-in, and the correct memory capacity
+    // function has been called.
 
-    
-    // ***** Get rest of the response bytes which are the CSD Register and CRC.
-    
-    
-    attempt = 0;
-    do{ // get CSD_STRUCTURE (Not used for memory calculation)
-        if((SD_ReceiveByteSPI()>>6) <= 2) break; //check for valid CSD_STRUCTURE returned
-        if(attempt++ >= 0xFF){ CS_HIGH; return 1;} // Timeout returning valid CSD_STRUCTURE 
+    uint8_t resp;
+    uint8_t timeout = 0;
+    uint64_t cSize = 0;
+
+    do{ // CSD_STRUCTURE - Must be 1 for SDHC types.
+        if( (resp = (SD_ReceiveByteSPI() >> 6)) == 1 ) break;
+        if(timeout++ >= 0xFF){ CS_HIGH; return 1; }
     }while(1);
     
-    attempt = 0;
-    do{ // get TAAC (Not used for memory calculation)
-        if(!(SD_ReceiveByteSPI()>>7)) break; // check for valid TAAC (bit 7 is rsvd should = 0)
-        if(attempt++ >= 0xFF) { CS_HIGH; return 1;} //Timeout returning valid TAAC
+    timeout = 0;
+    do{ // TAAC - Must be 0X0E (1ms)
+        if( (resp = SD_ReceiveByteSPI()) == 0x0E) break;
+        if(timeout++ >= 0xFF) { CS_HIGH; return 1; }
     }while(1);
 
-    SD_ReceiveByteSPI();  // get NSAC of CSD. Any value could be valid. (Not used for memory calculation)
-
-    attempt = 0;
-    do{ // get TRAN_SPEED. (Not used for memory calculation)
-        resp = SD_ReceiveByteSPI();  
-        if((resp == 0x32) || (resp == 0x5A)) break; //TRAN_SPEED must be 0x32 or 0x5A.
-        if(attempt++ >= 0xFF) { CS_HIGH; return 1;} //Timeout returning valid TRAN_SPEED
+    timeout = 0;
+    do{ // NSAC - Must be 0X00 (1ms)
+        if( (resp = SD_ReceiveByteSPI()) == 0x00) break;
+        if(timeout++ >= 0xFF) { CS_HIGH; return 1; }
     }while(1);
 
+    timeout = 0;
+    do{ // TRAN_SPEED - Must be 0x32 for current implementation
+        if( (resp = SD_ReceiveByteSPI()) == 0x32)  break;
+        if(timeout++ >= 0xFF) { CS_HIGH; return 1; }
+    }while(1);
 
-    //Next 2 bytes include 12 bit CCC and 4 bit READ_BL_LENGTH.  
-    //CCC is of the form 01_110110101 and is NOT used for memory calculation
-    //READ_BL_LEN is needed to calculate memory capacity and must by 9, 10, or 11.
+    // Next 2 bytes are the 12-bit CCC and 4-bit READ_BL_LEN. CCC is of the
+    // form _1_1101101_1 for SDHC/SDXC. READ_BL_LEN must be 9 for SDHC/SDXC.
     uint8_t flag = 1;
     while(flag == 1)
     {
-        if((resp = SD_ReceiveByteSPI())&0x7B) //CCC 8 most significant bits must be of the form 01_11011;
+        if( ( (resp = SD_ReceiveByteSPI()) & 0x5B) == 0x5B) //CCC[11:4]
         {
-            if(((resp = SD_ReceiveByteSPI())>>4) == 0x05) //CCC least sig. 4 bits and 4 bit READ_BL_LEN.
+            if(((resp = SD_ReceiveByteSPI()) >> 4) == 0x05) //CCC[3:0] 
             {
-                READ_BL_LEN = resp&0b00001111;
-                if ((READ_BL_LEN < 9) || (READ_BL_LEN > 11)) { CS_HIGH; return 1; }
+                if ( (resp & 0x0F) != 9) { CS_HIGH; return 1; }
                 flag = 0;
             }
         }
-        if(attempt++ >= 0xFF) { CS_HIGH; return 1;}
+        if(timeout++ >= 0xFF) { CS_HIGH; return 1;}
     }
 
-    //This section gets the remaining bits of the CSD.
-    //C_SIZE and C_SIZE_MULT are needed for memory capacity calculation.
+    //This section gets the remaining bits leading up to C_SIZE.
     flag = 1;
-    attempt = 0;
+    timeout = 0;
+
     while(flag == 1)
     {
-        if((resp = SD_ReceiveByteSPI())&0xF3) //MASK of 0xF3 is based on the following. X is 1 or 0.
-                                        //READ_BLK_PARTIAL[7] = 1;
-                                        //WRITE_BLK_MISALIGN[6] = X;
-                                        //READ_BLK_MISALIGN[5] = X;
-                                        //DSR_IMP[4] = X;
-                                        //RESERVERED[3:2] = 0;
-                                        //C_SIZE - 2 Most Significant Bits[1:0] = X.  (Used for memory capacity calculation.)
+        resp = SD_ReceiveByteSPI();
+        if( (resp == 0) || (resp == 16) ) //READ_BLK_PARTIAL[7] = 0;
+                                          //WRITE_BLK_MISALIGN[6] = 0;
+                                          //READ_BLK_MISALIGN[5] = 0;
+                                          //DSR_IMP[4] = X;
+                                          //RESERVERED[3:0] = 0;
         {
-            //get and parse C_SIZE            
-            C_SIZE = (resp&0x03);           
-            C_SIZE <<= 8;           
-            C_SIZE |= SD_ReceiveByteSPI(); //get next 8 bits of C_SIZE
-            C_SIZE <<= 8;        
-            C_SIZE |= SD_ReceiveByteSPI();
-            C_SIZE <<= 4;
-            C_SIZE |= ( SD_ReceiveByteSPI() >> 4 );
-            
+            cSize = (SD_ReceiveByteSPI() & 0x3F); // Only [5:0] is C_SIZE           
+            cSize <<= 8;           
+            cSize |= SD_ReceiveByteSPI();
+            cSize <<= 8;        
+            cSize |= SD_ReceiveByteSPI();
             flag = 0;
         }
-        if(attempt++ >= 0xFF) { CS_HIGH; return 1; }
+        if(timeout++ >= 0xFF) { CS_HIGH; return 1; }
     }
-
     CS_HIGH;
 
-    uint64_t memoryCapacity = (C_SIZE + 1) * 512000;
+    uint32_t memoryCapacity = (cSize + 1) * 512000;
     
     return memoryCapacity; //bytes
 }

@@ -28,20 +28,11 @@
 
 
 
-// Struct whose members are the raw data bytes, R1 
-// response, and CRC returned by a data block read.
+// Struct whose members are the raw data bytes and CRC returned by a data block read.
 typedef struct {
     uint8_t byte[BLOCK_LEN]; // 512 byte array to hold block data bytes
     uint8_t CRC[2];
 } Block;
-
-
-// Error flags / tokens used explicitly by functions defined here.
-// The lowest byte in each flag / token is 0 as this byte will be
-// occupied by the R1 response in the returned values.
-// Call the specific 'Print Error' function on the upper bytes to 
-// to print specific errors here, call 'SD_PrintR1(r1) on the lowest
-// byte to print the R1 response.
 
 
  
