@@ -139,7 +139,7 @@ uint16_t SD_PrintMultipleBlocks(
             while( SD_ReceiveByteSPI() != 0xFE ) // wait for start block token.
             {
                 timeout++;
-                if(timeout > 0x500) return (START_TOKEN_TIMEOUT | r1);
+                if(timeout > 0x511) return (START_TOKEN_TIMEOUT | r1);
             }
 
             for(uint16_t k = 0; k < BLOCK_LEN; k++) 
@@ -344,7 +344,7 @@ uint16_t SD_WriteMultipleBlocks(
 uint16_t SD_NumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks)
 {
     uint8_t r1;
-    uint8_t timeout = 0; 
+    uint16_t timeout = 0; 
 
     CS_LOW;
     SD_SendCommand(APP_CMD,0); // next command is ACM
@@ -354,7 +354,6 @@ uint16_t SD_NumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks)
         CS_HIGH;
         return ( R1_ERROR | r1);
     }
-
     SD_SendCommand(SEND_NUM_WR_BLOCKS,0);
     r1 = SD_GetR1();
     if(r1 > 0)
@@ -362,16 +361,15 @@ uint16_t SD_NumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks)
         CS_HIGH;
         return ( R1_ERROR | r1);
     }
-    
     while(SD_ReceiveByteSPI() != 0xFE) // start block token
     {
-        if(timeout++ > 0xFE) 
+        if(timeout++ > 0x511) 
         {
             CS_HIGH;
             return ( START_TOKEN_TIMEOUT | r1 );
         }
     }
-
+    
     // Get the number of well written blocks (32-bit)
     *wellWrittenBlocks = SD_ReceiveByteSPI();
     *wellWrittenBlocks <<= 8;

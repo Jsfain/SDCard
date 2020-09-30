@@ -60,6 +60,7 @@ int main(void)
         uint32_t startBlockNumber;
         uint32_t endBlockNumber;
         uint32_t blockNumber;
+        uint32_t numberOfBlocks;
 
 
         Block ds; // block struct
@@ -86,8 +87,8 @@ int main(void)
         // entries. I made this to help locate raw data on the SD card.
         // This is not fast, so don't use it over a large range of blocks.
 
-        startBlockNumber = 3001;
-        endBlockNumber = 4000;
+        startBlockNumber = 5;
+        endBlockNumber = 30;
 
         if (ctv.type == SDHC) // SDHC is block addressable
             SD_FindNonZeroBlockNumbers(startBlockNumber, endBlockNumber);
@@ -146,9 +147,6 @@ int main(void)
         
         blockNumber = 8192;
           
-        //SD_PrintMultipleBlocks(address,nob);
-        
-
         if (ctv.type == SDHC) // SDHC is block addressable
             err16 = SD_PrintMultipleBlocks(blockNumber,numberOfBlocks);
         else // SDSC byte addressable
@@ -170,11 +168,11 @@ int main(void)
                 SD_PrintReadError(err16);
             }
         }
-        // ***************************************************************
+        // *******************************************************************
 */        
 
 
-
+/*
         // ******************* SD_WriteSingleBlock() **************************
         //
         // Use this function to write to a single block on the SD card 
@@ -197,6 +195,20 @@ int main(void)
             err16 = SD_EraseBlocks(
                     blockNumber * BLOCK_LEN,
                     blockNumber * BLOCK_LEN);
+        
+        if(err16 != ERASE_SUCCESSFUL)
+        {
+            print_str("\n\r >> SD_EraseBlocks() returned ");
+            if(err16 & R1_ERROR)
+            {
+                print_str("R1 error: ");
+                SD_PrintR1(err16);
+            }
+
+            print_str(" error "); 
+            SD_PrintEraseError(err16);
+        }
+
 
         // READ and PRINT
         if (ctv.type == SDHC) // SDHC is block addressable
@@ -281,85 +293,164 @@ int main(void)
             else// print the single data block that was read just in.
                 SD_PrintBlock(ds.byte);
         }
+        // *******************************************************************
+*/
+
+
+
+        // ******************* SD_WriteMultipleBlocks() ***********************
+        //
+        // Use this function to write to multiple blocks of the SD card. This
+        // function will write the same data to the blocks specified by 
+        // startBlockNumber and numberOfBlocks. This function is not really
+        // useful as it writes the same data to every block, but is used to 
+        // demonstrate the WRITE_MULTIPLE_BLOCK command. This block of code
+        // will first erase the multiple blocks using SD_EraseBlocks(), then
+        // read-in and print the same blocks using SD_PrintMultipleBlocks().
+        // Then it will write to the multiple blocks, it will then do some
+        // error handling if the WRITE_BLOCK_TOKEN is received (This should
+        // work but I haven't really been able to test this out though). It
+        // will then read-in and print the blocks again to show that the data 
+        // was successfully written to the blocks.
         
 
+        // data to write to block
+        uint8_t mdb[BLOCK_LEN] = "Well Hello There! I see you brought a PIE!!";
 
+        startBlockNumber = 10;
+        endBlockNumber = 20;
+        numberOfBlocks = 3;
+
+        // ERASE multiple blocks
+        print_str("\n\r   ***** ERASING BLOCKS ***** ");
+        if (ctv.type == SDHC) // SDHC is block addressable
+            err16 = SD_EraseBlocks(startBlockNumber, endBlockNumber);
+        else // SDSC byte addressable
+            err16 = SD_EraseBlocks(
+                    startBlockNumber * BLOCK_LEN,
+                    endBlockNumber * BLOCK_LEN);
         
-        /*
-        // ***** test SD_WriteMultipleBlocks() function in sd_misc.c *****
-
-        //DataBlock ds; //data block struct
-        uint32_t write_start_block = 20;
-        uint32_t write_start_address = write_start_block * BLOCK_LEN; // the address of first byte in block.
-        uint16_t mwr; // multiple write response
-
-        int nowb = 4; // number of write blocks
-        
-        uint8_t mdb[BLOCK_LEN] = "Well            Hello           There!          I               see             you             brought         a               PIE :) ";
-
-        print_str("\n\r ***** Read Multiple Blocks *****");
-        //SD_PrintMultipleBlocks(write_start_address,nowb);
-        
-        print_str("\n\r **** Write Multiple Blocks *****");
-        mwr = SD_WriteMultipleBlocks(write_start_address,nowb,mdb);
-
-        //Get R2 response (SEND_STATUS) if there is a write error.    
-        if ((mwr&0x0F00)==WRITE_ERROR)
+        if(err16 != ERASE_SUCCESSFUL)
         {
-            print_str("\n\r Write error detected");
-            uint16_t R2;
-        
-            CS_LOW;             
-            SD_SendCommand(SEND_STATUS,0);
-            R2 = SD_GetR1(); // The first byte of the R2 response is same as the R1 response.
-            R2 <<= 8;
-            R2 |= SD_GetR1(); // can use the sd_getR1 to get second byte of R2 response as well.
-            print_dec(R2);
-            CS_HIGH;
-            print_str("\n\r R2 Response = ");
-            print_dec(R2);
-            print_str("\n\r Write Response = ");
-            SD_PrintWriteError(mwr);
+            print_str("\n\r >> SD_EraseBlocks() returned ");
+            if(err16 & R1_ERROR)
+            {
+                print_str("R1 error: ");
+                SD_PrintR1(err16);
+            }
+
+            print_str(" error "); 
+            SD_PrintEraseError(err16);
         }
+
+        // PRINT Multiple Blocks
+        print_str("\n\r   ***** PRINTING BLOCKS BEFORE WRITE ***** ");
+        if (ctv.type == SDHC) // SDHC is block addressable
+            err16 = SD_PrintMultipleBlocks(startBlockNumber,numberOfBlocks);
+        else // SDSC byte addressable
+            err16 = SD_PrintMultipleBlocks(
+                            startBlockNumber * BLOCK_LEN, 
+                            numberOfBlocks);
         
+        if(err16 != READ_SUCCESS)
+        { 
+            print_str("\n\r >> SD_PrintMultipleBlocks() returned ");
+            if(err16 & R1_ERROR)
+            {
+                print_str("R1 error: ");
+                SD_PrintR1(err16);
+            }
+            else 
+            { 
+                print_str(" error "); 
+                SD_PrintReadError(err16);
+            }
+        }
+
+        // WRITE Multiple Blocks
+        print_str("\n\r  ***** WRITING BLOCKS ***** ");
+        err16 = SD_WriteMultipleBlocks(startBlockNumber,numberOfBlocks,mdb);
+        if(err16 != DATA_ACCEPTED_TOKEN)
+        { 
+            print_str("\n\r >> SD_WriteMultipleBlocks() returned ");
+            if(err16 & R1_ERROR)
+            {
+                print_str("R1 error: ");
+                SD_PrintR1(err16);
+            }
+            else 
+            { 
+                print_str(" error "); 
+                SD_PrintWriteError(err16);
+
+                // should get R2 (SEND_STATUS) and get the number of well
+                // written blocks if the WRITE_ERROR_TOKEN was returned by the card while writing
+                // by the card while writing attempting to write.
+                 
+                if (( err16 & WRITE_ERROR_TOKEN) == WRITE_ERROR_TOKEN)
+                {
+                    // Getting R2.  May make this into a function.
+                    print_str("\n\r WRITE_ERROR_TOKEN set.");
+                    print_str("\n\r Getting STATUS (R2) response.");
+                    uint16_t r2;
+                    CS_LOW;             
+                    SD_SendCommand(SEND_STATUS,0);
+                    r2 = SD_GetR1(); // The first byte of R2 is R1
+                    r2 <<= 8;
+                    r2 |= SD_ReceiveByteSPI();
+                    CS_HIGH;
+                    print_str("\n\r R2 Response = ");
+                    print_dec(r2);
+
+                    // Number of Well Written Blocks
+                    print_str("\n\r Getting Number of Well Written Blocks.");
+                    uint32_t nwwb;
+                    err16 = SD_NumberOfWellWrittenBlocks(&nwwb);
+                    if(err16 != READ_SUCCESS)
+                    { 
+                        print_str("\n\r >> SD_NumberOfWellWritteBlocks() returned ");
+                        if(err16 & R1_ERROR)
+                        {
+                            print_str("R1 error: ");
+                            SD_PrintR1(err16);
+                        }
+                        else 
+                        { 
+                            print_str(" error "); 
+                            SD_PrintReadError(err16);
+                        }
+                        print_str("\n\r Number of well written write blocks = ");
+                        print_dec(nwwb);
+                    }
+                }
+            }
+        }
+
+
+        print_str("\n\r ***** PRINTING BLOCKS AFTER WRITE ***** ");
+        // READ amd PRINT post write
+        if (ctv.type == SDHC) // SDHC is block addressable
+            err16 = SD_PrintMultipleBlocks(startBlockNumber,numberOfBlocks);
+        else // SDSC byte addressable
+            err16 = SD_PrintMultipleBlocks(
+                            startBlockNumber * BLOCK_LEN, 
+                            numberOfBlocks);
         
-        print_str("\n\rDone Writing Data Blocks");
-        //SD_PrintMultipleBlocks(write_start_address,nowb);
-        
+        if(err16 != READ_SUCCESS)
+        { 
+            print_str("\n\r >> SD_PrintMultipleBlocks() returned ");
+            if(err16 & R1_ERROR)
+            {
+                print_str("R1 error: ");
+                SD_PrintR1(err16);
+            }
+            else 
+            { 
+                print_str(" error "); 
+                SD_PrintReadError(err16);
+            }
+        }
 
-        uint32_t nwwb = SD_NumberOfWellWrittenBlocks();
-        print_str("\n\r Number of well written write blocks = ");
-        print_dec(nwwb);
-        // ***** END test SD_WriteMultipleBlocks() *****
-        */
-
-
-        /*
-        // ***** Test Erase Blocks *****
-
-        // calls SD_EraseBlocks(start_add, end_add) which will erase all blocks between the start and end address as
-        // well as the entire block that contains the start and end address.  Start and end address do not need to be the 
-        // first address of a block but must be contained within the first and last blocks to erase.
-
-        uint32_t noeb = 400; // number of erase blocks
-        uint32_t erase_start_block = 0;
-        uint32_t erase_start_address = erase_start_block * BLOCK_LEN; // the address of first byte in block.
-        uint32_t erase_end_address = erase_start_address + ((noeb - 1) * BLOCK_LEN); // "noeb-1 to ensure the noeb is the number of blocks erased"
-
-        uint16_t er; // erase response
-
-        print_dec(noeb*512);
-        //print_str("\n\r ***** Read Multiple Blocks *****");
-        //SD_PrintMultipleBlocks(erase_start_address,noeb);
-        
-        print_str("\n\r ***** Erase Multiple Blocks *****\n\r");
-        er = sd_EraseBlocks(erase_start_address,erase_end_address);
-        SD_PrintEraseBlockError(er);
-        
-        //print_str("\n\r ***** Read Multiple Blocks *****");
-        //SD_PrintMultipleBlocks(erase_start_address,noeb+2);
-        // ***** END Test Erase Blocks *****
-        */
        
         uint32_t start_sector;
         uint32_t start_address;
