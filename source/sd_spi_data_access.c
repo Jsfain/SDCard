@@ -125,7 +125,6 @@ uint16_t SD_PrintMultipleBlocks(
     CS_LOW;
     SD_SendCommand(READ_MULTIPLE_BLOCK, startBlockAddress); // CMD18
     r1 = SD_GetR1();
-    print_str("\n\rprinting R1 = ");SD_PrintR1(r1);
     if(r1 > 0)
     {
         CS_HIGH
@@ -149,9 +148,6 @@ uint16_t SD_PrintMultipleBlocks(
             for(uint8_t k = 0; k < 2; k++) 
                 bl.CRC[k] = SD_ReceiveByteSPI();
 
-            
-            print_str("\n\n\r\t\t\t\t\tBLOCK: ");
-            print_dec( (startBlockAddress + (i * BLOCK_LEN)) / BLOCK_LEN );
             SD_PrintBlock(bl.byte);
         }
         
@@ -167,7 +163,7 @@ uint16_t SD_PrintMultipleBlocks(
 
 
 // Writes data in array pointed at by *data to the block at 'address'
-uint16_t SD_WriteSingleDataBlock(uint32_t blockAddress, uint8_t *data)
+uint16_t SD_WriteSingleBlock(uint32_t blockAddress, uint8_t *data)
 {
     uint8_t  r1;
     CS_LOW;    

@@ -52,7 +52,7 @@ uint32_t SD_GetMemoryCapacityHC(void);
  *              2) uint32_t block number for the end block. 
  * Returns:     VOID
 ******************************************************************************/
-void SD_PrintNonZeroBlockNumbers(uint32_t startBlock, uint32_t endBlock);
+void SD_FindNonZeroBlockNumbers(uint32_t startBlock, uint32_t endBlock);
 
 
 #endif // SD_SPI_MISC_H

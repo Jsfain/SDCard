@@ -17,31 +17,34 @@
 #include "../includes/sd_spi_misc.h"
 
 
-
 uint32_t enterBlockNumber();
 
 
-//  *******   MAIN   ********
+
 int main(void)
 {
     USART_Init();
     SPI_MasterInit();
 
+
+    // ******************* SD CARD INITILIAIZATION ***************** 
     // Initializing ctv. These members will be set by the SD card's
     // initialization routine. They should only be set there.
     CardTypeVersion ctv = {.version = 1, .type = SDSC};
 
     uint32_t initResponse;
 
-    //Attempt, up to 10 times, to initialize the SD card.
+    // Attempt, up to 10 times, to initialize the SD card.
     for(int i = 0; i < 10; i++)
     {
         print_str("\n\n\rSD Card Initialization Attempt # "); print_dec(i);
         initResponse = SD_InitializeSPImode(&ctv);
-        if( ( (initResponse & 0xFF) != OUT_OF_IDLE) && ( (initResponse & 0xFFF00) != 0 ) )  // If response is anything other than 0 (OUT_OF_IDLE) then initialization failed.
+        if( ( (initResponse & 0xFF) != OUT_OF_IDLE) && 
+            ( (initResponse & 0xFFF00) != 0 ) )
         {    
             print_str("\n\n\rFAILED INITIALIZING SD CARD");
-            print_str("\n\rInitialization Error Response: "); SD_PrintInitError(initResponse);
+            print_str("\n\rInitialization Error Response: "); 
+            SD_PrintInitError(initResponse);
             print_str("\n\rR1 Response: "); SD_PrintR1(initResponse);
         }
         else
@@ -50,107 +53,234 @@ int main(void)
         }
     }
 
-    if(initResponse==OUT_OF_IDLE) // initialization successful
+    if(initResponse == OUT_OF_IDLE) // initialization successful
     {      
-        // ****************************************************
-        // Calling one of these functions will return the
-        // SD card's memory capacity. 
-        // SD_GetMemoryCapcitySC() and  SD_GetMemoryCapcitySC()
-        // are in sd_misc.c
-    
-        print_str("\n\n\n\rmemory capacity = ");
+        // create some variables to use for addressing
+        // in the subsequent functions
+        uint32_t startBlockNumber;
+        uint32_t endBlockNumber;
+        uint32_t blockNumber;
 
+
+        Block ds; // block struct
+        uint16_t err16; // returned error values
+        
+        
+        // *******  SD_GetMemoryCapacityHC/SC *******
+        //
+        // Get SD Card's memory capacity and print it
+        // to the screen. Still testing these....
+        print_str("\n\n\n\r Memory capacity = ");
         if (ctv.type == SDHC) 
             print_dec(SD_GetMemoryCapacityHC());
-        else
+        else  
             print_dec(SD_GetMemoryCapacitySC());
-
         print_str(" Bytes");
-        
-        // ***** END test sd_GetMemoryCapcity()
-        
-
-        // **** test SD_SearchNonZeroBlocks()
-        SD_PrintNonZeroBlockNumbers( (16*512) ,(16 * 512) + 2);
+        // ******************************************
         
 
-        Block ds; //data block struct
-        uint32_t blockNumber = 3;
-        uint16_t err;
-        uint32_t blockAddress;
+
+        // ***************** SD_FindNonZeroBlockNumbers() ******************
+        //
+        // print the block numbers of those block entries that have non-zero
+        // entries. I made this to help locate raw data on the SD card.
+        // This is not fast, so don't use it over a large range of blocks.
+
+        startBlockNumber = 3001;
+        endBlockNumber = 4000;
+
+        if (ctv.type == SDHC) // SDHC is block addressable
+            SD_FindNonZeroBlockNumbers(startBlockNumber, endBlockNumber);
+        else // SDSC byte addressable
+            SD_FindNonZeroBlockNumbers( 
+                        startBlockNumber * BLOCK_LEN, 
+                        endBlockNumber * BLOCK_LEN);
+
+        // *****************************************************************
+
+
+/*
+        // ******************* SD_ReadSingleBlock() ************************
+        // 
+        // Read in a single block from the SD card specified by blockNumber 
+        // into the array member of ds. This also demonstrates how to use 
+        // SD_PrintBlock() to print the block just read into the array.
+
+        blockNumber = 8192;
+        if (ctv.type == SDHC) // SDHC is block addressable
+            err16 = SD_ReadSingleBlock(blockNumber, &ds);
+        else // SDSC byte addressable
+            err16 = SD_ReadSingleBlock(blockNumber * BLOCK_LEN, &ds);
         
-        if (ctv.type == SDHC) blockAddress = blockNumber;
-        else blockAddress = blockNumber * BLOCK_LEN;
+        if(err16 != READ_SUCCESS)
+        { 
+            print_str("\n\r >> SD_ReadSingleBlock() returned ");
+            if(err16 & R1_ERROR)
+            {
+                print_str("R1 error: ");
+                SD_PrintR1(err16);
+            }
+            else 
+            { 
+                print_str(" error "); 
+                SD_PrintReadError(err16);
+            }
+        }
         
-        err = SD_ReadSingleBlock(blockAddress, &ds);
-        print_str(" err = ");SD_PrintReadError(err);
-        SD_PrintBlock(ds.byte);
+        else// print the single data block that was read just in.
+            SD_PrintBlock(ds.byte);
+
+        // **********************************************************
         
-        /*
-        err = SD_ReadSingleBlock(1, &ds);
-        print_str(" err = ");SD_PrintReadError(err);
-        SD_PrintBlock(ds.byte);
+*/
+/*
+
+        // ******************* SD_PrintMultipleBlocks() **********************
+        //
+        // Use this function to print multiple SD card blocks back-to-back
+        // beginning at blockNumber. The number of blocks printed is specified
+        // numberOfBlocks. 
+        // This function calls the READ_MULTIPLE_BLOCKS SD card command.
         
+        uint32_t numberOfBlocks = 3;
         
-        err = SD_ReadSingleBlock(16 * 512, &ds);
-        print_str(" err = ");SD_PrintReadError(err);
-        SD_PrintDataBlock(ds.byte);
-        */
-        // ***** test read/print multiple data block *******
-        //USART_Receive();
-        //int nob = 5;
-        //uint32_t block = 0;
-        //uint32_t address = block * BLOCK_LEN; // the address of first byte in block.   
+        blockNumber = 8192;
+          
         //SD_PrintMultipleBlocks(address,nob);
         
 
+        if (ctv.type == SDHC) // SDHC is block addressable
+            err16 = SD_PrintMultipleBlocks(blockNumber,numberOfBlocks);
+        else // SDSC byte addressable
+            err16 = SD_PrintMultipleBlocks(
+                            blockNumber * BLOCK_LEN, 
+                            numberOfBlocks);
+        
+        if(err16 != READ_SUCCESS)
+        { 
+            print_str("\n\r >> SD_PrintMultipleBlock() returned ");
+            if(err16 & R1_ERROR)
+            {
+                print_str("R1 error: ");
+                SD_PrintR1(err16);
+            }
+            else 
+            { 
+                print_str(" error "); 
+                SD_PrintReadError(err16);
+            }
+        }
+        // ***************************************************************
+*/        
 
+
+
+        // ******************* SD_WriteSingleBlock() **************************
+        //
+        // Use this function to write to a single block on the SD card 
+        // specified by blockNumber. This demo will first erase a single block
+        // using SD_EraseBlocks(), read and print the same block using
+        // SD_ReadSingleBlock and SD_PrintBlock() to show successful erase. It
+        // will writes to the block. Finally, it reads in and prints the block
+        // again to demonstrate the write was succesful.
         
-        // ***** test sd_WriteSingleDataBlock() function in sd_misc.c *****
-        
-        /*
-        //Block ds; //data block struct
-        //uint32_t block = 0;
-        //uint32_t address = block; // * BLOCK_LEN; // the address of first byte in block.
-        uint16_t wr; // write response
 
         // data to write to block
         uint8_t db[BLOCK_LEN] = "HELLO WORLD......"; 
     
-        //see what is currently written to block we will be writing to. 
-        err = SD_ReadSingleBlock(address, &ds);
-        print_str(" err = ");SD_PrintReadError(err);
-        SD_PrintBlock(ds.byte);
+        blockNumber = 10;
 
-        print_str("\n\r *** WRITING SINGLE BLOCK *** \n\r");
-        wr = SD_WriteSingleDataBlock(address,db);
+        // ERASE single block (start and end block is the same)
+        if (ctv.type == SDHC) // SDHC is block addressable
+            err16 = SD_EraseBlocks(blockNumber, blockNumber);
+        else // SDSC byte addressable
+            err16 = SD_EraseBlocks(
+                    blockNumber * BLOCK_LEN,
+                    blockNumber * BLOCK_LEN);
 
-        //Get R2 response (SEND_STATUS) if there is a write error.    
-        if ((wr&0x0F00)==WRITE_ERROR_TOKEN)
-        {
-            print_str("\n\r Write error detected");
-            uint16_t r2;
-        
-            CS_LOW;             
-            SD_SendCommand(SEND_STATUS,0);
-            r2 = SD_GetR1(); // The first byte of the R2 response is same as the R1 response.
-            r2 <<= 8;
-            r2 |= SD_GetR1(); // can use the sd_getR1 to get second byte of R2 response as well.
-            print_dec(r2);
-            CS_HIGH;
-            print_str("\n\r R2 Response = ");
-            print_dec(r2);
-            print_str("\n\r Write Response = ");
-            SD_PrintWriteError(wr);
+        // READ and PRINT
+        if (ctv.type == SDHC) // SDHC is block addressable
+            err16 = SD_ReadSingleBlock(blockNumber, &ds);
+        else // SDSC byte addressable
+            err16 = SD_ReadSingleBlock(blockNumber * BLOCK_LEN, &ds);
+
+        if(err16 != READ_SUCCESS)
+        { 
+            print_str("\n\r >> SD_ReadSingleBlock() returned ");
+            if(err16 & R1_ERROR)
+            {
+                print_str("R1 error: ");
+                SD_PrintR1(err16);
+            }
+            else 
+            { 
+                print_str(" error "); 
+                SD_PrintReadError(err16);
+            }
         }
-        
-        else // No write error, then verify data has been written to block at address
-        {
-            SD_ReadSingleBlock(address,&ds);
-            print_str(" err = ");SD_PrintReadError(err);
+        else// print the single data block that was read just in.
             SD_PrintBlock(ds.byte);
+
+        // WRITE
+        err16 = SD_WriteSingleBlock(blockNumber,db);
+        if(err16 != DATA_ACCEPTED_TOKEN)
+        { 
+            print_str("\n\r >> SD_WriteSingleBlock() returned ");
+            if(err16 & R1_ERROR)
+            {
+                print_str("R1 error: ");
+                SD_PrintR1(err16);
+            }
+            else 
+            { 
+                print_str(" error "); 
+                SD_PrintWriteError(err16);
+
+                // good to get the R2 (SEND_STATUS) response if the 
+                // WRITE_ERROR_TOKEN was returned by the card while writing to
+                // the block. May make this into a function. 
+                if (( err16 & WRITE_ERROR_TOKEN) == WRITE_ERROR_TOKEN)
+                {
+                    print_str("\n\r WRITE_ERROR_TOKEN set. Getting R2 response.");
+                    
+                    uint16_t r2;
+                    CS_LOW;             
+                    SD_SendCommand(SEND_STATUS,0);
+                    r2 = SD_GetR1(); // The first byte of R2 is R1
+                    r2 <<= 8;
+                    r2 |= SD_ReceiveByteSPI();
+                    CS_HIGH;
+                    print_str("\n\r R2 Response = ");
+                    print_dec(r2);
+                }
+            }
         }
-        */
+
+        // READ amd PRINT
+        else // Verify data has been written to block
+        {
+            if (ctv.type == SDHC) // SDHC is block addressable
+                err16 = SD_ReadSingleBlock(blockNumber, &ds);
+            else // SDSC byte addressable
+                err16 = SD_ReadSingleBlock(blockNumber * BLOCK_LEN, &ds);
+
+            if(err16 != READ_SUCCESS)
+            { 
+                print_str("\n\r >> SD_ReadSingleBlock() returned ");
+                if(err16 & R1_ERROR)
+                {
+                    print_str("R1 error: ");
+                    SD_PrintR1(err16);
+                }
+                else 
+                { 
+                    print_str(" error "); 
+                    SD_PrintReadError(err16);
+                }
+            }
+            else// print the single data block that was read just in.
+                SD_PrintBlock(ds.byte);
+        }
         
 
 
@@ -252,9 +382,9 @@ int main(void)
 
 
             start_address = BLOCK_LEN * start_sector;
-            err = SD_PrintMultipleBlocks(start_address,nos);
+            err16 = SD_PrintMultipleBlocks(start_address,nos);
             //print_str("\n\rerr = 0x"); print_hex(err);
-            SD_PrintReadError(err);
+            SD_PrintReadError(err16);
 
             print_str("\n\r press 'q' to quit and any other key to go again: ");
             answer = USART_Receive();

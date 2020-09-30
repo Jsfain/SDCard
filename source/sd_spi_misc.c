@@ -232,15 +232,13 @@ uint32_t SD_GetMemoryCapacityHC(void)
 
 
 
-// Prints the block number of all blocks between firstBlock and lastBlock 
-// that have any non-zero bytes, to assist in finding blocks that have data.
-void SD_PrintNonZeroBlockNumbers(uint32_t startBlockAddress, uint32_t endBlockAddress)
+// Prints the block number of all blocks that have any non-zero 
+// bytes between startBlockAddress and endBlockAddress.
+void SD_FindNonZeroBlockNumbers(
+                uint32_t startBlockAddress, 
+                uint32_t endBlockAddress)
 {
     Block ds;
-    print_str("\n\rSearching for non-zero blocks over range ");
-    print_dec(startBlockAddress);
-    print_str(" to ");
-    print_dec(endBlockAddress);
 
     uint16_t tab = 0; //used for printing format
     uint32_t address = 0;
@@ -263,7 +261,6 @@ void SD_PrintNonZeroBlockNumbers(uint32_t startBlockAddress, uint32_t endBlockAd
             }
         }
     }
-    print_str("\n\rDone searching non-zero blocks.");
 }
 // END sd_SearchNonZeroDataBlocks()
 

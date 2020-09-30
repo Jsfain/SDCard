@@ -147,7 +147,7 @@ uint16_t SD_PrintMultipleBlocks(
  *                 the SEND_STATUS command should be sent in order to get the 
  *                 cause of the write error.  
 ******************************************************************************/
-uint16_t SD_WriteSingleDataBlock(uint32_t blockAddress, uint8_t *data);
+uint16_t SD_WriteSingleBlock(uint32_t blockAddress, uint8_t *data);
 
 
 
@@ -175,7 +175,7 @@ uint16_t SD_WriteSingleDataBlock(uint32_t blockAddress, uint8_t *data);
  *              3) Call ACMD22 after this completes to get the number blocks
  *                 that were successfully written to.
 ******************************************************************************/
-uint16_t SD_WriteMultipleDataBlocks(
+uint16_t SD_WriteMultipleBlocks(
                 uint32_t blockAddress, 
                 uint32_t numberOfBlocks, 
                 uint8_t *dataBuffer);
