@@ -372,10 +372,10 @@ int main(void)
                     // Number of Well Written Blocks
                     print_str("\n\r Getting Number of Well Written Blocks.");
                     uint32_t nwwb;
-                    err16 = SD_NumberOfWellWrittenBlocks(&nwwb);
+                    err16 = SD_GetNumberOfWellWrittenBlocks(&nwwb);
                     if(err16 != READ_SUCCESS)
                     { 
-                        print_str("\n\r >> SD_NumberOfWellWritteBlocks() returned ");
+                        print_str("\n\r >> SD_GetNumberOfWellWritteBlocks() returned ");
                         if(err16 & R1_ERROR)
                         {
                             print_str("R1 error: ");

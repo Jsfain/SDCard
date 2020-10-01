@@ -94,30 +94,6 @@ void SD_PrintSingleBlock(uint8_t *block);  //only 512 byte block supported.
 
 
 
-
-
-
-
-/******************************************************************************
- * Function:    sd_PrintMultipleBlocks(
- *                      uint32_t start_address, 
- *                      uint32_t numOfBlocks)
- * Description: Prints multiple, consecutive data blocks using by requesting 
- *              sd_SendCommand send the READ_MULTIPLE_BLOCK command, and prints
- *              the returned blocks to the screen by calling 
- *              sd_PrintBlock(). The range of data blocks to be printed 
- *              begin at start_address and end at 
- *              start_address + (numOfBlocks - 1).
- * Argument:    1) uint32_t start address (512 * block number) 
- *              2) uint32_t number of blocks to be read in and printed.
- * Returns:     VOID
-******************************************************************************/
-uint16_t SD_PrintMultipleBlocks(
-                    uint32_t startBlockAddress, 
-                    uint32_t numberOfBlocks);
-
-
-
 /******************************************************************************
  * Function:    sd_WriteSingleDataBlock(uint32_t address, uint8_t *dataBuffer)               
  * Description: Writes the data in the 512 byte array pointed at by *dataBuffer
@@ -139,6 +115,39 @@ uint16_t SD_PrintMultipleBlocks(
  *                 cause of the write error.  
 ******************************************************************************/
 uint16_t SD_WriteSingleBlock(uint32_t blockAddress, uint8_t *data);
+
+
+
+/******************************************************************************
+ * Function:    sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
+ * Description: Erases all blocks between, and including, the blocks in the  
+ *              interval between start_address and end_address.
+ * Argument(s): 1) start_address - uint32_t value of the first block to erase.
+ *              2) end_address - uint32_t value of the last block to erase.
+ * Returns:     uint16_t error code whose value is the Data Response Code in 
+ *              the MSByte and the most recent R1 response in the LSByte.       
+ * ***************************************************************************/
+uint16_t SD_EraseBlocks(uint32_t startBlockAddress, uint32_t endBlockAddress);
+
+
+
+/******************************************************************************
+ * Function:    sd_PrintMultipleBlocks(
+ *                      uint32_t start_address, 
+ *                      uint32_t numOfBlocks)
+ * Description: Prints multiple, consecutive data blocks using by requesting 
+ *              sd_SendCommand send the READ_MULTIPLE_BLOCK command, and prints
+ *              the returned blocks to the screen by calling 
+ *              sd_PrintBlock(). The range of data blocks to be printed 
+ *              begin at start_address and end at 
+ *              start_address + (numOfBlocks - 1).
+ * Argument:    1) uint32_t start address (512 * block number) 
+ *              2) uint32_t number of blocks to be read in and printed.
+ * Returns:     VOID
+******************************************************************************/
+uint16_t SD_PrintMultipleBlocks(
+                uint32_t startBlockAddress, 
+                uint32_t numberOfBlocks);
 
 
 
@@ -173,7 +182,22 @@ uint16_t SD_WriteMultipleBlocks(
 
 
 
-void SD_PrintWriteError(uint16_t err);
+
+/******************************************************************************
+ * Function:    sd_GetNumberOfWellWrittenBlocks(void)
+ * Description: Returns the number of well written blocks after a multi-block 
+ *              write operation is performed. Call this function when 
+ *              sd_WriteMultipleDataBlocks() returns a write error to see how
+ *              many blocks were successfully written to.
+ * Argument(s): VOID
+ * Returns:     uint32_t number of well written blocks. 0 if error.
+ * ***************************************************************************/
+uint16_t SD_GetNumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks);
+
+
+
+
+void SD_PrintReadError(uint16_t err);
 
 
 
@@ -187,33 +211,6 @@ void SD_PrintWriteError(uint16_t err);
  * ***************************************************************************/
 void SD_PrintWriteError(uint16_t err);
 
-
-
-/******************************************************************************
- * Function:    sd_NumberOfWellWrittenBlocks(void)
- * Description: Returns the number of well written blocks after a multi-block 
- *              write operation is performed. Call this function when 
- *              sd_WriteMultipleDataBlocks() returns a write error to see how
- *              many blocks were successfully written to.
- * Argument(s): VOID
- * Returns:     uint32_t number of well written blocks. 0 if error.
- * ***************************************************************************/
-uint16_t SD_NumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks);
-
-
-void SD_PrintReadError(uint16_t err);
-
-
-/******************************************************************************
- * Function:    sd_EraseBlocks(uint32_t start_address, uint32_t end_address)
- * Description: Erases all blocks between, and including, the blocks in the  
- *              interval between start_address and end_address.
- * Argument(s): 1) start_address - uint32_t value of the first block to erase.
- *              2) end_address - uint32_t value of the last block to erase.
- * Returns:     uint16_t error code whose value is the Data Response Code in 
- *              the MSByte and the most recent R1 response in the LSByte.       
- * ***************************************************************************/
-uint16_t SD_EraseBlocks(uint32_t startBlockAddress, uint32_t endBlockAddress);
 
 
 
