@@ -50,7 +50,6 @@
 //#define R1_ERROR                      0x8000 //defined above
 
 
-//Well Written Block Error Flags
 
 
 // Error responses returned by the function sd_Eraseblocks()      
@@ -74,7 +73,7 @@
  * Argument:    Address of data block to read = 512 * Block or Sector number
  * Returns:     DataBlock object.
 ******************************************************************************/
-uint16_t SD_ReadSingleBlock(uint32_t blockAddress, uint8_t *ds);
+uint16_t SD_ReadSingleBlock(uint32_t blockAddress, uint8_t *block);
 
 
 /******************************************************************************
@@ -91,11 +90,11 @@ uint16_t SD_ReadSingleBlock(uint32_t blockAddress, uint8_t *ds);
  * Notes:       For the ASCII characters, a ' ' will be printed if value is
  *              < 32, '.' if > 128 and the ASCII character otherwise.
 ******************************************************************************/
-void SD_PrintBlock(uint8_t *byte);  //only 512 byte block supported.
+void SD_PrintSingleBlock(uint8_t *block);  //only 512 byte block supported.
 
 
 
-void SD_PrintReadError(uint16_t err);
+
 
 
 
@@ -201,6 +200,8 @@ void SD_PrintWriteError(uint16_t err);
  * ***************************************************************************/
 uint16_t SD_NumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks);
 
+
+void SD_PrintReadError(uint16_t err);
 
 
 /******************************************************************************

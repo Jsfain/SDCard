@@ -27,7 +27,7 @@
 
 
 // Read single block at address from SD card into array.
-uint16_t SD_ReadSingleBlock(uint32_t blockAddress, uint8_t *bl)
+uint16_t SD_ReadSingleBlock(uint32_t blockAddress, uint8_t *block)
 {
     uint8_t timeout = 0;
     uint8_t r1;
@@ -59,7 +59,7 @@ uint16_t SD_ReadSingleBlock(uint32_t blockAddress, uint8_t *bl)
 
         // start block token has been received         
         for(uint16_t i = 0; i < BLOCK_LEN; i++)
-            bl[i] = SD_ReceiveByteSPI();
+            block[i] = SD_ReceiveByteSPI();
         for(uint8_t i = 0; i < 2; i++)
             SD_ReceiveByteSPI(); // CRC
             
@@ -73,7 +73,7 @@ uint16_t SD_ReadSingleBlock(uint32_t blockAddress, uint8_t *bl)
 
 
 // Print columnized (address) OFFSET | HEX | ASCII values in *byte array
-void SD_PrintBlock(uint8_t *byte)
+void SD_PrintSingleBlock(uint8_t *block)
 {
     print_str("\n\n\r BLOCK OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
     uint16_t offset = 0;
@@ -93,7 +93,7 @@ void SD_PrintBlock(uint8_t *byte)
                 print_str(" ");
 
             print_str(" ");
-            print_hex(byte[offset]);
+            print_hex(block[offset]);
             space++;
         }
         
@@ -101,14 +101,14 @@ void SD_PrintBlock(uint8_t *byte)
         offset = offset-16;
         for( offset = row * 16; offset < (row*16) + 16; offset++ )
         {
-            if( byte[offset] < 32 ) { USART_Transmit( ' ' ); }
-            else if( byte[offset] < 128 ) { USART_Transmit( byte[offset] ); }
+            if( block[offset] < 32 ) { USART_Transmit( ' ' ); }
+            else if( block[offset] < 128 ) { USART_Transmit( block[offset] ); }
             else USART_Transmit('.');
         }
     }    
     print_str("\n\n\r");
 }
-// END SD_PrintBlock(uint8_t *byte)
+// END SD_PrintSingleBlock(uint8_t *byte)
 
 
 
@@ -117,7 +117,7 @@ uint16_t SD_PrintMultipleBlocks(
                 uint32_t startBlockAddress,
                 uint32_t numberOfBlocks)
 {
-    uint8_t bl[512];
+    uint8_t block[512];
     uint16_t timeout = 0;
     uint8_t r1;
 
@@ -142,12 +142,12 @@ uint16_t SD_PrintMultipleBlocks(
             }
 
             for(uint16_t k = 0; k < BLOCK_LEN; k++) 
-                bl[k] = SD_ReceiveByteSPI();
+                block[k] = SD_ReceiveByteSPI();
 
             for(uint8_t k = 0; k < 2; k++) 
                 SD_ReceiveByteSPI(); // CRC
 
-            SD_PrintBlock(bl);
+            SD_PrintSingleBlock(block);
         }
         
         SD_SendCommand(STOP_TRANSMISSION,0);
@@ -338,8 +338,11 @@ uint16_t SD_WriteMultipleBlocks(
 
 
 
-// Returns the number of well written blocks after a multi-block
-// write operation is performed. Use SD_PrintReadError(err) 
+// Gets the number of well written blocks from the SD card after a
+// WRITE_ERROR_TOKEN is returned by the card during a mulit-block
+// write operation. It then updates the value pointed to by the 
+// wellWrittenBlocks pointer with this value. The return value is 
+// a Read Error Flag. Use SD_PrintReadError().
 uint16_t SD_NumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks)
 {
     uint8_t r1;

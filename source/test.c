@@ -72,7 +72,7 @@ int main(void)
         // 
         // Read in a single block from the SD card specified by blockNumber 
         // into the array member of ds. This also demonstrates how to use 
-        // SD_PrintBlock() to print the block just read into the array.
+        // SD_PrintSingleBlock() to print the block just read into the array.
 
         blockNumber = 8192;
         if (ctv.type == SDHC) // SDHC is block addressable
@@ -96,7 +96,7 @@ int main(void)
         }
         
         else// print the single data block that was read just in.
-            SD_PrintBlock(ds);
+            SD_PrintSingleBlock(ds);
 
         // **********************************************************
 */     
@@ -145,7 +145,7 @@ int main(void)
         // Use this function to write to a single block on the SD card 
         // specified by blockNumber. This demo will first erase a single block
         // using SD_EraseBlocks(), read and print the same block using
-        // SD_ReadSingleBlock and SD_PrintBlock() to show successful erase. It
+        // SD_ReadSingleBlock and SD_PrintSingleBlock() to show successful erase. It
         // will writes to the block. Finally, it reads in and prints the block
         // again to demonstrate the write was succesful.
         
@@ -198,7 +198,7 @@ int main(void)
             }
         }
         else// print the single data block that was read just in.
-            SD_PrintBlock(ds);
+            SD_PrintSingleBlock(ds);
 
         // WRITE
         err16 = SD_WriteSingleBlock(blockNumber,db);
@@ -258,7 +258,7 @@ int main(void)
                 }
             }
             else// print the single data block that was read just in.
-                SD_PrintBlock(ds);
+                SD_PrintSingleBlock(ds);
         }
         // *******************************************************************
 */
