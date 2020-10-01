@@ -27,7 +27,7 @@
 
 
 // Read single block at address from SD card into array.
-uint16_t SD_ReadSingleBlock(uint32_t blockAddress, Block *bl)
+uint16_t SD_ReadSingleBlock(uint32_t blockAddress, uint8_t *bl)
 {
     uint8_t timeout = 0;
     uint8_t r1;
@@ -59,10 +59,9 @@ uint16_t SD_ReadSingleBlock(uint32_t blockAddress, Block *bl)
 
         // start block token has been received         
         for(uint16_t i = 0; i < BLOCK_LEN; i++)
-            bl->byte[i] = SD_ReceiveByteSPI();
-
+            bl[i] = SD_ReceiveByteSPI();
         for(uint8_t i = 0; i < 2; i++)
-            bl->CRC[i] = SD_ReceiveByteSPI();
+            SD_ReceiveByteSPI(); // CRC
             
         SD_ReceiveByteSPI(); // clear any remaining bytes from SPDR
     }
@@ -118,7 +117,7 @@ uint16_t SD_PrintMultipleBlocks(
                 uint32_t startBlockAddress,
                 uint32_t numberOfBlocks)
 {
-    Block bl;
+    uint8_t bl[512];
     uint16_t timeout = 0;
     uint8_t r1;
 
@@ -143,12 +142,12 @@ uint16_t SD_PrintMultipleBlocks(
             }
 
             for(uint16_t k = 0; k < BLOCK_LEN; k++) 
-                bl.byte[k] = SD_ReceiveByteSPI();
+                bl[k] = SD_ReceiveByteSPI();
 
             for(uint8_t k = 0; k < 2; k++) 
-                bl.CRC[k] = SD_ReceiveByteSPI();
+                SD_ReceiveByteSPI(); // CRC
 
-            SD_PrintBlock(bl.byte);
+            SD_PrintBlock(bl);
         }
         
         SD_SendCommand(STOP_TRANSMISSION,0);

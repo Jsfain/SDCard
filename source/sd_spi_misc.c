@@ -238,8 +238,8 @@ void SD_FindNonZeroBlockNumbers(
                 uint32_t startBlockAddress, 
                 uint32_t endBlockAddress)
 {
-    Block ds;
-
+    //Block ds;
+    uint8_t ds[512];
     uint16_t tab = 0; //used for printing format
     uint32_t address = 0;
 
@@ -248,11 +248,11 @@ void SD_FindNonZeroBlockNumbers(
                   blockNumber++ )
     {
         address = blockNumber;
-        SD_ReadSingleBlock(address, &ds);       
+        SD_ReadSingleBlock(address, ds);       
         
         for(int i = 0; i < BLOCK_LEN; i++)
         {
-            if(ds.byte[i]!=0)
+            if(ds[i]!=0)
             {
                 if(tab%5==0) print_str("\n\r");
                 print_str("\t\t");print_dec(blockNumber);
