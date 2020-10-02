@@ -25,8 +25,6 @@
 #include "../includes/sd_spi_data_access.h"
 
 
-// Single block data access functions
-
 // Read single block at address from SD card into array.
 uint16_t SD_ReadSingleBlock(uint32_t blockAddress, uint8_t *block)
 {
@@ -171,19 +169,19 @@ uint16_t SD_WriteSingleBlock(uint32_t blockAddress, uint8_t *data)
                 }
             };
             CS_HIGH;
-            return (DATA_ACCEPTED_TOKEN | r1);
+            return (DATA_ACCEPTED_TOKEN_RECEIVED | r1);
         }
 
         else if((dataResponseToken & 0x0B ) == 0x0B ) // CRC Error
         {
             CS_HIGH;
-            return (CRC_ERROR_TOKEN | r1);
+            return (CRC_ERROR_TOKEN_RECEIVED | r1);
         }
 
         else if((dataResponseToken&0x0D)==0x0D) // Write Error
         {
             CS_HIGH;
-            return (WRITE_ERROR_TOKEN | r1);
+            return (WRITE_ERROR_TOKEN_RECEIVED | r1);
         }
     }
     return (INVALID_DATA_RESPONSE | r1) ;
@@ -218,7 +216,7 @@ uint16_t SD_EraseBlocks(uint32_t startBlockAddress, uint32_t endBlockAddress)
     if(r1 > 0)
     {
         CS_HIGH;
-        return ( ERROR_ERASE | R1_ERROR | r1 );
+        return ( ERASE_ERROR | R1_ERROR | r1 );
     }
 
     uint16_t timeout = 0; 
@@ -287,7 +285,7 @@ uint16_t SD_PrintMultipleBlocks(
 // Writes data in the array pointed at by *data to multiple blocks
 // specified by 'numberOfBlocks' and starting at 'address'.
 uint16_t SD_WriteMultipleBlocks(
-                uint32_t blockAddress, 
+                uint32_t startBlockAddress, 
                 uint32_t numberOfBlocks, 
                 uint8_t *data)
 {
@@ -296,7 +294,7 @@ uint16_t SD_WriteMultipleBlocks(
     uint16_t timeout = 0;
 
     CS_LOW;    
-    SD_SendCommand(WRITE_MULTIPLE_BLOCK,blockAddress);  //CMD25
+    SD_SendCommand(WRITE_MULTIPLE_BLOCK,startBlockAddress);  //CMD25
     uint8_t r1 = SD_GetR1();
     
     if(r1 > 0)
@@ -347,18 +345,18 @@ uint16_t SD_WriteMultipleBlocks(
                 {
                     if(timeout++ > 511) return (CARD_BUSY_TIMEOUT | r1); 
                 };
-                returnToken = DATA_ACCEPTED_TOKEN;
+                returnToken = DATA_ACCEPTED_TOKEN_RECEIVED;
             }
 
             else if( (dataResponseToken & 0x0B) == 0x0B ) // CRC Error
             {
-                returnToken = CRC_ERROR_TOKEN;
+                returnToken = CRC_ERROR_TOKEN_RECEIVED;
                 break;
             }
 
             else if( (dataResponseToken & 0x0D) == 0x0D ) // Write Error
             {
-                returnToken = WRITE_ERROR_TOKEN;
+                returnToken = WRITE_ERROR_TOKEN_RECEIVED;
                 break;
             }
         }
@@ -381,11 +379,7 @@ uint16_t SD_WriteMultipleBlocks(
 
 
 
-// Gets the number of well written blocks from the SD card after a
-// WRITE_ERROR_TOKEN is returned by the card during a mulit-block
-// write operation. It then updates the value pointed to by the 
-// wellWrittenBlocks pointer with this value. The return value is 
-// a Read Error Flag. Use SD_PrintReadError().
+// Gets the number of well written blocks after multi-block write error
 uint16_t SD_GetNumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks)
 {
     uint8_t r1;
@@ -463,14 +457,14 @@ void SD_PrintWriteError(uint16_t err)
 {
     switch(err&0xFF00)
     {
-        case(DATA_ACCEPTED_TOKEN):
-            print_str("\n\r DATA ACCEPTED");
+        case(DATA_ACCEPTED_TOKEN_RECEIVED):
+            print_str("\n\r DATA_ACCEPTED_TOKEN_RECEIVED");
             break;
-        case(CRC_ERROR_TOKEN):
-            print_str("\n\r CRC_ERROR");
+        case(CRC_ERROR_TOKEN_RECEIVED):
+            print_str("\n\r CRC_ERROR_TOKEN_RECEIVED");
             break;
-        case(WRITE_ERROR_TOKEN):
-            print_str("\n\r WRITE_ERROR");
+        case(WRITE_ERROR_TOKEN_RECEIVED):
+            print_str("\n\r WRITE_ERROR_TOKEN_RECEIVED");
             break;
         case(INVALID_DATA_RESPONSE):
             print_str("\n\r INVALID_DATA_RESPONSE"); // Successful data write
@@ -506,7 +500,7 @@ void SD_PrintEraseError(uint16_t err)
         case(SET_ERASE_END_ADDR_ERROR):
             print_str("\n\r SET ERASE END ADDR ERROR");
             break;
-        case(ERROR_ERASE):
+        case(ERASE_ERROR):
             print_str("\n\r ERROR ERASE");
             break;
         case(ERASE_BUSY_TIMEOUT):

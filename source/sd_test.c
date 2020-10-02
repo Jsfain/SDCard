@@ -20,7 +20,6 @@
 uint32_t enterBlockNumber();
 
 
-
 int main(void)
 {
     USART_Init();
@@ -32,7 +31,7 @@ int main(void)
     // Initializing ctv. These members will be set by the SD card's
     // initialization routine. They should only be set there.
     
-    CardTypeVersion ctv = {.version = 1, .type = SDSC};
+    CardTypeVersion ctv;
 
     uint32_t initResponse;
 
@@ -351,7 +350,7 @@ int main(void)
                 SD_PrintWriteError(err16);
 
                 // should get R2 (SEND_STATUS) and get the number of well
-                // written blocks if the WRITE_ERROR_TOKEN was returned by the card while writing
+                // written blocks if the WRITE_ERROR_TOKEN was returned
                 // by the card while writing attempting to write.
                  
                 if (( err16 & WRITE_ERROR_TOKEN) == WRITE_ERROR_TOKEN)
@@ -472,6 +471,10 @@ int main(void)
         // ********************************************************************
 
 
+        // ********************************************************************
+        //                          SD_SPI_MISC FUNCTIONS
+        // ********************************************************************
+
 
         // *******  SD_GetMemoryCapacityHC/SC *******
         //
@@ -518,7 +521,7 @@ int main(void)
 
 
 
-// local function used to take user input and convert to a block.
+// local function for taking user input to specify a block
 // number. If nothing is entered then the block number is 0.
 uint32_t enterBlockNumber()
 {
