@@ -17,17 +17,17 @@ Link=(avr-gcc -Wall -g -mmcu=atmega1280 -o)
 IHex=(avr-objcopy -j .text -j .data -O ihex)
 
 
-echo -e ">> COMPILE: "${Compile[@]}" "$buildDir"/test.o " $sourceDir"/test.c"
-"${Compile[@]}" $buildDir/test.o $sourceDir/test.c
+echo -e ">> COMPILE: "${Compile[@]}" "$buildDir"/sd_test.o " $sourceDir"/sd_test.c"
+"${Compile[@]}" $buildDir/sd_test.o $sourceDir/sd_test.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
 then
-    echo -e "error compiling TEST.C"
+    echo -e "error compiling SD_TEST.C"
     echo -e "program exiting with code $status"
     exit $status
 else
-    echo -e "Compiling TEST.C successful"
+    echo -e "Compiling SD_TEST.C successful"
 fi
 
 
@@ -116,8 +116,8 @@ else
 fi
 
 
-echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/test.elf "$buildDir"/test.o  "$buildDir"/spi.o "$buildDir"/sd_spi_spi.o "$buildDir"/sd_spi_data_access.o "$buildDir"/sd_spi_misc.o "$buildDir"/usart.o "$buildDir"/prints.o"
-"${Link[@]}" $buildDir/test.elf $buildDir/test.o $buildDir/spi.o $buildDir/sd_spi_base.o $buildDir/sd_spi_data_access.o $buildDir/sd_spi_misc.o $buildDir/usart.o $buildDir/prints.o
+echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/sd_test.elf "$buildDir"/sd_test.o  "$buildDir"/spi.o "$buildDir"/sd_spi_spi.o "$buildDir"/sd_spi_data_access.o "$buildDir"/sd_spi_misc.o "$buildDir"/usart.o "$buildDir"/prints.o"
+"${Link[@]}" $buildDir/sd_test.elf $buildDir/sd_test.o $buildDir/spi.o $buildDir/sd_spi_base.o $buildDir/sd_spi_data_access.o $buildDir/sd_spi_misc.o $buildDir/usart.o $buildDir/prints.o
 status=$?
 sleep $t
 if [ $status -gt 0 ]
@@ -126,13 +126,13 @@ then
     echo -e "program exiting with code $status"
     exit $status
 else
-    echo -e "Linking successful. Output in TEST.ELF"
+    echo -e "Linking successful. Output in SD_TEST.ELF"
 fi
 
 
 
-echo -e "\n\r>> GENERATE INTEL HEX File: "${IHex[@]}" "$buildDir"/test.elf "$buildDir"/test.hex"
-"${IHex[@]}" $buildDir/test.elf $buildDir/test.hex
+echo -e "\n\r>> GENERATE INTEL HEX File: "${IHex[@]}" "$buildDir"/sd_test.elf "$buildDir"/sd_test.hex"
+"${IHex[@]}" $buildDir/sd_test.elf $buildDir/sd_test.hex
 status=$?
 sleep $t
 if [ $status -gt 0 ]
@@ -141,7 +141,7 @@ then
     echo -e "program exiting with code $status"
     exit $status
 else
-    echo -e "HEX file successfully generated. Output in TEST.HEX"
+    echo -e "HEX file successfully generated. Output in SD_TEST.HEX"
 fi
 
 

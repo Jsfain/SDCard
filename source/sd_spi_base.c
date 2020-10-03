@@ -180,7 +180,7 @@ uint32_t SD_InitializeSPImode(CardTypeVersion *ctv)
     // END READ_OCR (CMD58)
     // ************************
     
-    return OUT_OF_IDLE; //initialization succeded
+    return (OUT_OF_IDLE | INIT_SUCCESS); //initialization succeded
 }
 // END SD_InitializeSPImode()
 
@@ -304,7 +304,7 @@ void SD_PrintInitError(uint32_t err)
         print_str(" FAILED_READ_OCR");
     if(err&POWER_UP_NOT_COMPLETE)
         print_str(" POWER_UP_NOT_COMPLETE");
-    if(err == 0) // NO ERRORS
+    if( (err&INIT_SUCCESS) == INIT_SUCCESS) 
         print_str(" INIT_SUCCESS\n\r");
 }
 // END sd_printInitErrors()

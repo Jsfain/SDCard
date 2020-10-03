@@ -92,6 +92,7 @@
 
 // Initialization Error Responses returned by initialization function.
 // The lowest byte is zero to accommodate the R1 response.
+#define INIT_SUCCESS            0x00000
 #define FAILED_GO_IDLE_STATE    0x00100   //CMD0
 #define FAILED_SEND_IF_COND     0x00200   //CMD8
 #define UNSUPPORTED_CARD_TYPE   0x00400
