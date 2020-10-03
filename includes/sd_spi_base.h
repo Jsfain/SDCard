@@ -1,16 +1,26 @@
 /******************************************************************************
+ * Copyright (c) 2020 Joshua Fain
+ * 
+ * 
  * SD_SPI_BASE.H
- *  
- * TARGET
- * ATmega 1280
+ * 
  *
  * DESCRIPTION
  * Base-level SD card function declarations and struct and macro definitions  
  * that will be used to handle the basic physical interaction with an SD card
  * operating in SPI Mode.
+ *
  * 
- * Author: Joshua Fain
- * Date:   9/24/2020
+ * TARGET
+ * ATmega 1280 
+ * 
+ * 
+ * VERSION
+ * 0.0.0.1
+ * 
+ *
+ * LICENSE
+ * Licensed under the GNU GPL v3
  * ***************************************************************************/
 
 

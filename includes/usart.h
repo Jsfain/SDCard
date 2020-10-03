@@ -1,15 +1,24 @@
 /******************************************************************************
- * Author: Joshua Fain
- * Date:   6/23/2020
+ * Copyright (c) 2020 Joshua Fain
  * 
- * File: USART.H 
  * 
- * Required By:  USART.C
+ * USART.H 
  * 
- * Target: ATmega 1280
  * 
- * Description: 
+ * DESCRIPTION
  * Declares USART related functions as well as defines CPU frequency and baud. 
+ * 
+ * 
+ * TARGET
+ * ATmega 1280 
+ * 
+ * 
+ * VERSION
+ * 0.0.0.1
+ * 
+ *
+ * LICENSE
+ * Licensed under the GNU GPL v3
 ******************************************************************************/
 
 

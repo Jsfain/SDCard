@@ -1,26 +1,25 @@
 /******************************************************************************
- * Author: Joshua Fain
- * Date:   6/23/2020
+ * Copyright (c) 2020 Joshua Fain
  * 
- * File: PRINTS.C 
  * 
- * Requires: PRINTS.H  - header for print functions defined here.
- *           USART.H   - needed for sending commands to, and receiving
- *                       responses from, SD Card.
- *           STDINT.H  - defines data types.
- *           AVR/IO.H  - needed for I/O related AVR variables.
- * 
- * Target: ATmega 1280
+ * PRINTS.C 
  *
- * Description: 
+ *
+ * DESCRIPTION 
  * Defines some print functions declared in PRINTS.H that can be used to print
  * strings and numbers in decimal, integer, and hex format.
  * 
- * Functions:
- * 1) void print_int(uint32_t n)
- * 2) void print_bin(uint32_t n)
- * 3) void print_hex(uint32_t n)
- * 4) void print_str(char str[])
+ * 
+ * TARGET
+ * ATmega 1280 
+ * 
+ * 
+ * VERSION
+ * 0.0.0.1
+ * 
+ *
+ * LICENSE
+ * Licensed under the GNU GPL v3
  * ***************************************************************************/
  
 
@@ -52,7 +51,7 @@ void print_dec(uint32_t n)
     else if(n <  100000000)   len = 8;
     else if(n <  1000000000)  len = 9;
     else if(n <= 4294967295)  len = 10; //largest 32-bit integer value
-    
+
     char dec[len]; //array to hold integer digit characters
     for (int i = 0; i < len; i++) dec[i] = '0'; // initialize each digit to 0.
 

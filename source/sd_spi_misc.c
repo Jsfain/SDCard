@@ -1,17 +1,27 @@
  /*****************************************************************************
- * SD_MISC.C 
+ * Copyright (c) 2020 Joshua Fain
  * 
- * TARGET
- * ATmega 1280
+ * 
+ * SD_MISC.C 
  *
+ * 
  * DESCRIPTION
  * Specialized functions for interacting with an SD card hosted on an AVR 
- * microcontroller operating in SPI mode. Uses SD_SPI_BASE.C(H) for physical
- * interface to the SD card.
+ * microcontroller operating in SPI mode. Requires SD_SPI_BASE for physical
+ * interface to the SD card and uses some special functions in 
+ * SD_SPI_DATA_ACCESS.
  * 
- *
- * Author: Joshua Fain
- * Date:   9/17/2020
+ * 
+ * TARGET
+ * ATmega1280
+ * 
+ * 
+ * VERSION
+ * 0.0.0.1
+ * 
+ * 
+ * LICENSE
+ * Licensed under the GNU GPL v3
  * ***************************************************************************/
 
 

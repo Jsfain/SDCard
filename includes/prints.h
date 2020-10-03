@@ -1,16 +1,25 @@
 /******************************************************************************
- * Author: Joshua Fain
- * Date:   6/23/2020
+ * Copyright (c) 2020 Joshua Fain
  * 
- * File: PRINTS.H 
  * 
- * Required by: PRINTS.C 
+ * PRINTS.H 
  * 
- * Target: ATmega 1280
  *
- * Description: 
+ * DESCRIPTION
  * Declares some print functions that can be used to print strings as well as
  * numbers in decimal, integer, and hex formats.
+ * 
+ * 
+ * TARGET
+ * ATmega 1280 
+ * 
+ * 
+ * VERSION
+ * 0.0.0.1
+ * 
+ *
+ * LICENSE
+ * Licensed under the GNU GPL v3
  * ***************************************************************************/
 
 

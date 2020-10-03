@@ -1,14 +1,24 @@
 /******************************************************************************
+ * Copyright (c) 2020 Joshua Fain
+ * 
+ * 
  * SD_SPI_BASE.C
  *
+ * 
+ * DESCRIPTION
+ * Defines the base-level (required) SPI mode SD card functions.
+ * 
+ * 
  * TARGET
  * Tested against ATmega 1280
  *
- * DESCRIPTION
- * Defines the base-level SPI mode SD card functions.
+ * 
+ * VERSION
+ * 0.0.0.1
  *
- * Author: Joshua Fain
- * Date:   9/20/2020
+ * 
+ * LICENSE
+ * Licensed under the GNU GPL v3
  * ***************************************************************************/
 
 

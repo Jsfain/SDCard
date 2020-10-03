@@ -1,28 +1,27 @@
 /*************************************************************************
- * Author: Joshua Fain
- * Date:   6/23/2020
+ * Copyright (c) 2020 Joshua Fain
  * 
  * 
- * File:     SPI.C 
+ * SPI.C
  * 
- * Requires: SPI.H     - needed for sending commands to, and receiving
- *                       responses from, SD Card.
- *           STDINT.H  - defines data types used here.
- *           AVR/IO.H  - needed for I/O related AVR variables.
- * 
- * 
- * Target: ATmega 1280
- * 
- * Description: 
+ *  
+ * DESCRIPTION 
  * Defines standard SPI functions declared in SPI.H that are necessary 
  * for initializing the SPI port into master mode, and sending/receiving
  * data via SPI on the target device. These are mostly the same as those
  * found in the ATmega datasheet.
  * 
- * Functions:
- * 1) void SPI_MasterInit(void)
- * 2) void SPI_MasterTransmit(char cData)
- * 3) uint8_t SPI_MasterRead()
+ * 
+ * TARGET
+ * ATmega 1280 
+ * 
+ * 
+ * VERSION
+ * 0.0.0.1
+ * 
+ *
+ * LICENSE
+ * Licensed under the GNU GPL v3
  * **********************************************************************/
 
 

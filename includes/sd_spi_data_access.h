@@ -1,8 +1,9 @@
 /******************************************************************************
+ * Copyright (c) 2020 Joshua Fain
+ * 
+ * 
  * SD_SPI_DATA_ACCESS.H
  *  
- * TARGET
- * ATmega 1280
  *
  * DESCRIPTION
  * Uses SD_SPI_BASE.C(H) to implement specialized functions against an SD card
@@ -11,8 +12,16 @@
  * with the SD card is handled by functions defined in SD_SPI_BASE
  *  
  * 
- * Author: Joshua Fain
- * Date:   9/17/2020
+ * TARGET
+ * ATmega 1280 
+ * 
+ * 
+ * VERSION
+ * 0.0.0.1
+ * 
+ *
+ * LICENSE
+ * Licensed under the GNU GPL v3
  * ***************************************************************************/
 
 

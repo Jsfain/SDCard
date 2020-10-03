@@ -1,25 +1,26 @@
 /*************************************************************************
- * Author: Joshua Fain
- * Date:   6/23/2020
+ * Copyright (c) 2020 Joshua Fain
  * 
- * File:     USART.C 
  * 
- * Requires: USART.H   - header to declare the functions and define
- *                       directive variables used here.
- *           STDINT.H  - defines data types.
- *           AVR/IO.H  - needed for I/O related AVR variables.
+ * USART.C
  * 
- * Target: ATmega 1280
  * 
- * Description: 
+ * DESCRIPTION
  * Defines standard functions declared in USART.H used for initializing,
  * sending, and recieving data via USART0 on target device. These are 
  * mostly the same as those found in the ATmega datasheet.
  * 
- * Functions:
- * 1) void USART_Init()
- * 2) uint8_t USART_Receive()
- * 3) void USART_Transmit(uint8_t data)
+ * 
+ * TARGET
+ * ATmega 1280 
+ * 
+ * 
+ * VERSION
+ * 0.0.0.1
+ * 
+ *
+ * LICENSE
+ * Licensed under the GNU GPL v3
  * **********************************************************************/
 
 

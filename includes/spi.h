@@ -1,15 +1,24 @@
 /******************************************************************************
- * Author: Joshua Fain
- * Date:   6/23/2020
+ * Copyright (c) 2020 Joshua Fain
  * 
- * File: SPI.H
  * 
- * Required by: SPI.C
+ * SPI.H
  * 
- * Target: ATmega 1280
  * 
- * Description: 
- * Defines SPI port/pins and declares SPI specific functions. 
+ * DESCRIPTION
+ * Defines SPI port/pins and declares SPI specific functions.
+ * 
+ * 
+ * TARGET
+ * ATmega 1280 
+ * 
+ * 
+ * VERSION
+ * 0.0.0.1
+ * 
+ *
+ * LICENSE
+ * Licensed under the GNU GPL v3
  * ***************************************************************************/
 
 

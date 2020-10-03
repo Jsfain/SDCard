@@ -1,11 +1,22 @@
 /*************************************************************************
- * Author: Joshua Fain
- * Date:   7/5/2020
+ * Copyright (c) 2020 Joshua Fain
  * 
- * Contians main()
- * File used to test out the sd card functions. Changes regularly
- * depending on what is being tested.
+ * 
+ * SD_TEST.C
+ * 
+ * 
+ * DESCRIPTION
+ * Contains main and includes some examples to test the AVR-SDCard Module
+ * 
+ * 
+ * TARGET
+ * ATmega1280
+ * 
+ * 
+ * LICENSE
+ * Licensed under the GNU GPL v3
  * **********************************************************************/
+
 
 #include <stdint.h>
 #include <avr/io.h>

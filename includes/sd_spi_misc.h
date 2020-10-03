@@ -1,8 +1,9 @@
 /******************************************************************************
+ * Copyright (c) 2020 Joshua Fain
+ * 
+ * 
  * SD_SPI_MISC.H
  *  
- * TARGET
- * ATmega 1280
  *
  * DESCRIPTION
  * Uses SD_SPI_BASE.C(H) to implement specialized functions against an SD card
@@ -10,11 +11,17 @@
  * writing, erasing, and printing raw data blocks. The physical interaction
  * with the SD card is handled by functions defined in SD_SPI_BASE
  * 
- * FUNCTION LIST
- * 1) uint32_t  sd_GetMemoryCapacity(void)
  * 
- * Author: Joshua Fain
- * Date:   9/17/2020
+ * TARGET
+ * ATmega 1280 
+ * 
+ * 
+ * VERSION
+ * 0.0.0.1
+ * 
+ *
+ * LICENSE
+ * Licensed under the GNU GPL v3
  * ***************************************************************************/
 
 
