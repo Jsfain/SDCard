@@ -64,8 +64,8 @@ Anyone. Use it. Modify it for specific purposes/systems, and if you want you can
 
 
 ## References
-1.  AVR-SDCard Module Guide - instruction guide for this module
-2. [AVR-General](https://github.com/Jsfain/AVR-General.git) - respository where other non-module files are maintained
-3. [AVR-Toolchain](https://github.com/osx-cross/homebrew-avr)  - required to build/download the files.  On Windows, Atmel Studio should come with the toolchain.
+1. [AVR-SDCard Module Guide](https://github.com/Jsfain/AVR-SDCard/blob/master/AVR-SD%20Card%20Instruction%20Guide.pdf) 
+2. [AVR-General](https://github.com/Jsfain/AVR-General.git)
+3. [AVR-Toolchain](https://github.com/osx-cross/homebrew-avr)
 3. Atmel ATmega640/V-1280/V-1281/V-2560/V-2561/V Datasheet
-4. SD Specifications Part 1: Physical Layer Specification - Simplified Specification Version 7.10
+4. SD Specifications Part 1: Physical Layer Specification - Simplified Specification Version 7.10   
