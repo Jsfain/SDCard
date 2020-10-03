@@ -50,10 +50,11 @@ To use, copy the source/header files and build/download the module using the AVR
 
 
 ## Who can use
-Anyone. Use it. Modify it for specific purposes/systems, and if you want you can let me know if you found it helpful.
+Anyone. Use it. Modify it for your specific purpose/system. If you want, you can let me know if you found it helpful.
 
 
 ## License
+Under [GNU GPL v3](https://github.com/Jsfain/AVR-SDCard/blob/master/LICENSE) license
 
 
 ## Warnings / Disclaimers
