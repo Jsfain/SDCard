@@ -2,7 +2,7 @@
 ***********************************************************************************************************************
 *                                                   AVR-SDCARD MODULE
 *
-* File    : SD_SPI_DATA_MISC.H
+* File    : SD_SPI_MISC.H
 * Version : 0.0.0.1 
 * Author  : Joshua Fain
 * Target  : ATMega1280
