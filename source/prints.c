@@ -1,40 +1,43 @@
-/******************************************************************************
- * Copyright (c) 2020 Joshua Fain
- * 
- * 
- * PRINTS.C 
- *
- *
- * DESCRIPTION 
- * Defines some print functions declared in PRINTS.H that can be used to print
- * strings and numbers in decimal, integer, and hex format.
- * 
- * 
- * TARGET
- * ATmega 1280 
- * 
- * 
- * VERSION
- * 0.0.0.1
- * 
- *
- * LICENSE
- * Licensed under the GNU GPL v3
- * ***************************************************************************/
- 
+/*
+***********************************************************************************************************************
+*                                                   AVR-GENERAL MODULE
+*
+* File    : PRINTS.C
+* Version : 0.0.0.1 
+* Author  : Joshua Fain
+* Target  : ATMega1280
+*
+* DESCRIPTION:
+* Defines some print functions from PRINTS.H to print strings and positive integers in decimal, binary, hex formats.
+*
+*                                                 
+*                                                       MIT LICENSE
+*
+* Copyright (c) 2020 Joshua Fain
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
+* documentation files (the "Software"), to deal in the Software without restriction, including without limitation the 
+* rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to 
+* permit ersons to whom the Software is furnished to do so, subject to the following conditions: The above copyright 
+* notice and this permission notice shall be included in all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE 
+* WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+* COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+* OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+***********************************************************************************************************************
+*/
 
 #include <stdint.h>
 #include <avr/io.h>
 #include "../includes/prints.h"
 #include "../includes/usart.h"
 
-
-/******************************************************************************
- * Function:    print_dec(uint32_t n) 
- * Description: prints decimal value of the arguement to screen.
- * Argument(s): unsigned integer to print to screen. up to 32-bit.
- * Returns:     VOID
-******************************************************************************/
+/********************************************************************
+ * Description : Prints unsigned (positive) base-10 (decimal) value
+ *               of the arguement to screen.
+ * Argument(s) : n   Unsigned int to print to screen. Up to 32-bit.
+********************************************************************/
 void print_dec(uint32_t n)
 {
     //Determine number of decimal digits required to represent the number.
@@ -74,14 +77,12 @@ void print_dec(uint32_t n)
 
 
 
-/******************************************************************************
- * Function:    print_bin(uint32_t n) 
- * Description: prints value of arguement to screen as a binary integer.
- * Argument(s): unsigned integer to print. up to 32 bits.
- * Returns:     VOID
- * Notes:       prints the number as space-separated of nibbles (4bits).
- *              only prints the number of nibbles required for the number.
-******************************************************************************/
+/********************************************************************
+ * Description : Prints binary form of arg.
+ * Argument    : n   Unsigned int to print to screen. Up to 32-bit.
+ * Notes       : prints the number as space-separated nibbles 
+ *               (4bits). Only prints the number of nibbles required.
+*********************************************************************/
 void print_bin(uint32_t n)
 {
     //Determine number binary digits required to represent the number.
@@ -124,12 +125,10 @@ void print_bin(uint32_t n)
 
 
 
-/******************************************************************************
- * Function:    print_hex(uint32_t n) 
- * Description: prints value of arguement to screen as a hexadecimal integer.
- * Argument(s): unsingned integer to print. up to 32 bits.
- * Returns:     VOID
-******************************************************************************/
+/*******************************************************************
+ * Description: Prints hexadecimal for of the arguement.
+ * Argument   : n   Unsigned int to print to screen. Up to 32-bit.
+********************************************************************/
 void print_hex(uint32_t n)
 {
     //Determine number of hexadecimal digits required to represent the number.
@@ -167,18 +166,17 @@ void print_hex(uint32_t n)
 
 
 /******************************************************************************
- * Function:    print_str(char str[]) 
- * Description: prints c-string passed in as the argument.
- * Argument(s): c-string to print to screen.
- * Returns:     VOID
- * Notes:       c-strings must be null-terminated '\0'.
- *              Currently will only print up to 1000 character string, but 
- *              haven't tested up to this length.
+ * Description  : Prints C-string argument to screen.
+ * Argument     : c-string to print to screen.
+ * Notes:       : c-strings are null-terminated '\0'. Cannot just pass in array
+ *                of characters. 
+ *                Currently this will only print strings of up to 999 character
+ *                string, but this limit has not been tested.
 ******************************************************************************/
 void print_str(char str[])
 {
     int i = 0;
-    while(str[i] != '\0' && i < 1000)
+    while(str[i] != '\0' && i < 1001)
     {
         USART_Transmit(str[i]);
         i++;

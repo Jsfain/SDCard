@@ -54,7 +54,7 @@ Anyone. Use it. Modify it for your specific purpose/system. If you want, you can
 
 
 ## License
-Under [GNU GPL v3](https://github.com/Jsfain/AVR-SDCard/blob/master/LICENSE) license
+[MIT](https://github.com/Jsfain/AVR-SDCard/blob/master/LICENSE)
 
 
 ## Warnings / Disclaimers
