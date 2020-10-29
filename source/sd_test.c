@@ -55,7 +55,7 @@ int main(void)
     // Initializing ctv. These members will be set by the SD card's
     // initialization routine. They should only be set there.
     
-    CardTypeVersion ctv;
+    CTV ctv;
 
     uint32_t initResponse;
 
