@@ -19,7 +19,7 @@ This module was developed by referencing the SD Specifications Part 1: Physical 
 
 The module is composed of three source/header files.  These are listed below in order of importance/role:
 
-### AVR-SDCard Module
+### AVR-SD Card Module
 1. SD_SPI_BASE.C(H)
     * This source/header is required byt all other module files.
     * These files include the basic functions for direct interaction with the SD card, among these are functions for initializing the SD card into SPI mode, for sending commands to the SD card, and for receiving responses in byte-sized packets from the SD card.
@@ -43,7 +43,7 @@ The following source/header files are also required.  These are included in the 
 
 ## How to use
 Copy the files and build/download the module using the AVR Toolchain. These are written for an ATmega1280 target, so if using a different target then you will need to modify the code accordingly.  
- * The source files contain the description of each function available in the module.
+ * The source files contain descriptions of each function available in the module.
  * SD_TEST.C is probably the best way to see how to implment this module. This file contains main(), and includes several examples of function implementation that can be referenced.
  * A "MAKE.SH" file can also be referenced for seeing how I built the module from the source files and downloaded it to an ATmega1280 AVR target. This would primarily be useful for non-Windows users without access to Atmel Studio (like me).
  * Windows users should be able to just build/download the module from the source files using Atmel Studio (though I have not used this). Note, any paths (e.g. the includes) will need to be modified for compatibility.
@@ -65,8 +65,7 @@ Anyone. Use it. Modify it for your specific purpose/system. If you want, you can
 
 
 ## References
-1. [AVR-SDCard Module Guide](https://github.com/Jsfain/AVR-SDCard/blob/master/AVR-SD%20Card%20Instruction%20Guide.pdf) 
-2. [AVR-General](https://github.com/Jsfain/AVR-General.git)
-3. [AVR-Toolchain](https://github.com/osx-cross/homebrew-avr)
+1. [AVR-General](https://github.com/Jsfain/AVR-General.git)
+2. [AVR-Toolchain](https://github.com/osx-cross/homebrew-avr)
 3. Atmel ATmega640/V-1280/V-1281/V-2560/V-2561/V Datasheet
 4. SD Specifications Part 1: Physical Layer Specification - Simplified Specification Version 7.10   

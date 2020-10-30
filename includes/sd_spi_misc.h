@@ -1,6 +1,6 @@
 /*
 ***********************************************************************************************************************
-*                                                   AVR-SDCARD MODULE
+*                                                   AVR-SD CARD MODULE
 *
 * File    : SD_SPI_MISC.H
 * Version : 0.0.0.1 
@@ -10,7 +10,7 @@
 *
 * DESCRIPTION:
 * The file and it's header, are meant to be a catch-all for some specialized SD card functions that do not really fit
-* into any of the other AVR-SDCard module files. These functions require SD_SPI_BASE.C/H and SD_SPI_DATA_ACCESS.C/H
+* into any of the other AVR-SD Card module files. These functions require SD_SPI_BASE.C/H and SD_SPI_DATA_ACCESS.C/H
 * 
 *
 * FUNCTIONS:

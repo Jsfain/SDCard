@@ -1,6 +1,6 @@
 /*
 ***********************************************************************************************************************
-*                                                   AVR-GENERAL MODULE
+*                                                   AVR-SD CARD MODULE
 *
 * File    : SD_SPI_BASE.C
 * Version : 0.0.0.1 
@@ -9,7 +9,7 @@
 *
 *
 * DESCRIPTION:
-* Defines the base-level SPI mode SD card functions to handle the basic physical interaction of the AVR-microcontroller
+* Defines the base-level SPI mode SD card functions to handle the basic physical interaction of the AVR microcontroller
 * with an SD card operating in SPI Mode.
 *                                                 
 *
@@ -75,7 +75,7 @@ uint8_t pvt_CRC7(uint64_t tca);
 ***********************************************************************************************************************
  *                                   INITIALIZE AN SD CARD INTO SPI MODE
  * 
- * Description : This function must be called first before implementing any other part of the AVR-SDCard module. This
+ * Description : This function must be called first before implementing any other part of the AVR-SD Card module. This
  *               function will initialize the SD Card into SPI mode and set the CTV struct instance members to the 
  *               correct card type and version. 
  * 

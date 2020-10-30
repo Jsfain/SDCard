@@ -1,6 +1,6 @@
 /*
 ***********************************************************************************************************************
-*                                                   AVR-SDCARD MODULE
+*                                                   AVR-SD CARD MODULE
 *
 * File    : SD_SPI_BASE.H
 * Version : 0.0.0.1 
@@ -191,7 +191,7 @@ typedef struct CardTypeVersion {
 ***********************************************************************************************************************
  *                                   INITIALIZE AN SD CARD INTO SPI MODE
  * 
- * Description : This function must be called first before implementing any other part of the AVR-SDCard module. This
+ * Description : This function must be called first before implementing any other part of the AVR-SD Card module. This
  *               function will initialize the SD Card into SPI mode and set the CTV struct instance members to the 
  *               correct card type and version. 
  * 
