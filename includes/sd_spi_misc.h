@@ -9,12 +9,16 @@
 *
 *
 * DESCRIPTION:
-* Uses SD_SPI_BASE.C(H) to implement specialized functions against an SD card hosted on an AVR microcontroller and 
-* operating in SPI mode such as reading, writing, erasing, and printing raw data blocks. The physical interaction with
-* the SD card is handled by functions defined in SD_SPI_BASE.
+* The file and it's header, are meant to be a catch-all for some specialized SD card functions that do not really fit
+* into any of the other AVR-SDCard module files. These functions require SD_SPI_BASE.C/H and SD_SPI_DATA_ACCESS.C/H
 * 
 *
-*                                                 
+* FUNCTIONS:
+*  (1) uint32_t SD_GetMemoryCapacitySC(void);
+*  (2) uint32_t SD_GetMemoryCapacityHC(void);
+*  (3) void     SD_FindNonZeroBlockNumbers(uint32_t startBlock, uint32_t endBlock);        
+*
+*
 *                                                       MIT LICENSE
 *
 * Copyright (c) 2020 Joshua Fain
@@ -38,34 +42,27 @@
 
 
 
-/******************************************************************************
- *                          FUNCTION DECLARATIONS
- *****************************************************************************/
+/*
+***********************************************************************************************************************
+ *                                                        FUNCTIONS
+***********************************************************************************************************************
+*/
 
 
-/******************************************************************************
- * Function:    sd_getMemoryCapacity(void) 
- * Description: Calculates and returns the capacity of the SD card in bytes
- * Argument:    VOID
- * Returns:     uint32_t capcity of the SD card in bytes, if successful,
- *              and 1 if unsuccessful.
-******************************************************************************/
+// Calculate and return the memory capacity 
+// of a standard capacity SD Card in Bytes.
 uint32_t SD_GetMemoryCapacitySC(void);
 
 
+
+// Calculate memory capacity of a high capacity SD Card
+// from CSD and and return the memory capacity in Bytes.
 uint32_t SD_GetMemoryCapacityHC(void);
 
 
-/******************************************************************************
- * Function:    sd_SearchNonZeroBlocks(
- *                      uint32_t startBlock, 
- *                      uint32_t endBlock)
- * Description: Searches between a specified range of blocks for any blocks that
- *              have non-zero values and prints those block numbers to screen.
- * Argument:    1) uint32_t block number for the start block.
- *              2) uint32_t block number for the end block. 
- * Returns:     VOID
-******************************************************************************/
+
+// Prints the block number of all blocks that have any non-zero 
+// bytes between startBlockAddress and endBlockAddress.
 void SD_FindNonZeroBlockNumbers(uint32_t startBlock, uint32_t endBlock);
 
 

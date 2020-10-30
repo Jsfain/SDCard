@@ -9,11 +9,16 @@
 *
 *
 * DESCRIPTION:
-* Specialized functions for interacting with an SD card hosted on an AVR microcontroller operating in SPI mode. 
-* Requires SD_SPI_BASE for physical interface to the SD card and uses some special functions in  SD_SPI_DATA_ACCESS.
+* The file and it's header, are meant to be a catch-all for some specialized SD card functions that do not really fit
+* into any of the other AVR-SDCard module files. These functions require SD_SPI_BASE.C/H and SD_SPI_DATA_ACCESS.C/H
 * 
 *
-*                                                 
+* FUNCTIONS:
+*  (1) uint32_t SD_GetMemoryCapacitySC(void);
+*  (2) uint32_t SD_GetMemoryCapacityHC(void);
+*  (3) void     SD_FindNonZeroBlockNumbers(uint32_t startBlock, uint32_t endBlock);        
+*
+*
 *                                                       MIT LICENSE
 *
 * Copyright (c) 2020 Joshua Fain
@@ -41,6 +46,12 @@
 #include "../includes/prints.h"
 
 
+
+/*
+***********************************************************************************************************************
+ *                                                        FUNCTIONS
+***********************************************************************************************************************
+*/
 
 // Calculate and return the memory capacity 
 // of a standard capacity SD Card in Bytes.
@@ -249,9 +260,7 @@ uint32_t SD_GetMemoryCapacityHC(void)
 
 // Prints the block number of all blocks that have any non-zero 
 // bytes between startBlockAddress and endBlockAddress.
-void SD_FindNonZeroBlockNumbers(
-                uint32_t startBlockAddress, 
-                uint32_t endBlockAddress)
+void SD_FindNonZeroBlockNumbers(uint32_t startBlockAddress, uint32_t endBlockAddress)
 {
     //Block ds;
     uint8_t ds[512];
