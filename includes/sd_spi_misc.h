@@ -14,9 +14,9 @@
 * 
 *
 * FUNCTIONS:
-*  (1) uint32_t SD_GetMemoryCapacitySC(void);
-*  (2) uint32_t SD_GetMemoryCapacityHC(void);
-*  (3) void     SD_FindNonZeroBlockNumbers(uint32_t startBlock, uint32_t endBlock);        
+*  (1) uint32_t SD_GetMemoryCapacitySC (void);
+*  (2) uint32_t SD_GetMemoryCapacityHC (void);
+*  (3) void     SD_FindNonZeroBlockNumbers (uint32_t startBlock, uint32_t endBlock);        
 *
 *
 *                                                       MIT LICENSE
@@ -48,22 +48,56 @@
 ***********************************************************************************************************************
 */
 
+/*
+***********************************************************************************************************************
+ *                                               GET SDSC MEMORY CAPACITY
+ * 
+ * Description : This function will calculate and return the memory capacity of a standard capacity SD Card (SDSC).
+ * 
+ * Arguments   : void
+ * 
+ * Return      : Integer specifying the memory capacity of the SD card in bytes.
+***********************************************************************************************************************
+*/
 
-// Calculate and return the memory capacity 
-// of a standard capacity SD Card in Bytes.
-uint32_t SD_GetMemoryCapacitySC(void);
+uint32_t 
+SD_GetMemoryCapacitySC (void);
 
 
 
-// Calculate memory capacity of a high capacity SD Card
-// from CSD and and return the memory capacity in Bytes.
-uint32_t SD_GetMemoryCapacityHC(void);
+/*
+***********************************************************************************************************************
+ *                                               GET SDHC / SDXC MEMORY CAPACITY
+ * 
+ * Description : This function will calculate and return the memory capacity of a high (or extended) capacity SD Card 
+ *               (SDSC or SDXC).
+ * 
+ * Arguments   : void
+ * 
+ * Return      : Integer specifying the memory capacity of the SD card in bytes.
+***********************************************************************************************************************
+*/
+
+uint32_t 
+SD_GetMemoryCapacityHC (void);
 
 
 
-// Prints the block number of all blocks that have any non-zero 
-// bytes between startBlockAddress and endBlockAddress.
-void SD_FindNonZeroBlockNumbers(uint32_t startBlock, uint32_t endBlock);
+/*
+***********************************************************************************************************************
+ *                                                PRINT NON-ZERO BLOCK NUMBERS
+ * 
+ * Description : This function will search the blocks over a specified range and print the block number (address) of 
+ *               any block that has any data in it, i.e. is NOT all zeros. This function is not that fast so searching
+ *               over a large range of blocks can take a while, but it is useful for locating blocks with data.
+ * 
+ * Arguments   : startBlockAddress   - unsigned integer specifying the first block of the range that will be searched.
+ *             : endBlockAddress     - unsigned integer specifying the last block of the range that will be searched.
+***********************************************************************************************************************
+*/
+
+void 
+SD_FindNonZeroBlockNumbers (uint32_t startBlockAddress, uint32_t endBlockAddress);
 
 
 #endif // SD_SPI_MISC_H

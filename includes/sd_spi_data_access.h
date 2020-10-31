@@ -111,20 +111,24 @@
 ***********************************************************************************************************************
  *                                               READ A SINGLE DATA BLOCK
  * 
- * Description : This function can be called to read the single data block from the SD Card at 'blockAddress'
+ * Description : This function can be called to read the single data block from the SD Card at 'blockAddress' into the
+ *               array pointed at by *block
  * 
- * Arguments   : blockAddress    - Unisigned integer specifying the addressed location of the block on the SD card.
- *                                 Addressing is determined by the card type: SDHC is Block Addressable, while SDSC is
- *                                 Byte Addressable.
- *             : *block          - Pointer to an array of length BLOCK_LEN (512 bytes). The function will load the
- *                                 contents of the SD card's block at blockAddress into this array.
+ * Arguments   : blockAddress    - Unsigned integer specifying the addressed location of the SD card block whose 
+ *                                 contents will be printed to the screen. Addressing is determined by the card type:
+ *                                 SDHC is Block Addressable, SDSC is Byte Addressable.
+ *             : *block          - Pointer to an array of length BLOCK_LEN (512 bytes). This function will load the
+ *                                 contents of the SD card's block at 'blockAddress' into this array.
  * 
- * Return      : Read Error Flag   The lowest byte of the returned response is the R1 response. If the R1_ERROR flag is
- *                                 set, then call SD_PrintR1() to read the R1 response.
+ * Return      : Error Response    The upper byte holds a Read Error Flag. The lower byte is the R1 response. Pass the
+ *                                 returned value to SD_PrintReadError(err). If the R1_ERROR flag is set, then the R1
+ *                                 response portion has an error, in which case this should be read by SD_PrintR1(err)
+ *                                 from SD_SPI_BASE.
 ***********************************************************************************************************************
 */
 
-uint16_t SD_ReadSingleBlock(uint32_t blockAddress, uint8_t *block);
+uint16_t 
+SD_ReadSingleBlock (uint32_t blockAddress, uint8_t *block);
 
 
 
@@ -133,16 +137,19 @@ uint16_t SD_ReadSingleBlock(uint32_t blockAddress, uint8_t *block);
  *                                               PRINT SINGLE BLOCK CONTENTS
  * 
  * Description : This function can be called to print the contents of a single block stored in an array. The contents
- *               of the block will be printed to screen in 16 byte rows of columnized data: OFFSET | HEX | ASCII.  The
- *               HEX and ASCII columns are different forms of the block's data contents. The OFFSET column is the byte
- *               offset of the first byte in each row.    
+ *               of the block will be printed to the screen in rows of 16 bytes, columnized as: OFFSET | HEX | ASCII.
+ *               The HEX and ASCII columns are different forms of the block's contents. The OFFSET column is the byte
+ *               byte of the first byte in each row from the first byte of the block.     
  * 
  * Argument    : *block          Pointer to a byte array of length BLOCK_LEN (512 bytes) that holds the data contents
- *                               of a single SD card block. The array should be loaded SD_ReadSingleBlock() function.
+ *                               of a single SD card block. This array should have previously been loaded by the
+ *                               SD_ReadSingleBlock() function.
 ***********************************************************************************************************************
 */
 
-void SD_PrintSingleBlock(uint8_t *block);
+
+void 
+SD_PrintSingleBlock (uint8_t *block);
 
 
 
@@ -150,19 +157,24 @@ void SD_PrintSingleBlock(uint8_t *block);
 ***********************************************************************************************************************
  *                                               WRITE TO A SINGLE BLOCK
  * 
- * Description : This function will write the data in the *data array to the SD card at blockAddress. The data array
- *               should be of length BLOCK_LEN (512 bytes) and its entire contents will be written to the block.
+ * Description : This function will write the contents in the *data array to the block at 'blockAddress' on the SD 
+ *               card. The data array should be of length BLOCK_LEN (512 bytes) and its entire contents will be written
+ *               to the SD card block.
  * 
  * Arguments   : blockAddress   - Unsigned integer specifying the address of the block that will be written to. 
  *             : *data          - Pointer to a byte array of length BLOCK_LEN (512 bytes) that holds the data contents
- *                                that will be written to the SD Card at blockAddress.
+ *                                that will be written to block on the SD Card at blockAddress.
  * 
- * Returns     : Write Block Error Flag : The lowest byte of the returned response is the R1 response. If the R1_ERROR
- *                                        flag is set, then call SD_PrintR1() to read the R1 response.
+ * Return      : Error Response    The upper byte holds a Write Error Flag. The lower byte is the R1 response. Pass the
+ *                                 returned value to SD_PrintWriteError(err). If the R1_ERROR flag is set, then the R1
+ *                                 response portion has an error, in which case this should be read by SD_PrintR1(err)
+ *                                 from SD_SPI_BASE.
 ***********************************************************************************************************************
 */
 
-uint16_t SD_WriteSingleBlock(uint32_t blockAddress, uint8_t *data);
+
+uint16_t 
+SD_WriteSingleBlock (uint32_t blockAddress, uint8_t *data);
 
 
 
@@ -175,12 +187,15 @@ uint16_t SD_WriteSingleBlock(uint32_t blockAddress, uint8_t *data);
  * Argument    : startBlockAddress     - Address of the first block that will be erased.
  *             : endBlockAddress       - Address of the last block that will be erased.
  * 
- * Returns     : Erase Block Error Flag : The lowest byte of the returned response is the R1 response. If the R1_ERROR
- *                                        flag is set, then call SD_PrintR1() to read the R1 response.
+ * Return      : Error Response   The upper byte holds an Erase Error Flag. The lower byte is the R1 response. Pass the
+ *                                returned value to SD_PrintEraseError(err). If the R1_ERROR flag is set, then the R1
+ *                                response portion has an error, in which case this should be read by SD_PrintR1(err)
+ *                                from SD_SPI_BASE.
 ***********************************************************************************************************************
 */
 
-uint16_t SD_EraseBlocks(uint32_t startBlockAddress, uint32_t endBlockAddress);
+uint16_t 
+SD_EraseBlocks (uint32_t startBlockAddress, uint32_t endBlockAddress);
 
 
 
@@ -188,19 +203,22 @@ uint16_t SD_EraseBlocks(uint32_t startBlockAddress, uint32_t endBlockAddress);
 ***********************************************************************************************************************
  *                                               PRINT MULTIPLE BLOCKS
  * 
- * Description : This function will print multiple blocks by calling the SD Card Command READ_MULTIPLE_BLOCK. Every
- *               block that is read in is then printed to the screen by calling the SD_PrintSingleBlock() function.
+ * Description : This function will print multiple blocks by calling the SD card command READ_MULTIPLE_BLOCK. Every
+ *               block that is read in will be printed to the screen by calling the SD_PrintSingleBlock() function.
  *               This function is not really that useful except as a demonstration of the READ_MULTIPLE_BLOCK command.
  * 
  * Argument    : startBlockAddress     - Address of the first block that will be printed to the screen.
  *             : numberOfBlocks        - The total number of consecutive blocks that will be printed to the screen.
  * 
- * Return      : Read Error Flag   The lowest byte of the returned response is the R1 response. If the R1_ERROR flag is
- *                                 set, then call SD_PrintR1() to read the R1 response.
+ * Return      : Error Response    The upper byte holds a Read Error Flag. The lower byte is the R1 response. Pass the
+ *                                 returned value to SD_PrintReadError(err). If the R1_ERROR flag is set, then the R1
+ *                                 response portion has an error, in which case this should be read by SD_PrintR1(err)
+ *                                 from SD_SPI_BASE.
 ***********************************************************************************************************************
 */
 
-uint16_t SD_PrintMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks);
+uint16_t 
+SD_PrintMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks);
 
 
 
@@ -209,20 +227,23 @@ uint16_t SD_PrintMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBl
  *                                               WRITE TO MULTIPLE BLOCKS
  * 
  * Description : This function will write data in a byte array of length BLOCK_LEN (512 bytes) to multiple blocks on 
- *               the SD card. The full array of data will be written to the each of the blocks. This function is not 
- *               really that useful except to demontrate the WRITE_MULTIPLE_BLOCK SD card command.
+ *               the SD card. The full array of data will be copied to each of the blocks. This function is not really
+ *               useful except to demontrate the WRITE_MULTIPLE_BLOCK SD card command.
  * 
- * Argument    : blockAddress          - Address of the first block that will be written to.
- *             : numberOfBlocks        - The total number of consecutive blocks that will be written to.
+ * Argument    : blockAddress          - Address of the first block that will be written.
+ *             : numberOfBlocks        - The total number of consecutive blocks that will be written.
  *             : *dataBuffer           - Pointer to a byte array of length BLOCK_LEN (512 bytes) that holds the data
  *                                       contents that will be written to the SD Card.
  * 
- * Return      : Write Error Flag   The lowest byte of the returned response is the R1 response. If the R1_ERROR flag is
- *                                  set, then call SD_PrintR1() to read the R1 response.
+ * Return      : Error Response    The upper byte holds a Write Error Flag. The lower byte is the R1 response. Pass the
+ *                                 returned value to SD_PrintWriteError(err). If the R1_ERROR flag is set, then the R1
+ *                                 response portion has an error, in which case this should be read by SD_PrintR1(err)
+ *                                 from SD_SPI_BASE.
 ***********************************************************************************************************************
 */
 
-uint16_t SD_WriteMultipleBlocks(uint32_t blockAddress, uint32_t numberOfBlocks, uint8_t *dataBuffer);
+uint16_t 
+SD_WriteMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks, uint8_t *data);
 
 
 
@@ -231,18 +252,21 @@ uint16_t SD_WriteMultipleBlocks(uint32_t blockAddress, uint32_t numberOfBlocks, 
  *                                        GET THE NUMBER OF WELL-WRITTEN BLOCKS
  * 
  * Description : This function can be called after a failure on a WRITE_MULTIPLE_BLOCK command and the Write Error 
- *               Token was returned by the SD Card. This function will issue the SD Card command SEND_NUM_WR_BLOCKS
+ *               Token was returned by the SD Card. This function will issue the SD card command SEND_NUM_WR_BLOCKS
  *               which will return the number of blocks that were successfully written to.
  * 
  * Argument    : *wellWrittenBlocks       - Pointer to an integer that will be updated by this function to specify the 
  *                                          number of well-written blocks.
  * 
- * Return      : Read Error Flag   The lowest byte of the returned response is the R1 response. If the R1_ERROR flag is
- *                                 set, then call SD_PrintR1() to read the R1 response.
+ * Return      : Error Response    The upper byte holds a Read Error Flag. The lower byte is the R1 response. Pass the
+ *                                 returned value to SD_PrintReadError(err). If the R1_ERROR flag is set then the R1
+ *                                 response portion has an error in which case this should be read by SD_PrintR1(err)
+ *                                 from SD_SPI_BASE.
  ***********************************************************************************************************************
 */
 
-uint16_t SD_GetNumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks);
+uint16_t 
+SD_GetNumberOfWellWrittenBlocks (uint32_t *wellWrittenBlocks);
 
 
 
@@ -250,13 +274,14 @@ uint16_t SD_GetNumberOfWellWrittenBlocks(uint32_t *wellWrittenBlocks);
 ***********************************************************************************************************************
  *                                                 PRINT READ ERROR
  * 
- * Description : This function can be called to print a read error flag.
+ * Description : This function can be called to print the Read Error Flag returned by one of the read functions.
  * 
- * Argument    : err       - Unsigned integer that should be a response returned by a read function.
+ * Argument    : err       Unsigned integer that should be a response returned by a read function.
 ***********************************************************************************************************************
 */
 
-void SD_PrintReadError(uint16_t err);
+void 
+SD_PrintReadError (uint16_t err);
 
 
 
@@ -264,13 +289,14 @@ void SD_PrintReadError(uint16_t err);
 ***********************************************************************************************************************
  *                                                PRINT WRITE ERROR
  * 
- * Description : This function can be called to print a write error flag.
+ * Description : This function can be called to print a Write Error Flag returned by one of the write functions.
  * 
- * Argument    : err       - Unsigned integer that should be a response returned by a write function.
+ * Argument    : err       Unsigned integer that should be a response returned by a write function.
 ***********************************************************************************************************************
 */
 
-void SD_PrintWriteError(uint16_t err);
+void 
+SD_PrintWriteError (uint16_t err);
 
 
 
@@ -278,14 +304,14 @@ void SD_PrintWriteError(uint16_t err);
 ***********************************************************************************************************************
  *                                               PRINT ERASE ERROR
  * 
- * Description : This function can be called to print an erase error flag.
+ * Description : This function can be called to print an Erase Error Flag returned by the erase function.
  * 
- * Argument    : err       - Unsigned integer that should be a response returned by an erase function.
+ * Argument    : err       Unsigned integer that should be a response returned by an erase function.
 ***********************************************************************************************************************
 */
 
-void SD_PrintEraseError(uint16_t err);
-
+void 
+SD_PrintEraseError (uint16_t err);
 
 
 #endif // SD_SPI_DATA_ACCESS_H
