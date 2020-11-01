@@ -1,6 +1,6 @@
 /*
 ***********************************************************************************************************************
-*                                                   AVR-SDCARD MODULE
+*                                                   AVR-SD CARD MODULE
 *
 * File    : SD_TEST.C
 * Version : ?
@@ -9,7 +9,7 @@
 *
 *
 * DESCRIPTION:
-* Contains main and includes some examples to test the AVR-SDCard Module
+* Contains main() and includes some examples to test the AVR-SD Card Module
 * 
 *
 *                                                 
@@ -78,10 +78,10 @@ int main(void)
         }
     }
 
+
   // initialization successful
   if (initResponse == 0)
     {      
-
       // Some variables for addressing
       // in the subsequent functions
       uint32_t startBlockNumber;
@@ -89,23 +89,22 @@ int main(void)
       uint32_t blockNumber;
       uint32_t numberOfBlocks;
 
-      uint8_t  ds[512];
-      uint16_t err16; // for 16-bit returned error values
+      uint8_t  blockArr[512];
+      uint16_t err16; // 16-bit returned errors
       
-/*
-      // ******************* SD_ReadSingleBlock() **************************
+
+      // ****************** TEST: SD_ReadSingleBlock() *******************
       // 
       // Read in a single block from the SD card at location specified by
-      // blockNumber into the 'ds' array. This also demonstrates how to use 
-      // SD_PrintSingleBlock() to print the block read into the 'ds' array.
-
+      // blockNumber into the array, blockArr. This also demonstrates how
+      // to use SD_PrintSingleBlock() to print the block.
+/*
       blockNumber = 8192;
 
-      // SDHC is block addressable
       if (ctv.type == SDHC) 
-        err16 = SD_ReadSingleBlock (blockNumber, ds);
-      else // SDSC byte addressable
-        err16 = SD_ReadSingleBlock (blockNumber * BLOCK_LEN, ds);
+        err16 = SD_ReadSingleBlock (blockNumber, blockArr);
+      else // SDSC
+        err16 = SD_ReadSingleBlock (blockNumber * BLOCK_LEN, blockArr);
       
       if (err16 != READ_SUCCESS)
         { 
@@ -124,28 +123,26 @@ int main(void)
 
       // print single data block just loaded into the array.
       else
-        SD_PrintSingleBlock(ds);
+        SD_PrintSingleBlock();
 
       // *******************************************************************
 */
 
-/*
-      // ******************* SD_PrintMultipleBlocks() **********************
+
+      // ****************** TEST: SD_PrintMultipleBlocks() *****************
       //
       // Use this function to print multiple, consecutive SD card blocks
       // beginning at blockNumber. The number of blocks printed is specified
       // by numberOfBlocks. The function calls the READ_MULTIPLE_BLOCKS SD 
       // card command.
-      
+/*      
       numberOfBlocks = 3;
       
       blockNumber = 20;
       
-      // SDHC is block addressable
       if (ctv.type == SDHC) 
         err16 = SD_PrintMultipleBlocks (blockNumber,numberOfBlocks);
-      // SDSC byte addressable
-      else 
+      else  // SDSC
         err16 = SD_PrintMultipleBlocks (blockNumber * BLOCK_LEN, numberOfBlocks);
       
       if (err16 != READ_SUCCESS)
@@ -165,23 +162,21 @@ int main(void)
       // ********************************************************************
 */
 
-/*
-      // ******************* SD_WriteSingleBlock() **************************
+
+      // ****************** TEST: SD_WriteSingleBlock() **********************
       //
       // Use this function to write to a single block on the SD card specified
       // by blockNumber. This demo will first erase a single block using 
       // SD_EraseBlocks(), read and print the block to confirm it is erased
       // using SD_ReadSingleBlock and SD_PrintSingleBlock(). This will then
-      // call the SD_WriteSingleBlock() function, and reads and prints the block
-      // again to confirm the write was successful.
-
+      // call the SD_WriteSingleBlock() function, and reads and prints the 
+      // block again to confirm the write was successful.
+/*
 
       // data to write to block
-      uint8_t db[BLOCK_LEN] = "Howdy Globe......"; 
+      uint8_t dataArr[BLOCK_LEN] = "Howdy Globe......"; 
   
       blockNumber = 20;
-
-
 
       // ERASE single block (erase START block = erase END block)
       print_str("\n\r Erasing Block "); print_dec(blockNumber);
@@ -207,9 +202,9 @@ int main(void)
       // READ and PRINT
       print_str("\n\r Read and Print Block "); print_dec(blockNumber); print_str(" after erasing.");
       if (ctv.type == SDHC) 
-        err16 = SD_ReadSingleBlock (blockNumber, ds);
+        err16 = SD_ReadSingleBlock (blockNumber, blockArr);
       else //SDSC
-        err16 = SD_ReadSingleBlock (blockNumber * BLOCK_LEN, ds);
+        err16 = SD_ReadSingleBlock (blockNumber * BLOCK_LEN, blockArr);
 
       if (err16 != READ_SUCCESS)
         { 
@@ -227,11 +222,11 @@ int main(void)
         }
       // print the data block just loaded into the array.
       else
-        SD_PrintSingleBlock(ds);
+        SD_PrintSingleBlock(blockArr);
 
       // WRITE
       print_str("\n\r Write to block "); print_dec(blockNumber);
-      err16 = SD_WriteSingleBlock (blockNumber, db);
+      err16 = SD_WriteSingleBlock (blockNumber, dataArr);
       if (err16 != DATA_ACCEPTED_TOKEN_RECEIVED)
         { 
           print_str ("\n\r >> SD_WriteSingleBlock() returned ");
@@ -271,9 +266,9 @@ int main(void)
           print_str("\n\r Read and Print Block "); print_dec(blockNumber); print_str(" after writing");
 
           if (ctv.type == SDHC)
-            err16 = SD_ReadSingleBlock (blockNumber, ds);
+            err16 = SD_ReadSingleBlock (blockNumber, blockArr);
           else // SDSC
-            err16 = SD_ReadSingleBlock (blockNumber * BLOCK_LEN, ds);
+            err16 = SD_ReadSingleBlock (blockNumber * BLOCK_LEN, blockArr);
 
           if (err16 != READ_SUCCESS)
             { 
@@ -290,14 +285,14 @@ int main(void)
                 }
             }
           else// print the single data block that was read just in.
-            SD_PrintSingleBlock (ds);
+            SD_PrintSingleBlock (blockArr);
         }
       // *******************************************************************
 */
 
 
-/*
-      // ******************* SD_WriteMultipleBlocks() ***********************
+
+      // ****************** TEST: SD_WriteMultipleBlocks() *****************
       //
       // Use this function to write to multiple blocks of the SD card. This
       // function will write the same data to the blocks specified by 
@@ -306,18 +301,18 @@ int main(void)
       // demonstrate the WRITE_MULTIPLE_BLOCK command. This block of code
       // will first erase the multiple blocks using SD_EraseBlocks(), then
       // read-in and print the same blocks using SD_PrintMultipleBlocks().
-      // Then it will write to the multiple blocks. It will then do some
-      // error handling if the WRITE_BLOCK_TOKEN_RECIEVED is returned (I
-      // haven't really been able to test this out. It will then read-in
-      // print the blocks again to show that the data write was successful. 
-      
+      // Then it will write to the multiple blocks. It should then do some
+      // error handling if the WRITE_BLOCK_TOKEN_RECIEVED is returned, but I
+      // haven't really been able to test this out. It will then read-in and
+      // print the blocks again to show that the write was successful. 
+
 
       // data to be written to the blocks
-      uint8_t data[BLOCK_LEN] = "Well Hello There! I see you brought a PIE!!";
+      uint8_t dataArr2[BLOCK_LEN] = "Well Hello There! I see you brought a PIE!!";
 
       startBlockNumber = 20;
-      endBlockNumber = 24; // used for erasing
-      numberOfBlocks = 4;  // used for writing
+      endBlockNumber   = 24; // used for erasing
+      numberOfBlocks   = 4;  // used for writing
 
       // ERASE multiple blocks
       print_str("\n\r ***** ERASING BLOCKS ***** ");
@@ -362,7 +357,7 @@ int main(void)
 
       // Write Multiple Blocks
       print_str ("\n\r ***** WRITING BLOCKS ***** ");
-      err16 = SD_WriteMultipleBlocks (startBlockNumber, numberOfBlocks, data);
+      err16 = SD_WriteMultipleBlocks (startBlockNumber, numberOfBlocks, dataArr2);
       if (err16 != DATA_ACCEPTED_TOKEN_RECEIVED)
         { 
           print_str ("\n\r >> SD_WriteMultipleBlocks() returned ");
@@ -443,7 +438,7 @@ int main(void)
             }
         }
       // ********************************************************************
-*/
+
 
 
       // ************************ User Input Section ************************

@@ -14,7 +14,7 @@
 *                                                 
 *
 * FUNCTIONS "PUBLIC":
-*  (1) uint32_t SD_InitializeSPImode (CTV *ctv);
+*  (1) uint32_t SD_InitializeSPImode (CTV * ctv);
 *  (2) void     SD_SendByteSPI (uint8_t byte);
 *  (3) uint8_t  SD_ReceiveByteSPI (void);
 *  (4) uvoid    SD_SendCommand(uint8_t cmd, uint32_t arg);
@@ -93,7 +93,7 @@ pvt_CRC7 (uint64_t tca);
 */
 
 uint32_t 
-SD_InitializeSPImode (CTV *ctv)
+SD_InitializeSPImode (CTV * ctv)
 {
     uint8_t r1 = 0; //R1 response returned for every SD Command
     uint8_t r7[5];  //R7 response returned by SEND_IF_COND (CMD8)
@@ -248,7 +248,7 @@ SD_InitializeSPImode (CTV *ctv)
     
     return 0; //initialization succeded
 }
-// END SD_InitializeSPImode()
+// END SD_InitializeSPImode(...)
 
 
 
@@ -272,7 +272,7 @@ SD_SendByteSPI (uint8_t byte)
 {
   SPI_MasterTransmit(byte);
 }
-// END SD_SendByteSPI()
+// END SD_SendByteSPI(...)
 
 
 
@@ -340,7 +340,7 @@ SD_SendCommand (uint8_t cmd, uint32_t arg)
   SD_SendByteSPI ((uint8_t)(tcacs >> 8));
   SD_SendByteSPI ((uint8_t)tcacs);
 }
-// END  SD_SendCommand()
+// END  SD_SendCommand(...)
 
 
 
@@ -407,7 +407,7 @@ SD_PrintR1 (uint8_t r1)
   if (r1 == 0)
     print_str (" OUT_OF_IDLE");
 }
-// END SD_Printr1()
+// END SD_Printr1(...)
 
 
 
@@ -448,7 +448,7 @@ SD_PrintInitError (uint32_t err)
   if (err == 0)
     print_str (" INIT_SUCCESS\n\r");
 }
-// END sd_printInitErrors()
+// END sd_printInitErrors(...)
 
 
 
@@ -496,4 +496,4 @@ pvt_CRC7 (uint64_t tca)
     }
   return result;
 }
-// END _CRC7()
+// END _CRC7(...)

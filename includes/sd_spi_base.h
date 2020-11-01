@@ -14,7 +14,7 @@
 *
 *                                                 
 * FUNCTIONS "PUBLIC":
-*  (1) uint32_t SD_InitializeSPImode (CTV *ctv);
+*  (1) uint32_t SD_InitializeSPImode (CTV * ctv);
 *  (2) void     SD_SendByteSPI (uint8_t byte);
 *  (3) uint8_t  SD_ReceiveByteSPI (void);
 *  (4) uvoid    SD_SendCommand(uint8_t cmd, uint32_t arg);

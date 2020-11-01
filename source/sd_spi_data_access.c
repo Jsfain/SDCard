@@ -14,12 +14,12 @@
 * functions. This file requires SD_SPI_BASE.C/H.
 *
 * FUNCTIONS:
-*  (1)  uint16_t  SD_ReadSingleBlock (uint32_t blockAddress, uint8_t * block);
-*  (2)  void      SD_PrintSingleBlock (uint8_t * block);
-*  (3)  uint16_t  SD_WriteSingleBlock (uint32_t blockAddress, uint8_t * data);
+*  (1)  uint16_t  SD_ReadSingleBlock (uint32_t blockAddress, uint8_t * blockArr);
+*  (2)  void      SD_PrintSingleBlock (uint8_t * blockArr);
+*  (3)  uint16_t  SD_WriteSingleBlock (uint32_t blockAddress, uint8_t * dataArr);
 *  (4)  uint16_t  SD_EraseBlocks (uint32_t startBlockAddress, uint32_t endBlockAddress);
 *  (5)  uint16_t  SD_PrintMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks);
-*  (6)  uint16_t  SD_WriteMultipleBlocks (uint32_t blockAddress, uint32_t numberOfBlocks, uint8_t * dataBuffer);
+*  (6)  uint16_t  SD_WriteMultipleBlocks (uint32_t blockAddress, uint32_t numberOfBlocks, uint8_t * dataArr);
 *  (7)  uint16_t  SD_GetNumberOfWellWrittenBlocks (uint32_t * wellWrittenBlocks);
 *  (8)  void      SD_PrintReadError (uint16_t err);
 *  (9)  void      SD_PrintWriteError (uint16_t err);
@@ -65,12 +65,12 @@
  *                                               READ A SINGLE DATA BLOCK
  * 
  * Description : This function can be called to read the single data block from the SD Card at 'blockAddress' into the
- *               array pointed at by *block
+ *               array pointed at by *blockArr
  * 
  * Arguments   : blockAddress    - Unsigned integer specifying the addressed location of the SD card block whose 
  *                                 contents will be printed to the screen. Addressing is determined by the card type:
  *                                 SDHC is Block Addressable, SDSC is Byte Addressable.
- *             : *block          - Pointer to an array of length BLOCK_LEN (512 bytes). This function will load the
+ *             : *blockArr       - Pointer to an array of length BLOCK_LEN (512 bytes). This function will load the
  *                                 contents of the SD card's block at 'blockAddress' into this array.
  * 
  * Return      : Error Response    The upper byte holds a Read Error Flag. The lower byte is the R1 response. Pass the
@@ -81,7 +81,7 @@
 */
 
 uint16_t 
-SD_ReadSingleBlock (uint32_t blockAddress, uint8_t *block)
+SD_ReadSingleBlock (uint32_t blockAddress, uint8_t * blockArr)
 {
   uint8_t timeout = 0;
   uint8_t r1;
@@ -114,7 +114,7 @@ SD_ReadSingleBlock (uint32_t blockAddress, uint8_t *block)
 
       // Start Block Token has been received         
       for(uint16_t i = 0; i < BLOCK_LEN; i++)
-        block[i] = SD_ReceiveByteSPI();
+        blockArr[i] = SD_ReceiveByteSPI();
       for(uint8_t i = 0; i < 2; i++)
         SD_ReceiveByteSPI(); // CRC
           
@@ -123,7 +123,7 @@ SD_ReadSingleBlock (uint32_t blockAddress, uint8_t *block)
   CS_HIGH;
   return (READ_SUCCESS | r1);
 }
-// END SD_ReadSingleBlock()
+// END SD_ReadSingleBlock(...) 
 
 
 
@@ -134,16 +134,16 @@ SD_ReadSingleBlock (uint32_t blockAddress, uint8_t *block)
  * Description : This function can be called to print the contents of a single block stored in an array. The contents
  *               of the block will be printed to the screen in rows of 16 bytes, columnized as: OFFSET | HEX | ASCII.
  *               The HEX and ASCII columns are different forms of the block's contents. The OFFSET column is the byte
- *               byte of the first byte in each row from the first byte of the block.     
+ *               location of the first byte in each row relative to the location of the first byte in the block.     
  * 
- * Argument    : *block          Pointer to a byte array of length BLOCK_LEN (512 bytes) that holds the data contents
+ * Argument    : *blockArr       Pointer to a byte array of length BLOCK_LEN (512 bytes) that holds the data contents
  *                               of a single SD card block. This array should have previously been loaded by the
  *                               SD_ReadSingleBlock() function.
 ***********************************************************************************************************************
 */
 
 void 
-SD_PrintSingleBlock (uint8_t *block)
+SD_PrintSingleBlock (uint8_t * blockArr)
 {
   print_str ("\n\n\r BLOCK OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
   uint16_t offset = 0;
@@ -170,7 +170,7 @@ SD_PrintSingleBlock (uint8_t *block)
           if (space % 4 == 0) 
             print_str (" ");
           print_str (" ");
-          print_hex (block[offset]);
+          print_hex (blockArr[offset]);
           space++;
         }
       
@@ -178,16 +178,16 @@ SD_PrintSingleBlock (uint8_t *block)
       offset -= 16;
       for (offset = row * 16; offset < (row*16) + 16; offset++)
         {
-            if (block[offset] < 32) 
+            if (blockArr[offset] < 32) 
               USART_Transmit ( ' ' ); 
-            else if (block[offset] < 128)
-              USART_Transmit (block[offset]);
+            else if (blockArr[offset] < 128)
+              USART_Transmit (blockArr[offset]);
             else USART_Transmit ('.');
         }
     }    
   print_str ("\n\n\r");
 }
-// END SD_PrintSingleBlock(uint8_t *byte)
+// END SD_PrintSingleBlock(...)
 
 
 
@@ -195,12 +195,12 @@ SD_PrintSingleBlock (uint8_t *block)
 ***********************************************************************************************************************
  *                                               WRITE TO A SINGLE BLOCK
  * 
- * Description : This function will write the contents in the *data array to the block at 'blockAddress' on the SD 
- *               card. The data array should be of length BLOCK_LEN (512 bytes) and its entire contents will be written
- *               to the SD card block.
+ * Description : This function will write the contents of *dataArr to the block at 'blockAddress' on the SD card. The
+ *               The data array should be of length BLOCK_LEN (512 bytes) and its entire contents will be written to
+ *               the SD card block.
  * 
  * Arguments   : blockAddress   - Unsigned integer specifying the address of the block that will be written to. 
- *             : *data          - Pointer to a byte array of length BLOCK_LEN (512 bytes) that holds the data contents
+ *             : *dataArr       - Pointer to a byte array of length BLOCK_LEN (512 bytes) that holds the data contents
  *                                that will be written to block on the SD Card at blockAddress.
  * 
  * Return      : Error Response    The upper byte holds a Write Error Flag. The lower byte is the R1 response. Pass the
@@ -211,7 +211,7 @@ SD_PrintSingleBlock (uint8_t *block)
 */
 
 uint16_t 
-SD_WriteSingleBlock (uint32_t blockAddress, uint8_t *data)
+SD_WriteSingleBlock (uint32_t blockAddress, uint8_t * dataArr)
 {
   uint8_t  r1;
   CS_LOW;    
@@ -231,7 +231,7 @@ SD_WriteSingleBlock (uint32_t blockAddress, uint8_t *data)
 
       // send data to write to SD card.
       for(uint16_t i = 0; i < BLOCK_LEN; i++) 
-        SD_SendByteSPI (data[i]);
+        SD_SendByteSPI (dataArr[i]);
 
       // Send 16-bit CRC. CRC is off by default so these do not matter.
       SD_SendByteSPI (0xFF);
@@ -289,7 +289,7 @@ SD_WriteSingleBlock (uint32_t blockAddress, uint8_t *data)
     }
   return (INVALID_DATA_RESPONSE | r1) ;
 }
-// END SD_WriteSingleDataBlock()
+// END SD_WriteSingleDataBlock(...)
 
 
 
@@ -351,7 +351,7 @@ SD_EraseBlocks (uint32_t startBlockAddress, uint32_t endBlockAddress)
     CS_HIGH;
     return ERASE_SUCCESSFUL;
 }
-// END SD_EraseBlocks()
+// END SD_EraseBlocks(...)
 
 
 
@@ -376,7 +376,7 @@ SD_EraseBlocks (uint32_t startBlockAddress, uint32_t endBlockAddress)
 uint16_t 
 SD_PrintMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks)
 {
-  uint8_t  block[512];
+  uint8_t  blockArr[512];
   uint16_t timeout = 0;
   uint8_t  r1;
 
@@ -391,8 +391,9 @@ SD_PrintMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks)
 
   if(r1 == 0)
     {
-      for (int i = 0; i < numberOfBlocks; i++)
+      for (uint8_t i = 0; i < numberOfBlocks; i++)
         {
+          print_str("\n\r Block ");print_dec(startBlockAddress + i);
           timeout = 0;
           while (SD_ReceiveByteSPI() != 0xFE) // wait for start block token.
             {
@@ -402,12 +403,12 @@ SD_PrintMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks)
             }
 
           for (uint16_t k = 0; k < BLOCK_LEN; k++) 
-            block[k] = SD_ReceiveByteSPI();
+            blockArr[k] = SD_ReceiveByteSPI();
 
           for (uint8_t k = 0; k < 2; k++) 
             SD_ReceiveByteSPI(); // CRC
 
-          SD_PrintSingleBlock (block);
+          SD_PrintSingleBlock (blockArr);
         }
         
       SD_SendCommand (STOP_TRANSMISSION, 0);
@@ -417,7 +418,7 @@ SD_PrintMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks)
   CS_HIGH;
   return READ_SUCCESS;
 }
-// END sd_PrintMultiplDataBlocks()
+// END sd_PrintMultiplDataBlocks(...)
 
 
 
@@ -425,13 +426,13 @@ SD_PrintMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks)
 ***********************************************************************************************************************
  *                                               WRITE TO MULTIPLE BLOCKS
  * 
- * Description : This function will write data in a byte array of length BLOCK_LEN (512 bytes) to multiple blocks on 
- *               the SD card. The full array of data will be copied to each of the blocks. This function is not really
- *               useful except to demontrate the WRITE_MULTIPLE_BLOCK SD card command.
+ * Description : This function will write the contents of a byte array of length BLOCK_LEN (512 bytes) to multiple 
+ *               blocks of the SD card. The full array of data will be copied to each of the blocks. This function is 
+ *               not really useful except to demontrate the WRITE_MULTIPLE_BLOCK SD card command.
  * 
  * Argument    : blockAddress          - Address of the first block that will be written.
  *             : numberOfBlocks        - The total number of consecutive blocks that will be written.
- *             : *dataBuffer           - Pointer to a byte array of length BLOCK_LEN (512 bytes) that holds the data
+ *             : *dataArr              - Pointer to a byte array of length BLOCK_LEN (512 bytes) that holds the data
  *                                       contents that will be written to the SD Card.
  * 
  * Return      : Error Response    The upper byte holds a Write Error Flag. The lower byte is the R1 response. Pass the
@@ -442,7 +443,7 @@ SD_PrintMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks)
 */
 
 uint16_t 
-SD_WriteMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks, uint8_t *data)
+SD_WriteMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks, uint8_t * dataArr)
 {
   uint8_t dataResponseToken;
   uint16_t returnToken;
@@ -466,9 +467,9 @@ SD_WriteMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks, uin
         {
           SD_SendByteSPI (0xFC); // Start Block Token initiates data transfer
 
-          // send data in 'data' to SD card.
+          // send data to SD card.
           for(uint16_t i = 0; i < BLOCK_LEN; i++)
-            SD_SendByteSPI (data[i]);
+            SD_SendByteSPI (dataArr[i]);
 
           // Send 16-bit CRC. CRC is off by default so these do not matter.
           SD_SendByteSPI (0xFF);
@@ -531,7 +532,7 @@ SD_WriteMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks, uin
   CS_HIGH;
   return returnToken; // successful write returns 0
 }
-// END SD_WriteMultipleDataBlocks()
+// END SD_WriteMultipleDataBlocks(...)
 
 
 
@@ -554,7 +555,7 @@ SD_WriteMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks, uin
 */
 
 uint16_t 
-SD_GetNumberOfWellWrittenBlocks (uint32_t *wellWrittenBlocks)
+SD_GetNumberOfWellWrittenBlocks (uint32_t * wellWrittenBlocks)
 {
   uint8_t r1;
   uint16_t timeout = 0; 
@@ -600,7 +601,7 @@ SD_GetNumberOfWellWrittenBlocks (uint32_t *wellWrittenBlocks)
 
   return READ_SUCCESS;
 }
-// END SD_GetNumberOfWellWrittenBlocks()
+// END SD_GetNumberOfWellWrittenBlocks(...)
 
 
 
@@ -632,7 +633,7 @@ SD_PrintReadError (uint16_t err)
         print_str ("\n\r UNKNOWN RESPONSE");
     }
 }
-// END SD_PrintWriteError()
+// END SD_PrintWriteError(...)
 
 
 
@@ -676,7 +677,7 @@ SD_PrintWriteError (uint16_t err)
         print_str ("\n\r UNKNOWN RESPONSE");
   }
 }
-// END SD_PrintWriteError()
+// END SD_PrintWriteError(...)
 
 
 
@@ -714,4 +715,4 @@ SD_PrintEraseError (uint16_t err)
         print_str ("\n\r UNKNOWN RESPONSE");
     }
 }
-// END SD_PrintWriteError()
+// END SD_PrintWriteError(...)
