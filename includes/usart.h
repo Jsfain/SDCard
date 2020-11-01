@@ -9,9 +9,16 @@
 *
 *
 * DESCRIPTION:
-* Declares USART related functions as well as defines CPU frequency and baud rate MACROS. 
+* Defines CPU frequency and baud rate macros, as well as declares the standard functions defined in USART.C for 
+* initializing, sending, and recieving data via USART0 on the target device. 
+* 
 *
-*                                                 
+* FUNCTIONS:
+*   (1) void    USART_Init (void)
+*   (2) uint8_t USART_Receive (void)
+*   (3) void    USART_Transmit (uint8_t data)
+*                                   
+*
 *                                                       MIT LICENSE
 *
 * Copyright (c) 2020 Joshua Fain
@@ -29,50 +36,83 @@
 ***********************************************************************************************************************
 */
 
+
 #ifndef USART_H
 #define USART_H
 
 
-/******************************************************************************
- * Definition:  F_CPU
- * Description: specifies the frequency of the clock source.
-******************************************************************************/
+/*
+***********************************************************************************************************************
+ *                                                       MACROS
+***********************************************************************************************************************
+*/
+
+// Specify clock frequency of target device.
 #define F_CPU   16000000UL
 
 
 
-/******************************************************************************
- * Definition:  BAUD
- * Description: defines the decimal-based baud rate to be used by USART0.
-******************************************************************************/
+// Define decimal-based baud rate to be used by USART0.
 #define BAUD    9600
 
 
-/******************************************************************************
- * Function:    UBRR_VALUE
- * Description: calculates the value to load into UBRR (UBRRH/UBRRL) for the 
- *              baud rate specified by BAUD. See ATmege datasheet for formula.
- * Argument(s): F_CPU, BAUD
- * Returns:     Value to be loaded into UBRR
-******************************************************************************/
+// Calculate the value to load into UBRR (UBRRH & UBRRL) 
+// for the decimal baud rate specified by BAUD.
 #define UBRR_VALUE  (F_CPU/16/BAUD) - 1 
 
 
-/******************************************************************************
- * Functions: Declaration of standard USART initialization, transmit, and 
- *            receive functions. See USART.C for detailed descriptions of each.
-******************************************************************************/
+/*
+***********************************************************************************************************************
+ *                                                       FUNCTIONS
+***********************************************************************************************************************
+*/
 
-//Initializes USART0 for target device.
-void USART_Init();
+/*
+***********************************************************************************************************************
+ *                                                   INITIALIZE USART
+ * 
+ * Description  : Initializes USART0 of target device by setting the baud rate, enabling transmit and receive and 
+ *                defining data frame format of 8 data bits and 1 stop bit.
+***********************************************************************************************************************
+*/
+
+void 
+USART_Init (void);
 
 
-//Function for receiving data via USART0 initialized by USART_Init().
-uint8_t USART_Receive();
 
 
-//Function for transmitting data via USART0 initialized by USART_Init().
-void USART_Transmit(uint8_t data);
+/*
+***********************************************************************************************************************
+ *                                               RECEIVE BYTE VIA USART
+ * 
+ * Description  : Standard USART receive function used to get the byte received in USART0 by polling the RXC0 flag and
+ *                then returning the byte in UDR0.
+ * 
+ * Argument     : void
+ * 
+ * Returns      : data byte received in UDR0.
+***********************************************************************************************************************
+*/
+
+uint8_t 
+USART_Receive (void);
+
+
+
+/*
+***********************************************************************************************************************
+ *                                               TRANSMIT BYTE VIA USART
+ * 
+ * Description  : Standard USART transmit function used to transmit a data byte by polling the UDRE0 flag. When the 
+ *                flag is set, UDR0 is empty and a new data byte can be loaded into UDR0 to be sent by USART. 
+ * 
+ * Argument     : byte    Unsigned data byte to send via USART.
+***********************************************************************************************************************
+*/
+
+void 
+USART_Transmit (uint8_t data);
 
 
 

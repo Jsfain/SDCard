@@ -7,9 +7,16 @@
 * Author  : Joshua Fain
 * Target  : ATMega1280
 *
+*
 * DESCRIPTION:
 * Declare some print functions used to print strings and positive integers in decimal, binary, and hex formats.
 *
+*
+* FUNCTIONS:
+*   (1) void print_dec (uint32_t num);
+*   (2) void print_bin (uint32_t num);
+*   (3) void print_hex (uint32_t num);
+*   (4) void print_str (char * str;
 *                                                 
 *                                                       MIT LICENSE
 *
@@ -33,20 +40,75 @@
 #define PRINTS_H
 
 
-/******************************************************************************
- * Functions: Declaration of print functions. See PRINTS.C for details.
-******************************************************************************/
+/*
+***********************************************************************************************************************
+*                                                       FUNCTIONS
+***********************************************************************************************************************
+*/
 
-//prints unsigned (positive) base-10 (decimal) integer up to 32 bits
-void print_dec(uint32_t);
+/*
+***********************************************************************************************************************
+ *                                        PRINT POSITIVE DECIMAL (BASE-10) INTEGERS
+ * 
+ * Description : Prints unsigned (positive) base-10 (decimal) integers to a terminal.
+ *  
+ * Argument    : n   Unsigned integer to be printed to the terminal/screen in decimal form.
+***********************************************************************************************************************
+*/
 
-//prints binary integer up to 32 bits
-void print_bin(uint32_t);
+void 
+print_dec(uint32_t num);
 
-//prints hexadecimal integer up to 32 bits
-void print_hex(uint32_t);
 
-//prints c-string up to 1000 characters long
-void print_str(char str[]);
+
+/*
+***********************************************************************************************************************
+ *                                            PRINT BINARY FORM OF INTEGER
+ * 
+ * Description : Prints the binary form of the unsigned integer argument.
+ *  
+ * Argument    : n   Unsigned integer to be printed to the terminal/screen in binary form.
+ * 
+ * Notes       : This function prints the number as space-separated nibbles (4bits), and only the number of required
+ *               nibbles will be printed. required.
+***********************************************************************************************************************
+*/
+
+void 
+print_bin(uint32_t num);
+
+
+
+/*
+***********************************************************************************************************************
+ *                                        PRINT HEXADECIMAL FORM OF AN INTEGER
+ * 
+ * Description : Prints the hexadecimal form of the unsigned integer argument.
+ *  
+ * Argument    : n   Unsigned integer to be printed to the terminal/screen in hexadecimal form.
+***********************************************************************************************************************
+*/
+
+void 
+print_hex(uint32_t num);
+
+
+
+/*
+***********************************************************************************************************************
+ *                                                  PRINT C-STRING
+ * 
+ * Description : Prints the C-string passed as the argument.
+ *  
+ * Argument    : str   Pointer to C-String char array that will be printed to the terminal. 
+ * 
+ * Notes:      : (1)  C-strings are null-terminated '\0', and therefore this function will only work if a char array
+ *                    contains a NULL. If it doesn't then unexpected results will likely occur.
+ *               (2)  Only strings of 999 characters + NULL are currently handled by this function.
+***********************************************************************************************************************
+*/
+
+void 
+print_str(char * str);
 
 #endif //PRINTS_H

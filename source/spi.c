@@ -10,10 +10,15 @@
 *
 * DESCRIPTION:
 * Defines standard SPI functions declared in SPI.H that are necessary for initializing the SPI port into master mode,
-* and sending/receiving data via SPI on a target device. These are more or less the standard forms found in the ATmega
-* datasheet.
+* and sending/receiving data via SPI on a target device. These are more or less the standard implementations.
 *
-*                                                 
+*
+* FUNCTIONS:
+*   (1) void SPI_MasterInit (void);
+*   (2) void SPI_MasterTransmit (uint8_t byte);
+*   (3) uint8_t SPI_MasterRead (void);                                                
+*
+*
 *                                                       MIT LICENSE
 *
 * Copyright (c) 2020 Joshua Fain
@@ -37,51 +42,79 @@
 #include "../includes/spi.h"
 
 
-/******************************************************************************
- * Function:    SPI_MasterInit(void)
- * Description: Initializes SPI port into master mode.
- * Argument(s): VOID
- * Returns:     VOID
-******************************************************************************/
-void SPI_MasterInit(void)
+
+/*
+***********************************************************************************************************************
+ *                                                       FUNCTIONS
+***********************************************************************************************************************
+*/
+
+/*
+***********************************************************************************************************************
+ *                                        INITIALIZE THE SPI PORT INTO MASTER MODE
+ * 
+ * Description : This function will initialize the SPI port into master mode. This is intended for an ATmega1280 target
+ *               and so the PORT assignment for the SPI-specific pins is PORT B. To change this for a different target 
+ *               point the relevant MACRO definitions in SPI.H to the correct port.
+***********************************************************************************************************************
+*/
+
+void 
+SPI_MasterInit (void)
 {
     // Set MOSI, SCK, and SS of SPI port as outputs. MISO is input.
-    DDR_SPI = (1<<DD_MOSI)|(1<<DD_SCK)|(1<<DD_SS);
+    DDR_SPI = (1 << DD_MOSI) | (1 << DD_SCK) | (1 << DD_SS);
 
-    //ensure SS is high (not asserted) before initializing SPI.
+    // Make sure SS is high (not asserted) before initializing SPI.
     SPI_PORT = 0x01;
     
-    //PRSPI in PPR0 must be 0 to enable SPI. Should be by default.
-    PRR0 &= ~(1<<PRSPI);
+    // PRSPI in PPR0 must be 0 to enable SPI. Should be set by default.
+    PRR0 &= ~(1 << PRSPI);
 
     //Enable SPI in master mode and set clock rate ck/64 = 16MHz/64 = 250KHz.
     //SPCR bits: SPIE=0, SPE=1, DORD=0, MSTR=1, CPOL=0, CPHA=0, SPR1=1, SPR0=0
-    SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR1);
-    SPSR &= ~(1<<SPI2X); //SPI2X = 0. Set to 1 to double clock rate.
+    SPCR = (1 << SPE) | (1 << MSTR) | (1 << SPR1);
+    SPSR &= ~(1 << SPI2X); //SPI2X = 0. Set to 1 to double clock rate.
 }
 
 
 
-/******************************************************************************
- * Function:    SPI_MasterTransmit(char cData)
- * Description: Sends data byte via SPI by loading data into SPDR
- * Argument(s): 8-bit data byte to send via SPI
- * Returns:     VOID   
-******************************************************************************/
-void SPI_MasterTransmit(uint8_t cData)
+/*
+***********************************************************************************************************************
+ *                                        TRANSMIT BYTE IN SPI MASTER MODE
+ * 
+ * Description  : This function will send a byte via the SPI port operating in master mode to the intended device. It 
+ *                does this by loading the byte into SPDR and waiting for the transmission to complete (i.e. the SPIF
+ *                flag to be set).
+ * 
+ * Argument     : byte     Unsigned byte that will be transmitted via the SPI port.
+***********************************************************************************************************************
+*/
+
+void 
+SPI_MasterTransmit (uint8_t byte)
 {
-    SPDR = cData; //begin data transmission by loading data byte into SPDR
-    while(!(SPSR & (1<<SPIF))); //Wait for transmission complete
+    SPDR = byte; //begin data transmission by loading data byte into SPDR
+    while ( !(SPSR & (1 << SPIF))); //Wait for transmission complete
 }
 
 
-/******************************************************************************
- * Function:    SPI_MasterRead(void)
- * Description: gets response byte from SPI device. 
- * Argument(s): VOID
- * Returns:     8-bit data byte returned from the SPI device into the SPDR.
-******************************************************************************/
-uint8_t SPI_MasterRead(void)
+
+/*
+***********************************************************************************************************************
+ *                                        RECEIVE BYTE IN SPI MASTER MODE
+ * 
+ * Description  : This function is used to get a byte that is received from a device via the SPI in master mode. It 
+ *                operates by simply returning the contents of the SPDR register.
+ * 
+ * Argument     : void
+ * 
+ * Returns      : Byte received from the device via SPI.
+***********************************************************************************************************************
+*/
+
+uint8_t 
+SPI_MasterRead (void)
 { 
   return SPDR;
 }

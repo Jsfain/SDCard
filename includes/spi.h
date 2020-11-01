@@ -9,9 +9,16 @@
 *
 *
 * DESCRIPTION:
-* Defines SPI port/pins and declares SPI specific functions.
-*
-*                                                 
+* Defines SPI port/pins and declares SPI specific functions defined in SPI.C that are necessary for initializing the 
+* SPI port into master mode, and sending/receiving data via SPI on a target device. These are more or less the 
+* standard implementations.
+* 
+* FUNCTIONS:
+*   (1) void SPI_MasterInit (void);
+*   (2) void SPI_MasterTransmit (uint8_t byte);
+*   (3) uint8_t SPI_MasterRead (void);
+*           
+*                                
 *                                                       MIT LICENSE
 *
 * Copyright (c) 2020 Joshua Fain
@@ -29,15 +36,18 @@
 ***********************************************************************************************************************
 */
 
+
 #ifndef SPI_H
 #define SPI_H
 
 
-/******************************************************************************
- * Definitions: SPI port/pins data direction definitions.
- * Description: Define the data direction variables of the SPI port/pins for 
- *              the target device.
-******************************************************************************/
+/*
+***********************************************************************************************************************
+ *                                                       MACROS
+***********************************************************************************************************************
+*/
+
+// SPI Data Direction Register (DDR) macros.
 #define DDR_SPI     DDRB
 #define DD_SS       DDB0
 #define DD_SCK      DDB1
@@ -45,11 +55,7 @@
 #define DD_MISO     DDB3
 
 
-
-/******************************************************************************
- * Definitions: SPI port pins.  
- * Description: Define the SPI port/pins for the targe device.
-******************************************************************************/
+// SPI Port Assignment macros.
 #define SPI_PORT    PORTB
 #define SS          PB0
 #define SCK         PB1
@@ -58,18 +64,60 @@
 
 
 
-/******************************************************************************
- * Functions: Declaration of standard SPI initialization, transmit, and 
- *            receive functions. See SPI.C for a more detailed descriptions.
-******************************************************************************/
+/*
+***********************************************************************************************************************
+ *                                                       FUNCTIONS
+***********************************************************************************************************************
+*/
 
-// Initialialized the SPI port in master mode
-void SPI_MasterInit(void);
+/*
+***********************************************************************************************************************
+ *                                        INITIALIZE THE SPI PORT INTO MASTER MODE
+ * 
+ * Description : This function will initialize the SPI port into master mode. This is intended for an ATmega1280 target
+ *               and so the PORT assignment for the SPI-specific pins is PORT B. To change this for a different target 
+ *               point the relevant MACRO definitions in SPI.H to the correct port.
+***********************************************************************************************************************
+*/
 
-// Sends byte via SPI to device
-void SPI_MasterTransmit(uint8_t cData);
+void 
+SPI_MasterInit (void);
 
-// Receives byte via SPI from device
-uint8_t SPI_MasterRead();
+
+
+/*
+***********************************************************************************************************************
+ *                                        TRANSMIT BYTE IN SPI MASTER MODE
+ * 
+ * Description  : This function will send a byte via the SPI port operating in master mode to the intended device. It 
+ *                does this by loading the byte into SPDR and waiting for the transmission to complete (i.e. the SPIF
+ *                flag to be set).
+ * 
+ * Argument     : byte     unsigned byte that will be transmitted via the SPI port.
+***********************************************************************************************************************
+*/
+
+void 
+SPI_MasterTransmit (uint8_t byte);
+
+
+
+/*
+***********************************************************************************************************************
+ *                                        RECEIVE BYTE IN SPI MASTER MODE
+ * 
+ * Description  : This function is used to get a byte that is received from a device via the SPI in master mode. It 
+ *                operates by simply returning the contents of the SPDR register.
+ * 
+ * Argument     : void
+ * 
+ * Returns      : Byte received from the device via SPI.
+***********************************************************************************************************************
+*/
+
+uint8_t 
+SPI_MasterRead (void);
+
+
 
 #endif  //SPI_H
