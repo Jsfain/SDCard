@@ -105,10 +105,10 @@ SD_InitializeSPImode (CTV * ctv)
 
     // ********************
     // GO_IDLE_STATE (CMD0)
-    CS_LOW;
+    CS_SD_LOW;
     SD_SendCommand (GO_IDLE_STATE, 0);
     r1 = SD_GetR1();
-    CS_HIGH;
+    CS_SD_HIGH;
     if (r1 != 1) 
       return (FAILED_GO_IDLE_STATE | r1);
     // END GO_IDLE_STATE (CMD0)
@@ -120,7 +120,7 @@ SD_InitializeSPImode (CTV * ctv)
     uint8_t checkPattern = 0xAA;
     uint8_t voltageSupplyRange  = 0x01; // 2.7 to 3.6V
     
-    CS_LOW;
+    CS_SD_LOW;
     SD_SendCommand (SEND_IF_COND, ((uint16_t)voltageSupplyRange << 8) | checkPattern);
 
     //Get R7 response
@@ -130,7 +130,7 @@ SD_InitializeSPImode (CTV * ctv)
     r7[3] = SD_ReceiveByteSPI();
     r7[4] = SD_ReceiveByteSPI();
 
-    CS_HIGH;
+    CS_SD_HIGH;
     if (r7[0] == (ILLEGAL_COMMAND | IN_IDLE_STATE)) 
       ctv->version = 1;
     else if (r7[0] == IN_IDLE_STATE) 
@@ -148,11 +148,11 @@ SD_InitializeSPImode (CTV * ctv)
     // ******************
     // CRC_ON_OFF (CMD59)
     r1 = 0;
-    CS_LOW;
+    CS_SD_LOW;
     SD_SendCommand (CRC_ON_OFF, 0);  //0 CRC OFF (default)
                                      //1 CRC ON
     r1 = SD_GetR1();
-    CS_HIGH;
+    CS_SD_HIGH;
     if (r1 != 1) 
       return (FAILED_CRC_ON_OFF | r1);
     // END CRC_ON_OFF (CMD59)
@@ -175,17 +175,17 @@ SD_InitializeSPImode (CTV * ctv)
     do
       {
         r1 = 0;
-        CS_LOW;
+        CS_SD_LOW;
         SD_SendCommand (APP_CMD, 0); // send APP_CMD before any ACMD
         r1 = SD_GetR1();
-        CS_HIGH;
+        CS_SD_HIGH;
         if (r1 != 1) 
           return (FAILED_APP_CMD | r1);
         r1 = 0;
-        CS_LOW;
+        CS_SD_LOW;
         SD_SendCommand (SD_SEND_OP_COND, acmd41Arg);
         r1 = SD_GetR1();
-        CS_HIGH;
+        CS_SD_HIGH;
         if (r1 > 1)
           return (FAILED_SD_SEND_OP_COND | r1);
         if ((timeout++ >= 0xFE) && (r1 > 0))
@@ -202,7 +202,7 @@ SD_InitializeSPImode (CTV * ctv)
     // Final init step is to read CCS (Card Capactity Status)
     // bit of the OCR (Operating Condition Register).
     r1 = 0;
-    CS_LOW;
+    CS_SD_LOW;
     SD_SendCommand (READ_OCR,0);
     r1 = SD_GetR1();
     if (r1 != 0)
@@ -213,7 +213,7 @@ SD_InitializeSPImode (CTV * ctv)
     //POWER_UP_STATUS
     if( (ocr >> 7) != 1 )
       {
-        CS_HIGH;
+        CS_SD_HIGH;
         return (POWER_UP_NOT_COMPLETE | r1);
       }
     
@@ -239,10 +239,10 @@ SD_InitializeSPImode (CTV * ctv)
         (voltagRangesAccepted != 0x1FF)  ) // Voltage range of
                                            // 2.7 to 3.6V supported.
       {
-        CS_HIGH;
+        CS_SD_HIGH;
         return (FAILED_READ_OCR | UNSUPPORTED_CARD_TYPE | r1);
       }
-    CS_HIGH;
+    CS_SD_HIGH;
     // END READ_OCR (CMD58)
     // ************************
     

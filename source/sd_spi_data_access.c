@@ -86,13 +86,13 @@ SD_ReadSingleBlock (uint32_t blockAddress, uint8_t * blockArr)
   uint8_t timeout = 0;
   uint8_t r1;
 
-  CS_LOW;
+  CS_SD_LOW;
   SD_SendCommand (READ_SINGLE_BLOCK, blockAddress); //CMD17
   r1 = SD_GetR1();
 
   if (r1 > 0)
     {
-      CS_HIGH;
+      CS_SD_HIGH;
       return (R1_ERROR | r1);
     }
 
@@ -107,7 +107,7 @@ SD_ReadSingleBlock (uint32_t blockAddress, uint8_t * blockArr)
           timeout++;
           if(timeout > 0xFE) 
             { 
-              CS_HIGH;
+              CS_SD_HIGH;
               return ( START_TOKEN_TIMEOUT | r1 );
             }
         }
@@ -120,7 +120,7 @@ SD_ReadSingleBlock (uint32_t blockAddress, uint8_t * blockArr)
           
       SD_ReceiveByteSPI(); // clear any remaining byte from SPDR
     }
-  CS_HIGH;
+  CS_SD_HIGH;
   return (READ_SUCCESS | r1);
 }
 // END SD_ReadSingleBlock(...) 
@@ -214,13 +214,13 @@ uint16_t
 SD_WriteSingleBlock (uint32_t blockAddress, uint8_t * dataArr)
 {
   uint8_t  r1;
-  CS_LOW;    
+  CS_SD_LOW;    
   SD_SendCommand (WRITE_BLOCK, blockAddress); // CMD24
   r1 = SD_GetR1();
 
   if (r1 > 0)
     {
-      CS_HIGH
+      CS_SD_HIGH
       return (R1_ERROR | r1);
     }
 
@@ -248,7 +248,7 @@ SD_WriteSingleBlock (uint32_t blockAddress, uint8_t * dataArr)
           dataResponseToken = SD_ReceiveByteSPI();
           if(timeout++ > 0xFE)
             {
-              CS_HIGH;
+              CS_SD_HIGH;
               return (DATA_RESPONSE_TIMEOUT | r1);
             }  
               
@@ -267,23 +267,23 @@ SD_WriteSingleBlock (uint32_t blockAddress, uint8_t * dataArr)
             {
               if (timeout++ > 0x1FF) 
                 {
-                  CS_HIGH;
+                  CS_SD_HIGH;
                   return (CARD_BUSY_TIMEOUT | r1);
                 }
             };
-          CS_HIGH;
+          CS_SD_HIGH;
           return (DATA_ACCEPTED_TOKEN_RECEIVED | r1);
       }
 
       else if ((dataResponseToken & 0x0B) == 0x0B) // CRC Error
         {
-          CS_HIGH;
+          CS_SD_HIGH;
           return (CRC_ERROR_TOKEN_RECEIVED | r1);
         }
 
       else if ((dataResponseToken & 0x0D) == 0x0D) // Write Error
         {
-          CS_HIGH;
+          CS_SD_HIGH;
           return (WRITE_ERROR_TOKEN_RECEIVED | r1);
         }
     }
@@ -315,28 +315,28 @@ SD_EraseBlocks (uint32_t startBlockAddress, uint32_t endBlockAddress)
     uint8_t r1 = 0;
     
     // set Start Address for erase block
-    CS_LOW;
+    CS_SD_LOW;
     SD_SendCommand (ERASE_WR_BLK_START_ADDR, startBlockAddress);
     r1 = SD_GetR1();
-    CS_HIGH;
+    CS_SD_HIGH;
     if (r1 > 0) 
       return (SET_ERASE_START_ADDR_ERROR | R1_ERROR | r1);
     
     // set End Address for erase block
-    CS_LOW;
+    CS_SD_LOW;
     SD_SendCommand (ERASE_WR_BLK_END_ADDR, endBlockAddress);
     r1 = SD_GetR1();
-    CS_HIGH;
+    CS_SD_HIGH;
     if (r1 > 0) 
       return (SET_ERASE_END_ADDR_ERROR | R1_ERROR | r1);
 
     // erase all blocks in range of start and end address
-    CS_LOW;
+    CS_SD_LOW;
     SD_SendCommand(ERASE,0);
     r1 = SD_GetR1();
     if(r1 > 0)
       {
-        CS_HIGH;
+        CS_SD_HIGH;
         return (ERASE_ERROR | R1_ERROR | r1);
       }
 
@@ -348,7 +348,7 @@ SD_EraseBlocks (uint32_t startBlockAddress, uint32_t endBlockAddress)
         if(timeout++ > 0xFFFE) 
           return (ERASE_BUSY_TIMEOUT | r1);
       }
-    CS_HIGH;
+    CS_SD_HIGH;
     return ERASE_SUCCESSFUL;
 }
 // END SD_EraseBlocks(...)
@@ -380,12 +380,12 @@ SD_PrintMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks)
   uint16_t timeout = 0;
   uint8_t  r1;
 
-  CS_LOW;
+  CS_SD_LOW;
   SD_SendCommand (READ_MULTIPLE_BLOCK, startBlockAddress); // CMD18
   r1 = SD_GetR1();
   if (r1 > 0)
     {
-      CS_HIGH
+      CS_SD_HIGH
       return (R1_ERROR | r1);
     }
 
@@ -415,7 +415,7 @@ SD_PrintMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks)
       SD_ReceiveByteSPI(); // R1b response. Don't care.
     }
 
-  CS_HIGH;
+  CS_SD_HIGH;
   return READ_SUCCESS;
 }
 // END sd_PrintMultiplDataBlocks(...)
@@ -449,13 +449,13 @@ SD_WriteMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks, uin
   uint16_t returnToken;
   uint16_t timeout = 0;
 
-  CS_LOW;    
+  CS_SD_LOW;    
   SD_SendCommand (WRITE_MULTIPLE_BLOCK, startBlockAddress);  //CMD25
   uint8_t r1 = SD_GetR1();
   
   if(r1 > 0)
     {
-      CS_HIGH
+      CS_SD_HIGH
       return (R1_ERROR | r1);
     }
 
@@ -483,7 +483,7 @@ SD_WriteMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks, uin
               dataResponseToken = SD_ReceiveByteSPI();
               if(timeout++ > 0xFF)
                 {
-                  CS_HIGH;
+                  CS_SD_HIGH;
                   return (DATA_RESPONSE_TIMEOUT | r1);
                 }  
             }
@@ -524,12 +524,12 @@ SD_WriteMultipleBlocks (uint32_t startBlockAddress, uint32_t numberOfBlocks, uin
         {
           if(timeout++ > 511) 
             {
-              CS_HIGH;
+              CS_SD_HIGH;
               return (CARD_BUSY_TIMEOUT | r1);
             }
         }
     }
-  CS_HIGH;
+  CS_SD_HIGH;
   return returnToken; // successful write returns 0
 }
 // END SD_WriteMultipleDataBlocks(...)
@@ -560,26 +560,26 @@ SD_GetNumberOfWellWrittenBlocks (uint32_t * wellWrittenBlocks)
   uint8_t r1;
   uint16_t timeout = 0; 
 
-  CS_LOW;
+  CS_SD_LOW;
   SD_SendCommand (APP_CMD, 0); // next command is ACM
   r1 = SD_GetR1();
   if (r1 > 0) 
     {   
-      CS_HIGH;
+      CS_SD_HIGH;
       return (R1_ERROR | r1);
     }
   SD_SendCommand (SEND_NUM_WR_BLOCKS, 0);
   r1 = SD_GetR1();
   if(r1 > 0)
     {
-      CS_HIGH;
+      CS_SD_HIGH;
       return (R1_ERROR | r1);
     }
   while (SD_ReceiveByteSPI() != 0xFE) // start block token
   {
     if(timeout++ > 0x511) 
       {
-        CS_HIGH;
+        CS_SD_HIGH;
         return (START_TOKEN_TIMEOUT | r1);
       }
   }
@@ -597,7 +597,7 @@ SD_GetNumberOfWellWrittenBlocks (uint32_t * wellWrittenBlocks)
   SD_ReceiveByteSPI();
   SD_ReceiveByteSPI();
 
-  CS_HIGH;
+  CS_SD_HIGH;
 
   return READ_SUCCESS;
 }

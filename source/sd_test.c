@@ -248,12 +248,12 @@ int main(void)
                   print_str ("\n\r WRITE ERROR TOKEN returned. Getting R2 response.");
                   
                   uint16_t r2;
-                  CS_LOW;             
+                  CS_SD_LOW;             
                   SD_SendCommand (SEND_STATUS,0);
                   r2 = SD_GetR1(); // The first byte of R2 is R1
                   r2 <<= 8;
                   r2 |= SD_ReceiveByteSPI();
-                  CS_HIGH;
+                  CS_SD_HIGH;
                   print_str ("\n\r R2 Response = ");
                   print_dec (r2);
                 }
@@ -381,12 +381,12 @@ int main(void)
                   print_str ("\n\r WRITE_ERROR_TOKEN set.");
                   print_str ("\n\r Getting STATUS (R2) response.");
                   uint16_t r2;
-                  CS_LOW;             
+                  CS_SD_LOW;             
                   SD_SendCommand (SEND_STATUS,0);
                   r2 = SD_GetR1(); // The first byte of R2 is R1
                   r2 <<= 8;
                   r2 |= SD_ReceiveByteSPI();
-                  CS_HIGH;
+                  CS_SD_HIGH;
                   print_str ("\n\r R2 Response = ");
                   print_dec (r2);
 

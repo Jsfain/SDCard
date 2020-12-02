@@ -73,8 +73,8 @@
 
 
 // *********** CS Assert / De-assert
-#define CS_LOW    SPI_PORT &= ~(1<<SS);  // Assert
-#define CS_HIGH   SPI_PORT |= (1<<SS);   // Deassert
+#define CS_SD_LOW    SPI_PORT &= ~(1<<SS0);   // Assert
+#define CS_SD_HIGH   SPI_PORT |=  (1<<SS0);   // Deassert
 
 
 

@@ -70,10 +70,10 @@ SD_GetMemoryCapacitySC (void)
     uint8_t r1 = 0;
 
     // SEND_CSD (CMD9)
-    CS_LOW;
+    CS_SD_LOW;
     SD_SendCommand(SEND_CSD,0);
     r1 = SD_GetR1(); // Get R1 response
-    if(r1 > 0) { CS_HIGH; return 1; }
+    if(r1 > 0) { CS_SD_HIGH; return 1; }
 
     // ***** Get rest of the response bytes which are the CSD Register and CRC.
     
@@ -88,13 +88,13 @@ SD_GetMemoryCapacitySC (void)
 
     do{ // CSD_STRUCTURE - Must be 0 for SDSC types.
         if( (SD_ReceiveByteSPI() >> 6) == 0 ) break;
-        if(timeout++ >= 0xFF){ CS_HIGH; return 1; }
+        if(timeout++ >= 0xFF){ CS_SD_HIGH; return 1; }
     }while(1);
 
     timeout = 0;
     do{ // TAAC - Bit 7 is reserved so must be 0
         if(!(SD_ReceiveByteSPI()>>7)) break;
-        if(timeout++ >= 0xFF) { CS_HIGH; return 1;}
+        if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1;}
     }while(1);
 
     // NSAC - Any value could be here
@@ -104,7 +104,7 @@ SD_GetMemoryCapacitySC (void)
     do{ // TRAN_SPEED
         resp = SD_ReceiveByteSPI();  
         if((resp == 0x32) || (resp == 0x5A)) break;
-        if(timeout++ >= 0xFF) { CS_HIGH; return 1;}
+        if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1;}
     }while(1);
 
 
@@ -120,11 +120,11 @@ SD_GetMemoryCapacitySC (void)
             {
                 readBlockLength = resp & 0b00001111;
                 if ((readBlockLength < 9) || (readBlockLength > 11)) 
-                    { CS_HIGH; return 1; }
+                    { CS_SD_HIGH; return 1; }
                 flag = 0;
             }
         }
-        if(timeout++ >= 0xFF) { CS_HIGH; return 1;}
+        if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1;}
     }
 
 
@@ -150,10 +150,10 @@ SD_GetMemoryCapacitySC (void)
             
             flag = 0;
         }
-        if(timeout++ >= 0xFF) { CS_HIGH; return 1; }
+        if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1; }
     }
 
-    CS_HIGH;
+    CS_SD_HIGH;
 
     // ******* Calculate memory capacity ******
     
@@ -193,10 +193,10 @@ SD_GetMemoryCapacityHC (void)
     uint8_t r1 = 0;
 
     // SEND_CSD (CMD9)
-    CS_LOW;
+    CS_SD_LOW;
     SD_SendCommand(SEND_CSD,0);
     r1 = SD_GetR1(); // Get R1 response
-    if(r1 > 0) { CS_HIGH; return 1; }
+    if(r1 > 0) { CS_SD_HIGH; return 1; }
     
 
     // Only C_SIZE value is needed to calculate the memory capacity of a SDHC/
@@ -210,25 +210,25 @@ SD_GetMemoryCapacityHC (void)
 
     do{ // CSD_STRUCTURE - Must be 1 for SDHC types.
         if( (resp = (SD_ReceiveByteSPI() >> 6)) == 1 ) break;
-        if(timeout++ >= 0xFF){ CS_HIGH; return 1; }
+        if(timeout++ >= 0xFF){ CS_SD_HIGH; return 1; }
     }while(1);
     
     timeout = 0;
     do{ // TAAC - Must be 0X0E (1ms)
         if( (resp = SD_ReceiveByteSPI()) == 0x0E) break;
-        if(timeout++ >= 0xFF) { CS_HIGH; return 1; }
+        if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1; }
     }while(1);
 
     timeout = 0;
     do{ // NSAC - Must be 0X00 (1ms)
         if( (resp = SD_ReceiveByteSPI()) == 0x00) break;
-        if(timeout++ >= 0xFF) { CS_HIGH; return 1; }
+        if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1; }
     }while(1);
 
     timeout = 0;
     do{ // TRAN_SPEED - Must be 0x32 for current implementation
         if( (resp = SD_ReceiveByteSPI()) == 0x32)  break;
-        if(timeout++ >= 0xFF) { CS_HIGH; return 1; }
+        if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1; }
     }while(1);
 
     // Next 2 bytes are the 12-bit CCC and 4-bit READ_BL_LEN. CCC is of the
@@ -240,11 +240,11 @@ SD_GetMemoryCapacityHC (void)
         {
             if(((resp = SD_ReceiveByteSPI()) >> 4) == 0x05) //CCC[3:0] 
             {
-                if ( (resp & 0x0F) != 9) { CS_HIGH; return 1; }
+                if ( (resp & 0x0F) != 9) { CS_SD_HIGH; return 1; }
                 flag = 0;
             }
         }
-        if(timeout++ >= 0xFF) { CS_HIGH; return 1;}
+        if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1;}
     }
 
     //This section gets the remaining bits leading up to C_SIZE.
@@ -267,9 +267,9 @@ SD_GetMemoryCapacityHC (void)
             cSize |= SD_ReceiveByteSPI();
             flag = 0;
         }
-        if(timeout++ >= 0xFF) { CS_HIGH; return 1; }
+        if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1; }
     }
-    CS_HIGH;
+    CS_SD_HIGH;
 
     uint32_t memoryCapacity = (cSize + 1) * 512000;
     
