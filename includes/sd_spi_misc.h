@@ -14,9 +14,9 @@
 * 
 *
 * FUNCTIONS:
-*  (1) uint32_t SD_GetMemoryCapacitySC (void);
-*  (2) uint32_t SD_GetMemoryCapacityHC (void);
-*  (3) void     SD_FindNonZeroBlockNumbers (uint32_t startBlock, uint32_t endBlock);        
+*  (1) uint32_t sd_spi_get_memory_capacity_sc (void);
+*  (2) uint32_t sd_spi_get_memory_capacity_hc (void);
+*  (3) void     sd_spi_find_nonzero_block_nums (uint32_t startBlock, uint32_t endBlock);           
 *
 *
 *                                                       MIT LICENSE
@@ -61,7 +61,7 @@
 */
 
 uint32_t 
-SD_GetMemoryCapacitySC (void);
+sd_spi_get_memory_capacity_sc (void);
 
 
 
@@ -79,7 +79,7 @@ SD_GetMemoryCapacitySC (void);
 */
 
 uint32_t 
-SD_GetMemoryCapacityHC (void);
+sd_spi_get_memory_capacity_hc (void);
 
 
 
@@ -97,7 +97,7 @@ SD_GetMemoryCapacityHC (void);
 */
 
 void 
-SD_FindNonZeroBlockNumbers (uint32_t startBlockAddress, uint32_t endBlockAddress);
+sd_spi_find_nonzero_block_nums (uint32_t startBlockAddress, uint32_t endBlockAddress);
 
 
 #endif // SD_SPI_MISC_H

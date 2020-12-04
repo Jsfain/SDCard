@@ -14,9 +14,9 @@
 * 
 *
 * FUNCTIONS:
-*  (1) uint32_t SD_GetMemoryCapacitySC(void);
-*  (2) uint32_t SD_GetMemoryCapacityHC(void);
-*  (3) void     SD_FindNonZeroBlockNumbers(uint32_t startBlock, uint32_t endBlock);        
+*  (1) uint32_t sd_spi_get_memory_capacity_sc (void);
+*  (2) uint32_t sd_spi_get_memory_capacity_hc (void);
+*  (3) void     sd_spi_find_nonzero_block_nums (uint32_t startBlock, uint32_t endBlock);        
 *
 *
 *                                                       MIT LICENSE
@@ -65,14 +65,14 @@
 ***********************************************************************************************************************
 */
 uint32_t 
-SD_GetMemoryCapacitySC (void)
+sd_spi_get_memory_capacity_sc (void)
 {
     uint8_t r1 = 0;
 
     // SEND_CSD (CMD9)
     CS_SD_LOW;
-    SD_SendCommand(SEND_CSD,0);
-    r1 = SD_GetR1(); // Get R1 response
+    sd_spi_send_command (SEND_CSD,0);
+    r1 = sd_spi_get_r1(); // Get R1 response
     if(r1 > 0) { CS_SD_HIGH; return 1; }
 
     // ***** Get rest of the response bytes which are the CSD Register and CRC.
@@ -87,22 +87,22 @@ SD_GetMemoryCapacitySC (void)
     uint8_t timeout = 0;
 
     do{ // CSD_STRUCTURE - Must be 0 for SDSC types.
-        if( (SD_ReceiveByteSPI() >> 6) == 0 ) break;
+        if( (sd_spi_receive_byte() >> 6) == 0 ) break;
         if(timeout++ >= 0xFF){ CS_SD_HIGH; return 1; }
     }while(1);
 
     timeout = 0;
     do{ // TAAC - Bit 7 is reserved so must be 0
-        if(!(SD_ReceiveByteSPI()>>7)) break;
+        if(!(sd_spi_receive_byte()>>7)) break;
         if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1;}
     }while(1);
 
     // NSAC - Any value could be here
-    SD_ReceiveByteSPI();
+    sd_spi_receive_byte();
 
     timeout = 0;
     do{ // TRAN_SPEED
-        resp = SD_ReceiveByteSPI();  
+        resp = sd_spi_receive_byte();  
         if((resp == 0x32) || (resp == 0x5A)) break;
         if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1;}
     }while(1);
@@ -114,9 +114,9 @@ SD_GetMemoryCapacitySC (void)
     uint8_t flag = 1;
     while(flag == 1)
     {
-        if((resp = SD_ReceiveByteSPI())&0x7B) //CCC[11:4] 
+        if((resp = sd_spi_receive_byte())&0x7B) //CCC[11:4] 
         {
-            if(((resp = SD_ReceiveByteSPI())>>4) == 0x05) //CCC[3:0]
+            if(((resp = sd_spi_receive_byte())>>4) == 0x05) //CCC[3:0]
             {
                 readBlockLength = resp & 0b00001111;
                 if ((readBlockLength < 9) || (readBlockLength > 11)) 
@@ -133,7 +133,7 @@ SD_GetMemoryCapacitySC (void)
     timeout = 0;
     while(flag == 1)
     {
-        if((resp = SD_ReceiveByteSPI()) & 0xF3) //READ_BLK_PARTIAL[7]   = 1;
+        if((resp = sd_spi_receive_byte()) & 0xF3) //READ_BLK_PARTIAL[7]   = 1;
                                                 //WRITE_BLK_MISALIGN[6] = X;
                                                 //READ_BLK_MISALIGN[5]  = X;
                                                 //DSR_IMP[4] = X;
@@ -141,12 +141,12 @@ SD_GetMemoryCapacitySC (void)
         {           
             cSize = (resp & 0x03);         
             cSize <<= 8;           
-            cSize |= SD_ReceiveByteSPI();
+            cSize |= sd_spi_receive_byte();
             cSize <<= 2;        
-            cSize |= (SD_ReceiveByteSPI() >> 6);
+            cSize |= (sd_spi_receive_byte() >> 6);
             
-            cSizeMult = ( (SD_ReceiveByteSPI() & 0x03) << 1);
-            cSizeMult |= (SD_ReceiveByteSPI() >> 7);
+            cSizeMult = ( (sd_spi_receive_byte() & 0x03) << 1);
+            cSizeMult |= (sd_spi_receive_byte() >> 7);
             
             flag = 0;
         }
@@ -188,15 +188,16 @@ SD_GetMemoryCapacitySC (void)
 ***********************************************************************************************************************
 */
 uint32_t 
-SD_GetMemoryCapacityHC (void)
+sd_spi_get_memory_capacity_hc (void)
 {
     uint8_t r1 = 0;
 
     // SEND_CSD (CMD9)
     CS_SD_LOW;
-    SD_SendCommand(SEND_CSD,0);
-    r1 = SD_GetR1(); // Get R1 response
-    if(r1 > 0) { CS_SD_HIGH; return 1; }
+    sd_spi_send_command (SEND_CSD,0);
+    r1 = sd_spi_get_r1(); // Get R1 response
+    if (r1 > 0) 
+      CS_SD_HIGH; return 1;
     
 
     // Only C_SIZE value is needed to calculate the memory capacity of a SDHC/
@@ -208,26 +209,33 @@ SD_GetMemoryCapacityHC (void)
     uint8_t timeout = 0;
     uint64_t cSize = 0;
 
-    do{ // CSD_STRUCTURE - Must be 1 for SDHC types.
-        if( (resp = (SD_ReceiveByteSPI() >> 6)) == 1 ) break;
-        if(timeout++ >= 0xFF){ CS_SD_HIGH; return 1; }
-    }while(1);
+    do
+      { // CSD_STRUCTURE - Must be 1 for SDHC types.
+        if ((resp = (sd_spi_receive_byte() >> 6)) == 1) 
+          break;
+        if (timeout++ >= 0xFF)
+          { 
+            CS_SD_HIGH; 
+            return 1; 
+          }
+      }
+    while(1);
     
     timeout = 0;
     do{ // TAAC - Must be 0X0E (1ms)
-        if( (resp = SD_ReceiveByteSPI()) == 0x0E) break;
+        if( (resp = sd_spi_receive_byte()) == 0x0E) break;
         if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1; }
     }while(1);
 
     timeout = 0;
     do{ // NSAC - Must be 0X00 (1ms)
-        if( (resp = SD_ReceiveByteSPI()) == 0x00) break;
+        if( (resp = sd_spi_receive_byte()) == 0x00) break;
         if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1; }
     }while(1);
 
     timeout = 0;
     do{ // TRAN_SPEED - Must be 0x32 for current implementation
-        if( (resp = SD_ReceiveByteSPI()) == 0x32)  break;
+        if( (resp = sd_spi_receive_byte()) == 0x32)  break;
         if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1; }
     }while(1);
 
@@ -236,9 +244,9 @@ SD_GetMemoryCapacityHC (void)
     uint8_t flag = 1;
     while(flag == 1)
     {
-        if( ( (resp = SD_ReceiveByteSPI()) & 0x5B) == 0x5B) //CCC[11:4]
+        if( ( (resp = sd_spi_receive_byte()) & 0x5B) == 0x5B) //CCC[11:4]
         {
-            if(((resp = SD_ReceiveByteSPI()) >> 4) == 0x05) //CCC[3:0] 
+            if(((resp = sd_spi_receive_byte()) >> 4) == 0x05) //CCC[3:0] 
             {
                 if ( (resp & 0x0F) != 9) { CS_SD_HIGH; return 1; }
                 flag = 0;
@@ -253,18 +261,18 @@ SD_GetMemoryCapacityHC (void)
 
     while(flag == 1)
     {
-        resp = SD_ReceiveByteSPI();
+        resp = sd_spi_receive_byte();
         if( (resp == 0) || (resp == 16) ) //READ_BLK_PARTIAL[7] = 0;
                                           //WRITE_BLK_MISALIGN[6] = 0;
                                           //READ_BLK_MISALIGN[5] = 0;
                                           //DSR_IMP[4] = X;
                                           //RESERVERED[3:0] = 0;
         {
-            cSize = (SD_ReceiveByteSPI() & 0x3F); // Only [5:0] is C_SIZE           
+            cSize = (sd_spi_receive_byte() & 0x3F); // Only [5:0] is C_SIZE           
             cSize <<= 8;           
-            cSize |= SD_ReceiveByteSPI();
+            cSize |= sd_spi_receive_byte();
             cSize <<= 8;        
-            cSize |= SD_ReceiveByteSPI();
+            cSize |= sd_spi_receive_byte();
             flag = 0;
         }
         if(timeout++ >= 0xFF) { CS_SD_HIGH; return 1; }
@@ -292,7 +300,7 @@ SD_GetMemoryCapacityHC (void)
 ***********************************************************************************************************************
 */
 void 
-SD_FindNonZeroBlockNumbers (uint32_t startBlockAddress, uint32_t endBlockAddress)
+sd_spi_find_nonzero_block_nums (uint32_t startBlockAddress, uint32_t endBlockAddress)
 {
     //Block ds;
     uint8_t ds[512];
@@ -304,14 +312,14 @@ SD_FindNonZeroBlockNumbers (uint32_t startBlockAddress, uint32_t endBlockAddress
                   blockNumber++ )
     {
         address = blockNumber;
-        SD_ReadSingleBlock(address, ds);       
+        sd_spi_read_single_block (address, ds);       
         
         for(int i = 0; i < BLOCK_LEN; i++)
         {
             if(ds[i]!=0)
             {
                 if(tab%5==0) print_str("\n\r");
-                print_str("\t\t");print_dec(blockNumber);
+                print_str ("\t\t"); print_dec (blockNumber);
                 tab++;
                 break;
             }

@@ -53,20 +53,20 @@
 #define DD_SCK      DDB1
 #define DD_MOSI     DDB2
 #define DD_MISO     DDB3
-// Data Direction for Device select PINS
-#define DD_SS0      DDB0
-#define DD_SS1      DDB4
 
 
 // SPI Port Assignment.
 #define SPI_PORT    PORTB
-#define SCK         PB1
+#define SCK         PB1 
 #define MOSI        PB2
 #define MISO        PB3
-// Device Select Pins
+
+
+// Chip Select Options
+#define DD_SS0      DDB0
+#define DD_SS1      DDB4
 #define SS0         PB0
 #define SS1         PB4
-
 
 /*
 ***********************************************************************************************************************

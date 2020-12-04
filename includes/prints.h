@@ -57,7 +57,7 @@
 */
 
 void 
-print_dec(uint32_t num);
+print_dec (uint32_t num);
 
 
 
@@ -75,7 +75,7 @@ print_dec(uint32_t num);
 */
 
 void 
-print_bin(uint32_t num);
+print_bin (uint32_t num);
 
 
 
@@ -90,7 +90,7 @@ print_bin(uint32_t num);
 */
 
 void 
-print_hex(uint32_t num);
+print_hex (uint32_t num);
 
 
 
@@ -109,6 +109,6 @@ print_hex(uint32_t num);
 */
 
 void 
-print_str(char * str);
+print_str (char * str);
 
 #endif //PRINTS_H
