@@ -87,8 +87,8 @@ pvt_crc7 (uint64_t tca);
  *                                                  Flag and the most recent R1 Response Flag. The Initialization Error
  *                                                  flag will be set in bits 8 to 19 of the returned value. The R1 
  *                                                  Response flags will be set in bits 0 to 7. These can be read by 
- *                                                  passing the returned value to sd_spi_print_init_error(uint32_t err)
- *                                                  and sd_spi_print_r1(uint8_t r1), respectively.
+ *                                                  passing the returned value to sd_spi_print_init_error(err) and
+ *                                                  sd_spi_print_error (r1), respectively.
 ***********************************************************************************************************************
 */
 
@@ -270,7 +270,7 @@ sd_spi_mode_init (CTV * ctv)
 void 
 sd_spi_send_byte (uint8_t byte)
 {
-  SPI_master_transmit (byte);
+  spi_master_transmit (byte);
 }
 // END sd_spi_send_byte(...)
 
@@ -297,7 +297,7 @@ uint8_t
 sd_spi_receive_byte (void)
 {
   sd_spi_send_byte(0xFF);
-  return SPI_master_read();
+  return spi_master_read();
 }
 // END sd_spi_receive_byte()
 

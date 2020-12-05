@@ -13,10 +13,10 @@
 *
 *
 * FUNCTIONS:
-*   (1) void print_dec (uint32_t num);
-*   (2) void print_bin (uint32_t num);
-*   (3) void print_hex (uint32_t num);
-*   (4) void print_str (char * str;
+*   (1) void print_dec (uint32_t num)
+*   (2) void print_bin (uint32_t num)
+*   (3) void print_hex (uint32_t num)
+*   (4) void print_str (char * str)
 *                                                 
 *                                                       MIT LICENSE
 *

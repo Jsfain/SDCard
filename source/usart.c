@@ -14,9 +14,9 @@
 *
 *
 * FUNCTIONS:
-*   (1) void    USART_init (void)
-*   (2) uint8_t USART_receive (void)
-*   (3) void    USART_transmit (uint8_t data)
+*   (1) void    usart_init (void)
+*   (2) uint8_t usart_receive (void)
+*   (3) void    usart_transmit (uint8_t data)
 *                                   
 *                                              
 *                                                       MIT LICENSE
@@ -54,7 +54,7 @@
 */
 
 void 
-USART_init (void)
+usart_init (void)
 {
     //Set baud rate
     UBRR0H = (uint8_t)((UBRR_VALUE) >> 8);
@@ -83,7 +83,7 @@ USART_init (void)
 */
 
 uint8_t 
-USART_receive (void)
+usart_receive (void)
 {
     // Wait for data to be received by polling the receive complete flag
     while ( !(UCSR0A & (1 << RXC0))) ;
@@ -106,7 +106,7 @@ USART_receive (void)
 */
 
 void 
-USART_transmit (uint8_t data)
+usart_transmit (uint8_t data)
 {
     //Wait for transmit buffer to be empty by polling Data Register Empty flag
     while( !( UCSR0A & (1 << UDRE0)) ) ;

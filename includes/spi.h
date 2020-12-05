@@ -14,9 +14,9 @@
 * standard implementations.
 * 
 * FUNCTIONS:
-*   (1) void    SPI_master_init (void);
-*   (2) void    SPI_master_transmit (uint8_t byte);
-*   (3) uint8_t SPI_master_read (void);
+*   (1) void    spi_master_init (void);
+*   (2) void    spi_master_transmit (uint8_t byte);
+*   (3) uint8_t spi_master_read (void);
 *           
 *                                
 *                                                       MIT LICENSE
@@ -86,7 +86,7 @@
 */
 
 void 
-SPI_master_init (void);
+spi_master_init (void);
 
 
 
@@ -103,7 +103,7 @@ SPI_master_init (void);
 */
 
 void 
-SPI_master_transmit (uint8_t byte);
+spi_master_transmit (uint8_t byte);
 
 
 
@@ -121,7 +121,7 @@ SPI_master_transmit (uint8_t byte);
 */
 
 uint8_t 
-SPI_master_read (void);
+spi_master_read (void);
 
 
 

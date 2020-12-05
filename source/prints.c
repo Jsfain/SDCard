@@ -91,7 +91,7 @@ print_dec (uint32_t num)
     
     //print characters in decimal array
     for (int i = len-1; i >= 0; i--) 
-      USART_transmit (dec[i]); 
+      usart_transmit (dec[i]); 
 }
 //END print_int(...)
 
@@ -149,9 +149,9 @@ print_bin (uint32_t num)
     // print a space every 4 bits.
     for (int i = len-1; i >= 0; i--)
     {
-        USART_transmit (bin[i]);
+        usart_transmit (bin[i]);
         if ((i % 4) == 0) 
-          USART_transmit (' ');
+          usart_transmit (' ');
     }
 }
 //END print_bin(...)
@@ -205,7 +205,7 @@ print_hex(uint32_t num)
     
     //print characters in hexadecimal array.
     for (int i = len-1; i >= 0; i--) 
-      USART_transmit (hex[i]);
+      usart_transmit (hex[i]);
 }    
 //END print_hex(...)
 
@@ -230,7 +230,7 @@ print_str(char * str)
     int i = 0;
     while(str[i] != '\0' && i < 1001)
     {
-        USART_transmit(str[i]);
+        usart_transmit(str[i]);
         i++;
     };
 }

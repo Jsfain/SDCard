@@ -14,9 +14,9 @@
 *
 *
 * FUNCTIONS:
-*   (1) void    SPI_master_init (void);
-*   (2) void    SPI_master_transmit (uint8_t byte);
-*   (3) uint8_t SPI_master_read (void);                                                
+*   (1) void    spi_master_init (void);
+*   (2) void    spi_master_transmit (uint8_t byte);
+*   (3) uint8_t spi_master_read (void);                                                
 *
 *
 *                                                       MIT LICENSE
@@ -60,7 +60,7 @@
 */
 
 void 
-SPI_master_init (void)
+spi_master_init (void)
 {
     // Set MOSI, SCK, and SS of SPI port as outputs. MISO is input.
     DDR_SPI = (1 << DD_MOSI) | (1 << DD_SCK) | (1 << DD_SS0) | (1 << DD_SS1);
@@ -92,7 +92,7 @@ SPI_master_init (void)
 */
 
 void 
-SPI_master_transmit (uint8_t byte)
+spi_master_transmit (uint8_t byte)
 {
     SPDR = byte; //begin data transmission by loading data byte into SPDR
     while ( !(SPSR & (1 << SPIF))); //Wait for transmission complete
@@ -114,7 +114,7 @@ SPI_master_transmit (uint8_t byte)
 */
 
 uint8_t 
-SPI_master_read (void)
+spi_master_read (void)
 { 
   return SPDR;
 }

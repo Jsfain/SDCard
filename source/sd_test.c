@@ -46,8 +46,8 @@ uint32_t enterBlockNumber();
 
 int main(void)
 {
-  USART_init();
-  SPI_master_init();
+  usart_init();
+  spi_master_init();
 
 
   print_str("\n\r DDR_SPI = 0x"); print_hex(DDR_SPI);
@@ -463,8 +463,8 @@ int main(void)
               print_str ("\n\rYou have selected to print "); print_dec(numberOfBlocks);
               print_str (" blocks beginning at block number "); print_dec(startBlockNumber);
               print_str ("\n\rIs this correct? (y/n)");
-              answer = USART_receive();
-              USART_transmit (answer);
+              answer = usart_receive();
+              usart_transmit (answer);
               print_str ("\n\r");
             }
           while (answer != 'y');
@@ -494,8 +494,8 @@ int main(void)
             }
 
           print_str ("\n\rPress 'q' to quit: ");
-          answer = USART_receive();
-          USART_transmit (answer);
+          answer = usart_receive();
+          usart_transmit (answer);
         }
       while (answer != 'q');
       // ********************************************************************
@@ -544,7 +544,7 @@ int main(void)
 
   // Something to do after SD card testing has completed.
   while(1)
-    USART_transmit(USART_receive());
+    usart_transmit(usart_receive());
   return 0;
 }
 
@@ -560,7 +560,7 @@ uint32_t enterBlockNumber()
   uint8_t c;
   uint32_t blockNumber = 0;
 
-  c = USART_receive();
+  c = usart_receive();
   
   while (c != '\r')
     {
@@ -585,7 +585,7 @@ uint32_t enterBlockNumber()
           print_str("\n\rblock number is too large.");
           print_str("\n\rEnter value < 4194304\n\r");
         }
-      c = USART_receive();
+      c = usart_receive();
     }
   return blockNumber;
 }
