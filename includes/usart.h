@@ -14,9 +14,9 @@
 * 
 *
 * FUNCTIONS:
-*   (1) void    USART_Init (void)
-*   (2) uint8_t USART_Receive (void)
-*   (3) void    USART_Transmit (uint8_t data)
+*   (1) void    USART_init (void)
+*   (2) uint8_t USART_receive (void)
+*   (3) void    USART_transmit (uint8_t data)
 *                                   
 *
 *                                                       MIT LICENSE
@@ -77,7 +77,7 @@
 */
 
 void 
-USART_Init (void);
+USART_init (void);
 
 
 
@@ -96,7 +96,7 @@ USART_Init (void);
 */
 
 uint8_t 
-USART_Receive (void);
+USART_receive (void);
 
 
 
@@ -112,7 +112,7 @@ USART_Receive (void);
 */
 
 void 
-USART_Transmit (uint8_t data);
+USART_transmit (uint8_t data);
 
 
 

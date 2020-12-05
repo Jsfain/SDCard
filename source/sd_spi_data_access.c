@@ -179,10 +179,10 @@ sd_spi_print_single_block (uint8_t * blockArr)
       for (offset = row * 16; offset < (row*16) + 16; offset++)
         {
             if (blockArr[offset] < 32) 
-              USART_Transmit ( ' ' ); 
+              USART_transmit ( ' ' ); 
             else if (blockArr[offset] < 128)
-              USART_Transmit (blockArr[offset]);
-            else USART_Transmit ('.');
+              USART_transmit (blockArr[offset]);
+            else USART_transmit ('.');
         }
     }    
   print_str ("\n\n\r");
