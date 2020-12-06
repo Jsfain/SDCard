@@ -272,7 +272,7 @@ sd_spi_send_byte (uint8_t byte)
 {
   spi_master_transmit (byte);
 }
-// END sd_spi_send_byte(...)
+// END sd_spi_send_byte
 
 
 
@@ -299,7 +299,7 @@ sd_spi_receive_byte (void)
   sd_spi_send_byte(0xFF);
   return spi_master_read();
 }
-// END sd_spi_receive_byte()
+// END sd_spi_receive_byte
 
 
 
@@ -340,7 +340,7 @@ sd_spi_send_command (uint8_t cmd, uint32_t arg)
   sd_spi_send_byte ((uint8_t)(tcacs >> 8));
   sd_spi_send_byte ((uint8_t)tcacs);
 }
-// END  sd_spi_send_command(...)
+// END  sd_spi_send_command
 
 
 
@@ -354,7 +354,7 @@ sd_spi_send_command (uint8_t cmd, uint32_t arg)
  * 
  * Return      : R1 Response Flags
  * 
- * Note        : Call sd_spi_print_r1(uint8_t r1) to read the R1 response. 
+ * Note        : Call sd_spi_print_r1(r1) to read the R1 response. 
 ***********************************************************************************************************************
 */
 
@@ -371,7 +371,7 @@ sd_spi_get_r1 (void)
     }
   return r1;
 }
-// END sd_spi_get_r1()
+// END sd_spi_get_r1
 
 
 
@@ -407,7 +407,7 @@ sd_spi_print_r1 (uint8_t r1)
   if (r1 == 0)
     print_str (" OUT_OF_IDLE");
 }
-// END SD_Printr1(...)
+// END SD_Printr1
 
 
 
@@ -448,7 +448,7 @@ sd_spi_print_init_error (uint32_t err)
   if (err == 0)
     print_str (" INIT_SUCCESS\n\r");
 }
-// END sd_printInitErrors(...)
+// END sd_printInitErrors
 
 
 
@@ -496,4 +496,4 @@ pvt_crc7 (uint64_t tca)
     }
   return result;
 }
-// END _CRC7(...)
+// END pvt_crc7

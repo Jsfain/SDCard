@@ -63,10 +63,10 @@ void
 spi_master_init (void)
 {
     // Set MOSI, SCK, and SS of SPI port as outputs. MISO is input.
-    DDR_SPI = (1 << DD_MOSI) | (1 << DD_SCK) | (1 << DD_SS0) | (1 << DD_SS1);
+    DDR_SPI = (1 << DD_MOSI) | (1 << DD_SCK) | (1 << DD_SS0) | (1 << DD_SS1) | (1 << DD_SS2);
 
     // Make sure SS is high (not asserted) before initializing SPI.
-    SPI_PORT = (1 << SS0) | (1 << SS1);
+    SPI_PORT = (1 << SS0) | (1 << SS1) | (1 << SS2);
     
     // PRSPI in PPR0 must be 0 to enable SPI. Should be set by default.
     PRR0 &= ~(1 << PRSPI);

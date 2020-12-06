@@ -62,11 +62,17 @@
 #define MISO        PB3
 
 
-// Chip Select Options
+// Chip Select 0 
 #define DD_SS0      DDB0
-#define DD_SS1      DDB4
 #define SS0         PB0
+
+// Chip Select 1
+#define DD_SS1      DDB4
 #define SS1         PB4
+
+// Chip Select 2
+#define DD_SS2      DDB5
+#define SS2         PB5
 
 
 /*

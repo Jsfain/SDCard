@@ -72,8 +72,8 @@
 
 
 // *********** Define CS for SPI and settings
-#define CS_SD_LOW    SPI_PORT &= ~(1 << PB0);  // Assert
-#define CS_SD_HIGH   SPI_PORT |=  (1 << PB0);  // Deassert
+#define CS_SD_LOW    SPI_PORT = ((SPI_PORT & ~(1 << SS0)) | (1 << SS1) | (1 << SS2));  // Assert
+#define CS_SD_HIGH   SPI_PORT |=  (1 << SS0);  // Deassert
 
 
 
