@@ -270,7 +270,7 @@ sd_spi_mode_init (CTV * ctv)
 void 
 sd_spi_send_byte (uint8_t byte)
 {
-  spi_master_transmit (byte);
+  spi_masterTransmit (byte);
 }
 // END sd_spi_send_byte
 
@@ -297,7 +297,7 @@ uint8_t
 sd_spi_receive_byte (void)
 {
   sd_spi_send_byte(0xFF);
-  return spi_master_read();
+  return spi_masterRead();
 }
 // END sd_spi_receive_byte
 

@@ -1,41 +1,19 @@
 /*
-***********************************************************************************************************************
-*                                                   AVR-GENERAL MODULE
+*******************************************************************************
+*                                AVR-GENERAL MODULE
 *
 * File    : USART.C
 * Version : 0.0.0.1 
 * Author  : Joshua Fain
 * Target  : ATMega1280
-*
+* License : MIT
+* Copyright (c) 2020
+* 
 *
 * DESCRIPTION:
-* Defines standard functions declared in USART.H used for initializing, sending, and recieving data via USART0 on 
-* the target device. Most of these are essentially the definitions found in the ATmega datasheet.
-*
-*
-* FUNCTIONS:
-*   (1) void    usart_init (void)
-*   (2) uint8_t usart_receive (void)
-*   (3) void    usart_transmit (uint8_t data)
-*                                   
-*                                              
-*                                                       MIT LICENSE
-*
-* Copyright (c) 2020 Joshua Fain
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
-* documentation files (the "Software"), to deal in the Software without restriction, including without limitation the 
-* rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to 
-* permit ersons to whom the Software is furnished to do so, subject to the following conditions: The above copyright 
-* notice and this permission notice shall be included in all copies or substantial portions of the Software.
-* 
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE 
-* WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-* COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-* OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-***********************************************************************************************************************
+* Functions for interacting with the ATMega's USART0 port.
+*******************************************************************************
 */
-
 
 
 #include <stdint.h>
@@ -44,13 +22,24 @@
 
 
 
+
+
 /*
-***********************************************************************************************************************
- *                                                   INITIALIZE USART
- * 
- * Description  : Initializes USART0 of target device by setting the baud rate, enabling transmit and receive and 
- *                defining data frame format of 8 data bits and 1 stop bit.
-***********************************************************************************************************************
+*******************************************************************************
+*******************************************************************************
+ *                     
+ *                                  FUNCTIONS
+ *  
+*******************************************************************************
+*******************************************************************************
+*/
+
+/*
+-------------------------------------------------------------------------------
+|                                INITIALIZE USART
+|                                        
+| Description : Initializes USART0 of the ATMega target device.
+-------------------------------------------------------------------------------
 */
 
 void 
@@ -70,16 +59,13 @@ usart_init (void)
 
 
 /*
-***********************************************************************************************************************
- *                                               RECEIVE BYTE VIA USART
- * 
- * Description  : Standard USART receive function used to get the byte received in USART0 by polling the RXC0 flag and
- *                then returning the byte in UDR0.
- * 
- * Argument     : void
- * 
- * Returns      : data byte received in UDR0.
-***********************************************************************************************************************
+-------------------------------------------------------------------------------
+|                             RECEIVE BYTE VIA USART
+|                                        
+| Description : Receives a byte using the USART0 on the ATmega target device.
+|
+| Returns     : byte received into UDR0 via USART0.
+-------------------------------------------------------------------------------
 */
 
 uint8_t 
@@ -95,14 +81,13 @@ usart_receive (void)
 
 
 /*
-***********************************************************************************************************************
- *                                               TRANSMIT BYTE VIA USART
- * 
- * Description  : Standard USART transmit function used to transmit a data byte by polling the UDRE0 flag. When the 
- *                flag is set, UDR0 is empty and a new data byte can be loaded into UDR0 to be sent by USART. 
- * 
- * Argument     : byte    Unsigned data byte to send via USART.
-***********************************************************************************************************************
+-------------------------------------------------------------------------------
+|                            TRANSMIT BYTE VIA USART
+|                                        
+| Description : Sends a byte to another device via the USART0.
+|
+| Arguments   : byte to send via USART0.
+-------------------------------------------------------------------------------
 */
 
 void 
