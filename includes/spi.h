@@ -56,10 +56,6 @@
 #define DD_SS1      DDB4
 #define SS1         PB4
 
-// Chip Select 2
-#define DD_SS2      DDB5
-#define SS2         PB5
-
 
 /*
 *******************************************************************************
