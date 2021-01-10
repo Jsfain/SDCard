@@ -10,7 +10,8 @@
 *
 *
 * DESCRIPTION:
-* Contains main() and includes some examples to test the AVR-SD Card Module
+* Examples to implement and test various capabilities of the AVR-SD Card 
+* Module. Contains main().
 *******************************************************************************
 */
 
@@ -36,45 +37,54 @@ int main(void)
 
   // ************** SD CARD INITILIAIZATION 
   //
-  // Initialize SD card and set ctv instance using the intialization routine.
+  // Set ctv and initialize the SD card using the initialization 
+  // routine. An instance of CTV is required to be set in order
+  // to determine how to address the blocks on the SD card.
 
   CTV ctv;
 
-  uint32_t initResponse;
+  uint32_t initResp;
 
   // Attempt, up to 5 times, to initialize the SD card.
   for (uint8_t i = 0; i < 5; i++)
     {
-      print_str ("\n\n\r SD Card Initialization Attempt # "); print_dec(i);
-      initResponse = sd_spiModeInit (&ctv);
+      print_str ("\n\n\r >> SD Card Initialization Attempt "); 
+      print_dec(i);
+      initResp = sd_spiModeInit (&ctv);
 
-      if (((initResponse & 0xFF) != 0) && ((initResponse & 0xFFF00) != 0))
+      // If R1 and Initialization Error Flag portions of the response
+      // are both 0 then the initialization was successful.
+      if (((initResp & 0xFF) != 0) && ((initResp & 0xFFF00) != 0))
         {    
-          print_str ("\n\n\r FAILED INITIALIZING SD CARD");
-          print_str ("\n\r Initialization Error Response: "); 
-          sd_printInitError (initResponse);
-          print_str ("\n\r R1 Response: "); sd_printR1 (initResponse);
+          print_str (": FAILED TO INITIALIZE SD CARD.");
+          print_str (" Initialization Error Response: "); 
+          sd_printInitError (initResp);
+          print_str (", R1 Response: "); 
+          sd_printR1 (initResp);
         }
       else
         {   
-          print_str ("\n\r SUCCESSFULLY INITIALIZED SD CARD");
+          print_str (": SD CARD INITIALIZATION SUCCESSFUL");
           break;
         }
     }
 
 
   // initialization successful
-  if (initResponse == 0)
+  if (initResp == 0)
     {      
-      // Some variables for addressing
+      // Some variables used for block addressing
       // in the subsequent functions
       uint32_t startBlckNum;
       uint32_t endBlckNum;
       uint32_t blckNum;
       uint32_t numOfBlcks;
 
+      // Array to hold the contents of an SD card block
       uint8_t  blckArr[512];
-      uint16_t err16; // 16-bit returned errors
+
+      // 16-bit errors
+      uint16_t err16; 
       
 
       // ********** TEST: sd_readSingleBlock() 
@@ -85,9 +95,12 @@ int main(void)
 
       blckNum = 8192; // random block number
 
-      if (ctv.type == SDHC) 
+      // read in a single block of BLOCK_LEN 
+      // located at blckNum on the SD card.
+
+      if (ctv.type == SDHC) // SDHC? card is block addressable
         err16 = sd_readSingleBlock (blckNum, blckArr);
-      else // SDSC
+      else // SDSC is byte addressable
         err16 = sd_readSingleBlock (blckNum * BLOCK_LEN, blckArr);
       
       if (err16 != READ_SUCCESS)
@@ -112,7 +125,7 @@ int main(void)
       // **********
 
 
-
+/*
       // ********** TEST: sd_printMultipleBlocks()
       //
       // Print multiple, consecutive SD card blocks begginging at blckNum.
@@ -488,7 +501,7 @@ int main(void)
       while (answer != 'q');
       // **********
 
-
+*/
 
       // ********************************************************************
       //                          SD_SPI_MISC FUNCTIONS
