@@ -20,12 +20,13 @@
 
 #include <stdint.h>
 #include <avr/io.h>
-#include "../includes/sd_spi_base.h"
-#include "../includes/sd_spi_data_access.h"
-#include "../includes/sd_spi_misc.h"
-#include "..//includes/usart.h"
-#include "../includes/spi.h"
-#include "../includes/prints.h"
+#include "prints.h"
+#include "spi.h"
+#include "sd_spi_base.h"
+#include "sd_spi_data_access.h"
+#include "sd_spi_misc.h"
+
+
 
 
 

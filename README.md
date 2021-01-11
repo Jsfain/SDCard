@@ -1,4 +1,4 @@
-# AVR-SD Card Module
+# About AVR-SD Card 
 Use an AVR microcontroller to execute SD card commands and handle the responses via SPI.
 
 

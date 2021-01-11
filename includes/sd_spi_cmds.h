@@ -1,14 +1,38 @@
+/*
+Header to define the SD card commands available in SPI mode.
+
+File    : SD_SPI_CMDS.H
+Version : 0.0.0.1 
+Author  : Joshua Fain
+Target  : ATMega1280
+License : MIT
+Copyright (c) 2020-2021
+*/
+
+
 #ifndef SD_SPI_CMDS_H
 #define SD_SPI_CMDS_H
 
-/*! \file sd_spi_cmds.h*/
+/*! \file sd_spi_cmds.h */
 /*! \defgroup sd_spi_cmds <sd_spi_cmds.h>
  *  \brief **SD Card SPI Mode commands** 
- *  \note Application commands require sending APP_CMD (55) to the SD card
- *        first to signal that the next command is an app command. 
+ *  \attention Application commands require sending APP_CMD (55) to the SD card
+ *  first to signal that the next command is an app command. 
  */
 
-// Commands available to an SD Card operating in SPI mode
+
+/*
+*******************************************************************************
+*******************************************************************************
+ *                     
+ *                                   MACROS
+ *  
+*******************************************************************************
+*******************************************************************************
+*/
+
+// ----------------------------------------------------------------------------
+//                                                             SD Card Commands
 /*! \ingroup sd_spi_cmds */
 #define GO_IDLE_STATE               0       //CMD0
 /*! \ingroup sd_spi_cmds */

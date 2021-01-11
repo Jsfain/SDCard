@@ -1,28 +1,20 @@
 /*
-*******************************************************************************
-*                                  AVR-SD CARD MODULE
-*
-* File    : SD_SPI_BASE.C
-* Version : 0.0.0.1 
-* Author  : Joshua Fain
-* Target  : ATMega1280
-* License : MIT
-* Copyright (c) 2020
-* 
-*
-* DESCRIPTION:
-* Base SPI mode SD card functions to handle the basic physical interaction of 
-* the AVR microcontroller with an SD card operating in SPI Mode.
-*******************************************************************************
-*/
+  Implementation of SD_SPI_BASE.H
 
+  File    : SD_SPI_BASE.C
+  Version : 0.0.0.1 
+  Author  : Joshua Fain
+  Target  : ATMega1280
+  License : MIT
+  Copyright (c) 2020
+*/
 
 
 #include <stdint.h>
 #include <avr/io.h>
-#include "../includes/sd_spi_base.h"
-#include "../includes/spi.h"
-#include "../includes/prints.h"
+#include "prints.h"
+#include "spi.h"
+#include "sd_spi_base.h"
 
 
 
@@ -55,25 +47,12 @@ pvt_crc7 (uint64_t tca);
 *******************************************************************************
 */
 
-/*
--------------------------------------------------------------------------------
-|                      INITIALIZE AN SD CARD INTO SPI MODE 
-|                                        
-| Description : Initializes the SD card to operate in spi mode and sets members
-|               of the CTV struct. This function must be called first before 
-|               implementing any other part of the AVR-SD Card module.
-|
-| Argument    : *ctv    - ptr to a CTV instance. The members of this instance
-|                         will be set by this function. The 'type' setting is
-|                         critical for block address handling.
-|
-| Return      : Initialization Error Response. This will include an 
-|               Initialization Error Flag and the most recent R1 Response Flag.
-|               To read the R1 response, pass it to sd_printR1(err). To read
-|               the Initialization Error Flag, call sd_printError(err).
--------------------------------------------------------------------------------
-*/
-
+/*-----------------------------------------------------------------------------
+|                                           INITIALIZE AN SD CARD INTO SPI MODE
+| 
+| ARG: *ctv - ptr to an instance of CTV 
+| RET: Initialization Error Response.
+-----------------------------------------------------------------------------*/
 uint32_t 
 sd_spiModeInit (CTV * ctv)
 {
@@ -233,21 +212,12 @@ sd_spiModeInit (CTV * ctv)
 
 
 
-/*
--------------------------------------------------------------------------------
-|                             SEND BYTE TO THE SD CARD
-|                                        
-| Description : Sends a single byte to the SD Card via the SPI port. This
-|               function, along with sd_receiveByteSPI(), are the SPI port 
-|               interfacing functions.
+/*-----------------------------------------------------------------------------
+|                                                      SEND BYTE TO THE SD CARD
 |
-| Argument    : byte   - byte packet that will be sent to the SD Card via SPI.
-|
-| Note       : Call as many times as required to send the complete data packet,
-|              token, command, etc...
--------------------------------------------------------------------------------
-*/
-
+| ARG : byte - byte packet to be sent to the SD card via the AVR's SPI port.
+| NOTE: requires SPI.H
+-----------------------------------------------------------------------------*/
 void
 sd_sendByteSPI (uint8_t byte)
 {
@@ -256,21 +226,13 @@ sd_sendByteSPI (uint8_t byte)
 
 
 
-/*
--------------------------------------------------------------------------------
-|                             RECEIVE BYTE FROM THE SD CARD
-|                                        
-| Description : Gets a single byte sent to the SD Card sent by a device via SPI.
-|               This function, along with sd_sendByteSPI() are the SPI port 
-|               interfacing functions. 
+/*-----------------------------------------------------------------------------
+|                                                 RECEIVE BYTE FROM THE SD CARD
 |
-| Return      : byte that will be received by the SD card via the SPI port.
-|
-| Note        : Call as many times as necessary to get the complete data
-|               packet, token, error response, etc... received by the SD card.
--------------------------------------------------------------------------------
-*/
-
+| ARG : Void 
+| RET : single byte packet received from the SD card into the AVR's SPI port.
+| NOTE: Requires SPI.H
+-----------------------------------------------------------------------------*/
 uint8_t 
 sd_receiveByteSPI (void)
 {
@@ -280,17 +242,12 @@ sd_receiveByteSPI (void)
 
 
 
-/*
--------------------------------------------------------------------------------
-|                             SEND COMMAND TO SD CARD
-|                                        
-| Description : Send a command and argument to the SD Card.
+/*-----------------------------------------------------------------------------
+|                                                       SEND COMMAND TO SD CARD
 |
-| Argument    : cmd    - 8-bit SD Card command to send to the SD Card. 
-|             : arg    - 32-bit argument to be sent with the command.
--------------------------------------------------------------------------------
-*/
-
+| ARG : cmd - 8-bit SD Card command to send to the SD Card.
+|     : arg - 32-bit argument to be sent with the command.
+-----------------------------------------------------------------------------*/
 void 
 sd_sendCommand (uint8_t cmd, uint32_t arg)
 {
@@ -320,21 +277,13 @@ sd_sendCommand (uint8_t cmd, uint32_t arg)
 
 
 
-/*
--------------------------------------------------------------------------------
-|                             GET THE R1 RESPONSE
-|                                        
-| Description : Gets the R1 response after sending a cmd/arg to the SD card. 
+/*-----------------------------------------------------------------------------
+|                                                            GET THE R1 RESPONSE
 |
-| Return      : R1 Response Flags.
-|               
-| Note        : - Always call immediately after sd_sendCommand().
-|               - Call sd_printR1(r1) to read the R1 response.
-|               - R1_TIMEOUT is not a true SD card R1 response flag but is used
-|                 here to indicate that the R1 response was not received. 
--------------------------------------------------------------------------------
-*/
-
+| ARG : void
+| RET : R1 Response Flags
+| NOTE: Call immediately after sd_sendCommand().
+-----------------------------------------------------------------------------*/
 uint8_t 
 sd_getR1 (void)
 {
@@ -351,16 +300,11 @@ sd_getR1 (void)
 
 
 
-/*
--------------------------------------------------------------------------------
-|                             PRINT THE R1 RESPONSE
-|                                        
-| Description : prints the R1 response flag(s) returned by sd_getR1(r1). 
+/*-----------------------------------------------------------------------------
+|                                                         PRINT THE R1 RESPONSE
 |
-| Argument    : r1    - byte. R1 response flag(s)
--------------------------------------------------------------------------------
-*/
-
+| ARG : r1 - R1 response returned by sd_getR1().
+-----------------------------------------------------------------------------*/
 void 
 sd_printR1 (uint8_t r1)
 {
@@ -386,43 +330,35 @@ sd_printR1 (uint8_t r1)
 
 
 
-/*
--------------------------------------------------------------------------------
-|                     PRINT THE INITIALIZATION RESPONSE FLAG
-|                                        
-| Description : Print the Initialization Error Flag portion of the response
-|               returned by sd_spiModeInit(). 
+/*-----------------------------------------------------------------------------
+|                                        PRINT THE INITIALIZATION RESPONSE FLAG
 |
-| Argument    : err    - Initialization error response.
-|
-| Notes       : Though the Init Error Flags are only bits 8 to 19 of the Init
-|               Error Response, it is valid to pass the entire Init Error 
-|               Response to this function.
--------------------------------------------------------------------------------
-*/
-
+| ARG : initResp - response returned by sd_spiModeInit().
+| NOTE: only prints the initialization error flag portion of the initResp. To 
+|       read the R1 portion, pass initResp to sd_printR1().
+-----------------------------------------------------------------------------*/
 void 
-sd_printInitError (uint32_t err)
+sd_printInitError (uint32_t initResp)
 {
-  if (err & FAILED_GO_IDLE_STATE)
+  if (initResp & FAILED_GO_IDLE_STATE)
     print_str (" FAILED_GO_IDLE_STATE,");
-  if (err & FAILED_SEND_IF_COND)
+  if (initResp & FAILED_SEND_IF_COND)
     print_str (" FAILED_SEND_IF_COND,");
-  if (err & UNSUPPORTED_CARD_TYPE)
+  if (initResp & UNSUPPORTED_CARD_TYPE)
     print_str (" UNSUPPORTED_CARD_TYPE,");
-  if (err & FAILED_CRC_ON_OFF)
+  if (initResp & FAILED_CRC_ON_OFF)
     print_str (" FAILED_CRC_ON_OFF,");
-  if (err & FAILED_APP_CMD)
+  if (initResp & FAILED_APP_CMD)
     print_str (" FAILED_APP_CMD,");
-  if (err & FAILED_SD_SEND_OP_COND)
+  if (initResp & FAILED_SD_SEND_OP_COND)
     print_str (" FAILED_SD_SEND_OP_COND,");
-  if (err & OUT_OF_IDLE_TIMEOUT)
+  if (initResp & OUT_OF_IDLE_TIMEOUT)
     print_str (" OUT_OF_IDLE_TIMEOUT,");
-  if (err & FAILED_READ_OCR)
+  if (initResp & FAILED_READ_OCR)
     print_str (" FAILED_READ_OCR,");
-  if (err & POWER_UP_NOT_COMPLETE)
+  if (initResp & POWER_UP_NOT_COMPLETE)
     print_str (" POWER_UP_NOT_COMPLETE,");
-  if (err == 0)
+  if (initResp == 0)
     print_str (" INIT_SUCCESS\n\r");
 }
 
@@ -456,7 +392,6 @@ sd_printInitError (uint32_t err)
 |               command is transmitted.
 -------------------------------------------------------------------------------
 */
-
 uint8_t 
 pvt_crc7 (uint64_t tca)
 {
@@ -481,4 +416,3 @@ pvt_crc7 (uint64_t tca)
     }
   return result;
 }
-// END pvt_crc7
