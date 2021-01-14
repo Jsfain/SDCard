@@ -23,7 +23,7 @@
 #include "prints.h"
 #include "spi.h"
 #include "sd_spi_base.h"
-#include "sd_spi_data_access.h"
+#include "sd_spi_rwe.h"
 #include "sd_spi_misc.h"
 
 

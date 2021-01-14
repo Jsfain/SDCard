@@ -46,17 +46,17 @@ else
 fi
 
 
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/sd_spi_data_access.o" $sourceDir"/sd_spi_data_access.c"
-"${Compile[@]}" $buildDir/sd_spi_data_access.o $sourceDir/sd_spi_data_access.c
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/sd_spi_rwe.o" $sourceDir"/sd_spi_rwe.c"
+"${Compile[@]}" $buildDir/sd_spi_rwe.o $sourceDir/sd_spi_rwe.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
 then
-    echo -e "error compiling sd_spi_data_access.C"
+    echo -e "error compiling sd_spi_rwe.C"
     echo -e "program exiting with code $status"
     exit $status
 else
-    echo -e "Compiling SD_SPI_DATA_ACCESS.C successful"
+    echo -e "Compiling SD_SPI_RWE.C successful"
 fi
 
 
@@ -116,8 +116,8 @@ else
 fi
 
 
-echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/sd_test.elf "$buildDir"/sd_test.o  "$buildDir"/spi.o "$buildDir"/sd_spi_base.o "$buildDir"/sd_spi_data_access.o "$buildDir"/sd_spi_misc.o "$buildDir"/usart.o "$buildDir"/prints.o"
-"${Link[@]}" $buildDir/sd_test.elf $buildDir/sd_test.o $buildDir/spi.o $buildDir/sd_spi_base.o $buildDir/sd_spi_data_access.o $buildDir/sd_spi_misc.o $buildDir/usart.o $buildDir/prints.o
+echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/sd_test.elf "$buildDir"/sd_test.o  "$buildDir"/spi.o "$buildDir"/sd_spi_base.o "$buildDir"/sd_spi_rwe.o "$buildDir"/sd_spi_misc.o "$buildDir"/usart.o "$buildDir"/prints.o"
+"${Link[@]}" $buildDir/sd_test.elf $buildDir/sd_test.o $buildDir/spi.o $buildDir/sd_spi_base.o $buildDir/sd_spi_rwe.o $buildDir/sd_spi_misc.o $buildDir/usart.o $buildDir/prints.o
 status=$?
 sleep $t
 if [ $status -gt 0 ]
