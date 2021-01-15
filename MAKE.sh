@@ -6,6 +6,9 @@ buildDir=../untracked/build
 #directory for source files
 sourceDir=source
 
+#directory for test files
+testDir=test
+
 #make build directory if it doesn't exist
 mkdir -p -v $buildDir
 
@@ -17,8 +20,8 @@ Link=(avr-gcc -Wall -g -mmcu=atmega1280 -o)
 IHex=(avr-objcopy -j .text -j .data -O ihex)
 
 
-echo -e ">> COMPILE: "${Compile[@]}" "$buildDir"/sd_test.o " $sourceDir"/sd_test.c"
-"${Compile[@]}" $buildDir/sd_test.o $sourceDir/sd_test.c
+echo -e ">> COMPILE: "${Compile[@]}" "$buildDir"/sd_test.o " $testDir"/sd_test.c"
+"${Compile[@]}" $buildDir/sd_test.o $testDir/sd_test.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
