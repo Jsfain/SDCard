@@ -1,21 +1,15 @@
-/*
-*******************************************************************************
-*                                  AVR-SD CARD MODULE
-*
+/******************************************************************************
 * File    : SD_SPI_MISC.H
 * Version : 0.0.0.1 
 * Author  : Joshua Fain
 * Target  : ATMega1280
 * License : MIT
 * Copyright (c) 2020
-* 
 *
-* DESCRIPTION:
-* This is meant to be a catch-all for some extra SD card functions that do not
-* fit into any of the other AVR-SD Card module files. These functions require 
-* SD_SPI_BASE.C/H and SD_SPI_DATA_ACCESS.C/H
-*******************************************************************************
-*/
+* Description:
+* This is meant to be a catch-all for some misellaneous functions. Requires 
+* SD_SPI_BASE and SD_SPI_RWE.
+******************************************************************************/
 
 
 #ifndef SD_SPI_MISC_H
@@ -25,139 +19,114 @@
 
 
 
-/*
-*******************************************************************************
-*******************************************************************************
+/******************************************************************************
+ ******************************************************************************
  *                     
  *                               FUNCTIONS   
  *  
-*******************************************************************************
-*******************************************************************************
-*/
+ ******************************************************************************
+ *****************************************************************************/
 
-/*
--------------------------------------------------------------------------------
-|                          GET SDSC MEMORY CAPACITY
-|                                        
-| Description : Calculates and returns the memory capacity of a standard 
-|               capacity SD Card (SDSC)
-|
-| Return      : The memory capacity of the SD card in bytes.
--------------------------------------------------------------------------------
-*/
 
+/* ----------------------------------------------------------------------------
+ *                                                          GET MEMORY CAPACITY
+ * 
+ * Functions to calculate and return the memory capacity of an SD Card in
+ * bytes. Which one to use depends on the card type, i.e. SDSC or SDHC. This 
+ * should be set in an instance of CTV while intializing the card.
+ * ------------------------------------------------------------------------- */
 uint32_t 
 sd_getMemoryCapacitySDSC (void);
-
-
-
-/*
--------------------------------------------------------------------------------
-|                         GET SDHC / SDXC MEMORY CAPACITY
-|                                        
-| Description : Calculates and returns the memory capacity of a high/extended
-|               capacity SD Card (SDHC/SDXC)
-|
-| Return      : The memory capacity of the SD card in bytes.
--------------------------------------------------------------------------------
-*/
 
 uint32_t 
 sd_getMemoryCapacitySDHC (void);
 
 
 
-/*
--------------------------------------------------------------------------------
-|                         GET SDHC / SDXC MEMORY CAPACITY
-|                                        
-| Description : Search consecutive blocks over a specified range for those that
-|               contain any non-zero values. The number/address of any blocks
-|               found, with data will be printed to a screen. This function is
-|               not fast, so searching over a large range of blocks can take a
-|               while.
-|
-| Arguments   : startBlckAddr  - address of the first block to search.
-|             : endBlckAddr    - address of the last block to search.
--------------------------------------------------------------------------------
-*/
-
+/* ----------------------------------------------------------------------------
+*                                                     FIND NON-ZERO DATA BLOCKS
+*                                        
+* DESCRIPTION: 
+* Search consecutive blocks - from startBlckAddr to endBlckAddr - for thos that
+* contain any non-zero values and print those block numbers/addresses to the
+* screen. 
+* 
+* ARGUMENTS:
+* 1) uint32_t startBlckAddr  - address of the first block to search.
+* 2) uint32_t endBlckAddr    - address of the last block to search.
+*
+* NOTES:
+* 1) This is mostly useful for finding which blocks may contain raw data.
+* 2) This is not fast so suggest only search over a small range.
+* -------------------------------------------------------------------------- */
 void 
 sd_findNonZeroDataBlockNums (uint32_t startBlckAddr, uint32_t endBlckAddr);
 
 
-/*
--------------------------------------------------------------------------------
-|                           PRINT MULTIPLE BLOCKS
-|                                        
-| Description : Prints multiple blocks by calling the READ_MULTIPLE_BLOCKS SD
-|               card command. The blocks that are read in will be printed by 
-|               passing to sd_printSingleBlock().
-|
-| Arguments   : startBlckAddr - Address of the first block to be printed.
-|             : numOfBlcks    - Number of blocks to be printed to the screen
-|                               starting at startBlckAddr. 
-|
-| Return      : Error response. Upper byte holds a Read Block Error Flag. Lower
-|               byte holds the R1 response. Pass to sd_printReadError(). If the
-|               R1_ERROR flag is set, then the R1 response portion has an error 
-|               which should then be read by sd_printR1().
--------------------------------------------------------------------------------
-*/
 
+/* ----------------------------------------------------------------------------
+ *                                                        PRINT MULTIPLE BLOCKS
+ *           
+ * DESCRIPTION:
+ * Prints multiple blocks by calling the READ_MULTIPLE_BLOCK SD card command. 
+ * Each block read in will be printed to the screen using sd_printSingleBlock()
+ * function from SD_SPI_RWE.
+ * 
+ * ARGUMENTS:
+ * 1) uint32_t startBlckAddr - Address of the first block to be printed.
+ * 2) uint32_t numOfBlcks    - The number of blocks to be printed to the screen
+ *                             starting at startBlckAddr. 
+ * 
+ * RETURN: 
+ * uint16_t - Read Block Error (upper byte) and R1 Response (lower byte).
+* -------------------------------------------------------------------------- */
 uint16_t 
 sd_printMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks);
 
 
 
-/*
--------------------------------------------------------------------------------
-|                            WRITE TO MULTIPLE BLOCKS
-|                                        
-| Description : Write the contents of a byte array of length BLOCK_LEN to
-|               multiple blocks of the SD card. The entire array data will be
-|               copied to each block.
-|
-| Argument    : startBlckAddr - Address of first block to be written to.
-|             : numOfBlcks    - Number of blocks to be written to.
-|             : *dataArr      - Ptr to array of length BLOCK_LEN that holds
-|                               the data that will be written to the SD Card.
-|
-| Return      : Error response. Upper byte holds a Write Block Error Flag.
-|               Lower byte holds the R1 response. Pass to sd_printWriteError().
-|               If the R1_ERROR flag is set, the R1 response portion has an 
-|               error which should then be read by sd_printR1().
--------------------------------------------------------------------------------
-*/
-
+/* ----------------------------------------------------------------------------
+ *                                                        WRITE MULTIPLE BLOCKS
+ *           
+ * DESCRIPTION:
+ * Write the contents of a byte array of length BLOCK_LEN to multiple blocks of
+ * the SD card. The entire array data will be copied to each block. This
+ * function is not that useful, but used to test/demo the SD card command
+ * WRITE_MULTIPLE_BLOCK.
+ * 
+ * ARGUMENTS:
+ * 1) uint32_t startBlckAddr - Address of the first block to be written to.
+ * 2) uint32_t numOfBlcks    - Number of blocks to be written to.
+ * 3) uint8_t  *dataArr      - Ptr to an array holding the data contents that 
+ *                             will be written to each of the specified SD 
+ *                             card blocks. Array is of length BLOCK_LEN.
+ * 
+ * RETURN: 
+ * uint16_t - Write Block Error (upper byte) and R1 Response (lower byte).
+* -------------------------------------------------------------------------- */
 uint16_t 
 sd_writeMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks, 
                         uint8_t * dataArr);
 
 
 
-/*
--------------------------------------------------------------------------------
-|                      GET THE NUMBER OF WELL-WRITTEN BLOCKS
-|                                        
-| Description : This function sends the SD card command SEND_NUM_WR_BLOCKS. 
-|               Call this after a failure on a WRITE_MULTIPLE_BLOCK command and
-|               the Write Error Token is returned by the SD Card. This will 
-|               provide the number of blocks that were successfully written
-|               to before the error occurred.
-|
-| Argument    : *wellWrtnBlcks   - integer ptr to a value that will be updated 
-|                                  by this function, and will specify the 
-|                                  number of blocks successfully written to by
-|                                  before the write error.
-|
-| Return      : Error response. Upper byte holds a Read Block Error Flag. The
-|               lower byte holds the R1 response. Pass to sd_printWriteError().
-|               If the R1_ERROR flag is set, the R1 response portion has an 
-|               error which should then be read by sd_printR1().
--------------------------------------------------------------------------------
-*/
-
+/* ----------------------------------------------------------------------------
+ *                                        GET THE NUMBER OF WELL-WRITTEN BLOCKS
+ *           
+ * DESCRIPTION:
+ * This function sends the SD card command SEND_NUM_WR_BLOCKS. This should be
+ * called after a failure on a WRITE_MULTIPLE_BLOCK command and the Write 
+ * Error Token is returned by the SD Card. This will provide the number of 
+ * blocks that were successfully written before the error occurred.
+ * 
+ * ARGUMENTS:
+ * uint32_t *wellWrtnBlcks - integer ptr to a value that will be updated by
+ *                           by this function, and will specify the number of 
+ *                           blocks successfully written to before the error.
+ * 
+ * RETURN: 
+ * uint16_t - Read Block Error (upper byte) and R1 Response (lower byte).
+* -------------------------------------------------------------------------- */
 uint16_t 
 sd_getNumOfWellWrittenBlocks (uint32_t *wellWrittenBlocks);
 
