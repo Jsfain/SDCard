@@ -1,3 +1,16 @@
+/******************************************************************************
+ * File    : SD_SPI_CMDS.H
+ * Version : 0.0.0.1 
+ * Author  : Joshua Fain
+ * Target  : ATMega1280
+ * License : MIT
+ * Copyright (c) 2020-2021
+ * 
+ * Description:
+ * Macro definitions for the SD Card commands available in SPI mode.
+ *****************************************************************************/
+
+
 #ifndef SD_SPI_CMDS_H
 #define SD_SPI_CMDS_H
 

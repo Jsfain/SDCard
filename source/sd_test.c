@@ -125,7 +125,7 @@ int main(void)
       // **********
 
 
-/*
+
       // ********** TEST: sd_printMultipleBlocks()
       //
       // Print multiple, consecutive SD card blocks begginging at blckNum.
@@ -501,7 +501,7 @@ int main(void)
       while (answer != 'q');
       // **********
 
-*/
+
 
       // ********************************************************************
       //                          SD_SPI_MISC FUNCTIONS

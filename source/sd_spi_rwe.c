@@ -1,22 +1,14 @@
-/*
-*******************************************************************************
-*                                  AVR-SD CARD MODULE
-*
-* File    : SD_SPI_DATA_ACCESS.C
-* Version : 0.0.0.1 
-* Author  : Joshua Fain
-* Target  : ATMega1280
-* License : MIT
-* Copyright (c) 2020
-* 
-*
-* DESCRIPTION:
-* Implements some specialized raw data access functions against an SD card in 
-* SPI mode from an AVR microcontroller, e.g. single- and multi-block read, 
-* write, and erase as well as a few error printing functions. This requires
-* SD_SPI_BASE.C/H to function.
-*******************************************************************************
-*/
+/******************************************************************************
+ * File    : SD_SPI_RWE.H
+ * Version : 0.0.0.1 
+ * Author  : Joshua Fain
+ * Target  : ATMega1280
+ * License : MIT
+ * Copyright (c) 2020-2021
+ * 
+ * Description:
+ * Implements SD_SPI_RWE.H
+ * ***************************************************************************/
 
 
 
@@ -30,41 +22,43 @@
 
 
 
-/*
-*******************************************************************************
-*******************************************************************************
+/******************************************************************************
+ ******************************************************************************
  *                     
  *                               FUNCTIONS   
  *  
-*******************************************************************************
-*******************************************************************************
-*/
+ ******************************************************************************
+ *****************************************************************************/
+
 
 /*
--------------------------------------------------------------------------------
-|                          READ A SINGLE DATA BLOCK
-|                                        
-| Description : Reads the single data block from the SD Card at blckAddr into 
-|               the array pointed at by *blckArr.
-|
-| Arguments   : blckAddr    - address of the block on the SD card block whose 
-|                             contents will be printed to the screen.
-|             : *blckArr    - ptr to an array that will be loaded with the
-|                             contents of the SD card's block at 'blckAddr'.
-|                             Array should be of length BLOCK_LEN.
-|
-| Return      : Error response. The upper byte holds the Read Block Error Flag.
-|               The lower byte holds the R1 response. Pass to 
-|               sd_printReadError(). If R1_ERROR flag is set, then the R1 
-|               response portion has an error. This should be read by 
-|               sd_printR1().
-|
-| Notes       : Addressing is determined by the card type. SDHC is Block 
-|               addressable, SDSC is byte addressable. This should be known 
-|               before passing the address.
--------------------------------------------------------------------------------
-*/
+ * For the following block read, write, and erase block, the returned error
+ * response values can be read by their corresponding print error function. For
+ * example, the returned value of sd_readSingleBlock() can be read by passing
+ * it to sd_printReadError(). These print functions will read the upper byte of
+ * of the error response. If in the error response the R1_ERROR flag is set in
+ * the upper byte, then the lower byte (i.e. the R1 Response portion of the
+ * error response) contains at least one flag that has been set which should 
+ * then be read by passing the error response to sd_printR1() in SD_SPI_BASE. 
+ */ 
 
+
+
+/*-----------------------------------------------------------------------------
+ *                                                            READ SINGLE BLOCK
+ * 
+ * DESCRIPTION: 
+ * Reads a single data block from the SD card into an array.   
+ * 
+ * ARGUMENTS:
+ * 1) uint32_t blckAddr - Address of the data block on the SD card that will be
+ *                        read into the array.
+ * 2) uint8_t  *blckArr - Ptr to an array to be loaded with the contents of the 
+ *                        data block at blckAddr. Must be of length BLOCK_LEN.
+ * 
+ * RETURN: 
+ * uint16_t - Read Block Error (upper byte) and R1 Response (lower byte).
+ * ------------------------------------------------------------------------- */
 uint16_t 
 sd_readSingleBlock (uint32_t blckAddr, uint8_t * blckArr)
 {
@@ -111,20 +105,21 @@ sd_readSingleBlock (uint32_t blckAddr, uint8_t * blckArr)
 
 
 
-/*
--------------------------------------------------------------------------------
-|                                PRINT SINGLE BLOCK
-|                                        
-| Description : Prints the contents of a single block stored in an array to a
-|               screen. The block's contents will be printed to the screen in
-|               rows of 16 bytes, columnized as (Addr)OFFSET | HEX | ASCII.
-|
-| Argument    : *blckArr    - ptr to an array holding the contents of the block
-|                             to be printed. Array should be length BLOCK_LEN.
-|                             Array should be loaded by sd_readSinbleBlock().
--------------------------------------------------------------------------------
-*/
-
+/*-----------------------------------------------------------------------------
+ *                                                           PRINT SINGLE BLOCK
+ * 
+ * DESCRIPTION: 
+ * Prints the contents of a single SD card data block, that's previously been 
+ * loaded into an array, to the screen. The block's contents will be printed to
+ * the screen in rows of 16 bytes, columnized as (Addr)OFFSET | HEX | ASCII.
+ * 
+ * ARGUMENTS: 
+ * uint8_t  *blckArr - Ptr to an array holding the contents of the block to be 
+ *                     printed to the screen. Must be of length BLOCK_LEN.
+ * 
+ * RETURN:
+ * void
+ * ------------------------------------------------------------------------- */
 void 
 sd_printSingleBlock (uint8_t * blckArr)
 {
@@ -173,25 +168,22 @@ sd_printSingleBlock (uint8_t * blckArr)
 
 
 
-/*
--------------------------------------------------------------------------------
-|                               WRITE SINGLE BLOCK
-|                                        
-| Description : Writes contents of array *dataArr to the block at 'blckAddr'
-|               on the SD card. The data array should be of length BLOCK_LEN.
-|               Its entire contents will be written to the SD card block.
-|
-| Arguments   : blckAddr   - address of the block that will be written to. 
-|             : *dataArr   - ptr to an array that holds the data contents
-|                            that will be written to the block on the SD Card.
-|
-| Return      : Error response. Upper byte holds the Write Block Error Flag.
-|               Lower byte holds the R1 response. Pass to sd_printReadError().
-|               If R1_ERROR flag is set, then the R1 response portion has an 
-|               error which should be read by sd_printR1().
--------------------------------------------------------------------------------
-*/
-
+/*-----------------------------------------------------------------------------
+ *                                                           WRITE SINGLE BLOCK
+ * 
+ * DESCRIPTION: 
+ * Writes the values in an array to a single SD card data block.   
+ * 
+ * ARGUMENTS:
+ * 1) uint32_t blckAddr - Address of the data block on the SD card that will be
+ *                        written to.
+ * 2) uint8_t  *dataArr - Ptr to an array that holds the data contents that
+ *                        will be written to the block at blckAddr on the SD 
+ *                        Card. Must be of length BLOCK_LEN.
+ * 
+ * RETURN: 
+ * uint16_t - Write Block Error (upper byte) and R1 Response (lower byte).
+ * ------------------------------------------------------------------------- */
 uint16_t 
 sd_writeSingleBlock (uint32_t blckAddr, uint8_t * dataArr)
 {
@@ -274,23 +266,19 @@ sd_writeSingleBlock (uint32_t blckAddr, uint8_t * dataArr)
 
 
 
-/*
--------------------------------------------------------------------------------
-|                               ERASE BLOCKS
-|                                        
-| Description : This function will erase the blocks between (and including) 
-|               startBlckAddr and endBlckAddr.
-|
-| Arguments   : startBlckAddr - Address of the first block that will be erased.
- *            : endBlckAddr   - Address of the last block that will be erased.
-|
-| Return      : Error response. Upper byte holds the Erase Error Flag. Lower
-|               byte holds the R1 response. Pass to sd_printEraseError().
-|               If R1_ERROR flag is set, then the R1 response portion has an 
-|               error which should be read by sd_printR1().
--------------------------------------------------------------------------------
-*/
-
+/*-----------------------------------------------------------------------------
+ *                                                                 ERASE BLOCKS
+ * 
+ * DESCRIPTION: 
+ * Erases the blocks between (and including) the startBlckAddr and endBlckAddr.   
+ * 
+ * ARGUMENTS:
+ * 1) uint32_t startBlckAddr - Address of the first block that will be erased.
+ * 2) uint32_t endBlckAddr   - Address of the last block that will be erased.
+ * 
+ * RETURN: 
+ * uint16_t - Erase Block Error (upper byte) and R1 Response (lower byte).
+ * ------------------------------------------------------------------------- */
 uint16_t 
 sd_eraseBlocks (uint32_t startBlckAddr, uint32_t endBlckAddr)
 {
@@ -336,16 +324,29 @@ sd_eraseBlocks (uint32_t startBlckAddr, uint32_t endBlckAddr)
 
 
 
-/*
--------------------------------------------------------------------------------
-|                                PRINT READ ERROR
-|                                        
-| Description : Print Read Error Flag returned by a SD card read function.
-|
-| Argument    : err  - byte holding a Read Error Response.
--------------------------------------------------------------------------------
-*/
 
+
+/*
+ * If either of the three print error functions show that the R1_ERROR flag was
+ * set in the error response that was passed to it, then the error response
+ * should then be passed to sd_printR1() from SD_SPI_BASE.H/C to read the 
+ * R1 Error.
+ */
+
+
+
+/*-----------------------------------------------------------------------------
+ *                                                             PRINT READ ERROR
+ * 
+ * DESCRIPTION: 
+ * Print Read Error Flag returned by a SD card read function.  
+ * 
+ * ARGUMENTS:
+ * uint16_t err - Read Error Response.
+ * 
+ * RETURN: 
+ * void
+ * ------------------------------------------------------------------------- */
 void 
 sd_printReadError (uint16_t err)
 {
@@ -367,16 +368,18 @@ sd_printReadError (uint16_t err)
 
 
 
-/*
--------------------------------------------------------------------------------
-|                                PRINT WRITE ERROR
-|                                        
-| Description : Print Write Error Flag returned by a SD card write function.
-|
-| Argument    : err  - byte holding a Read Error Response.
--------------------------------------------------------------------------------
-*/
-
+/*-----------------------------------------------------------------------------
+ *                                                            PRINT WRITE ERROR
+ * 
+ * DESCRIPTION: 
+ * Print Write Error Flag returned by a SD card read function.  
+ * 
+ * ARGUMENTS:
+ * uint16_t err - Write Error Response.
+ * 
+ * RETURN: 
+ * void
+ * ------------------------------------------------------------------------- */
 void 
 sd_printWriteError (uint16_t err)
 {
@@ -410,16 +413,18 @@ sd_printWriteError (uint16_t err)
 
 
 
-/*
--------------------------------------------------------------------------------
-|                                PRINT ERASE ERROR
-|                                        
-| Description : Print Erase Error Flag returned by an SD card erase function.
-|
-| Argument    : err  - byte holding a Read Error Response.
--------------------------------------------------------------------------------
-*/
- 
+/*-----------------------------------------------------------------------------
+ *                                                            PRINT ERASE ERROR
+ * 
+ * DESCRIPTION: 
+ * Print Erase Error Flag returned by a SD card read function.  
+ * 
+ * ARGUMENTS:
+ * uint16_t err - Erase Error Response.
+ * 
+ * RETURN: 
+ * void
+ * ------------------------------------------------------------------------- */
 void 
 sd_printEraseError (uint16_t err)
 {
