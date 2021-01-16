@@ -181,7 +181,8 @@ typedef struct CardTypeVersion {
  *                                                           INITIALIZE SD CARD
  * 
  * DESCRIPTION: 
- * Initializes an SD card into SPI mode and sets members of the CTV instance. 
+ * Implements the SD Card SPI mode initialization routine and sets the members 
+ * of the CTV instance. 
  * 
  * ARGUMENTS: 
  * CTV *ctv  - ptr to a CTV instance whose members will be set here.
@@ -261,7 +262,7 @@ sd_sendCommand (uint8_t cmd, uint32_t arg);
 
 
 /*-----------------------------------------------------------------------------
- *                                                        GET R1 RESPONSE FLAGS
+ *                                                              GET R1 RESPONSE
  * 
  * DESCRIPTION: 
  * Gets the R1 response from the SD card after sending it a SD command.
@@ -275,8 +276,7 @@ sd_sendCommand (uint8_t cmd, uint32_t arg);
  * NOTES:
  * 1) Always call this function immediately after sd_sendCommand().
  * 1) Pass the return value to sd_printR1(err) to print the R1 response.
- * 2) If R1_TIMEOUT is returned, this indicates that the SD Card did not
- *    return an R1 response within a specified amount of time.
+ * 2) If R1_TIMEOUT is returned, then SD Card did not return an R1 response.
  * ------------------------------------------------------------------------- */
 uint8_t 
 sd_getR1 (void);
@@ -304,8 +304,7 @@ sd_printR1 (uint8_t r1);
  *                                          PRINT INITIALIZATION RESPONSE FLAGS
  * 
  * DESCRIPTION: 
- * Prints the Initialization Error Flag portion of the response returned by 
- * sd_spiModeInit().
+ * Prints Initialization Error Flag portion of the sd_spiModeInit() response.
  *  
  * ARGUMENT:
  * uint32_t initErr - The Initialization Error Response returned by the 

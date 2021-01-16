@@ -134,7 +134,7 @@ int main(void)
 
 
 
-
+/*
     // ------------------------------------------------------------------------
     //                                                    PRINT MULTIPLE BLOCKS
     // 
@@ -561,6 +561,7 @@ int main(void)
                                     endBlckNum * BLOCK_LEN);
     print_str("\n\r Done\n\r");
     // **********
+*/
   }
 
 
