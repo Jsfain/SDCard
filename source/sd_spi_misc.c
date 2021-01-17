@@ -385,7 +385,7 @@ sd_findNonZeroDataBlockNums (uint32_t startBlckAddr, uint32_t endBlckAddr)
  * 
  * RETURN: 
  * uint16_t - Read Block Error (upper byte) and R1 Response (lower byte).
-* -------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------- */
 uint16_t 
 sd_printMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks)
 {
@@ -398,11 +398,11 @@ sd_printMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks)
   r1 = sd_getR1();
   if (r1 > 0)
   {
-    CS_SD_HIGH
+    CS_SD_HIGH;
     return (R1_ERROR | r1);
   }
 
-  if(r1 == 0)
+  if (r1 == 0)
   {
     for (uint8_t i = 0; i < numOfBlcks; i++)
     {
@@ -413,8 +413,7 @@ sd_printMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks)
       // wait for start block token.
       while (sd_receiveByteSPI() != 0xFE) 
       {
-        timeout++;
-        if (timeout > 0x2FF) 
+        if (timeout++ > 0xFFF) 
           return (START_TOKEN_TIMEOUT | r1);
       }
 
@@ -468,7 +467,7 @@ sd_writeMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks,
   uint8_t  r1;
   uint16_t timeout = 0;
   uint8_t  dataRespTkn;
-  uint16_t retToken;
+  uint16_t retTkn;
   uint8_t  dataTknMask = 0x1F;
 
   CS_SD_LOW;    
@@ -523,40 +522,48 @@ sd_writeMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks,
           if(timeout++ > 0x2FF) 
             return (CARD_BUSY_TIMEOUT | r1); 
         };
-        retToken = DATA_ACCEPTED_TOKEN_RECEIVED;
+        retTkn = DATA_ACCEPTED_TOKEN_RECEIVED;
       }
 
       // CRC Error
       else if ((dataRespTkn & 0x0B) == 0x0B)
       {
-        retToken = CRC_ERROR_TOKEN_RECEIVED;
+        retTkn = CRC_ERROR_TOKEN_RECEIVED;
         break;
       }
 
       // Write Error
       else if( (dataRespTkn & 0x0D) == 0x0D ) 
       {
-        retToken = WRITE_ERROR_TOKEN_RECEIVED;
+        retTkn = WRITE_ERROR_TOKEN_RECEIVED;
         break;
       }
     }
 
     timeout = 0;
     // send Stop Transmission Token
-    sd_sendByteSPI(0xFD); 
+    sd_sendByteSPI (0xFD); 
     while (sd_receiveByteSPI() == 0)
     {
-      if (timeout++ > 0x1FF) 
+      if (timeout++ > 0x2FF) 
       {
         CS_SD_HIGH;
         return (CARD_BUSY_TIMEOUT | r1);
       }
     }
   }
+
+  // Have found sometimes even after CARD_BUSY is no longer set,
+  // that if another command is immediately issued, it results 
+  // result in errors unless some delay is added before de-asserting
+  // CS here. So that's what this for loop is doing. 
+  for (uint8_t k = 0; k < 0xFE; k++)
+    sd_sendByteSPI (0xFF);
+
   CS_SD_HIGH;
 
   // successful write.
-  return retToken; 
+  return retTkn; 
 }
 
 

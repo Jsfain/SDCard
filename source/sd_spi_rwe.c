@@ -248,7 +248,7 @@ sd_writeSingleBlock (uint32_t blckAddr, uint8_t * dataArr)
         // Data Out (DO) line held low while card is busy writing to block.
         while (sd_receiveByteSPI() == 0) 
         {
-          if (timeout++ > 0x2FF) 
+          if (timeout++ > 0x4FF) 
           {
             CS_SD_HIGH;
             return (CARD_BUSY_TIMEOUT | r1);
@@ -360,13 +360,13 @@ sd_printReadError (uint16_t err)
   switch (err & 0xFF00)
   {
     case (R1_ERROR):
-      print_str ("\n\r R1 ERROR");
+      print_str ("\n\r R1_ERROR");
       break;
     case (READ_SUCCESS):
-      print_str ("\n\r READ SUCCESS");
+      print_str ("\n\r READ_SUCCESS");
       break;
     case (START_TOKEN_TIMEOUT):
-      print_str ("\n\r START TOKEN TIMEOUT");
+      print_str ("\n\r START_TOKEN_TIMEOUT");
       break;
     default:
       print_str ("\n\r UNKNOWN RESPONSE");
@@ -438,16 +438,16 @@ sd_printEraseError (uint16_t err)
   switch(err&0xFF00)
   {
     case (ERASE_SUCCESSFUL):
-      print_str ("\n\r ERASE SUCCESSFUL");
+      print_str ("\n\r ERASE_SUCCESSFUL");
       break;
     case (SET_ERASE_START_ADDR_ERROR):
-      print_str ("\n\r SET ERASE START ADDR ERROR");
+      print_str ("\n\r SET_ERASE_START_ADDR_ERROR");
       break;
     case (SET_ERASE_END_ADDR_ERROR):
-      print_str ("\n\r SET ERASE END ADDR ERROR");
+      print_str ("\n\r SET_ERASE_END_ADDR_ERROR");
       break;
     case (ERASE_ERROR):
-      print_str ("\n\r ERROR ERASE");
+      print_str ("\n\r ERROR_ERASE");
       break;
     case (ERASE_BUSY_TIMEOUT):
       print_str ("\n\r ERASE_BUSY_TIMEOUT");

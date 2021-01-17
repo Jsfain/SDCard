@@ -290,7 +290,7 @@ sd_sendCommand (uint8_t cmd, uint32_t arg)
 
   // Found that sometimes introducing delay
   // in sending command improves stability.
-  for (uint8_t i = 0; i <= 10; i++)
+  for (uint8_t i = 0; i < 10; i++)
     sd_sendByteSPI (0xFF);
 
   // Send command to SD Card via SPI port
