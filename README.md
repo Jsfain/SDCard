@@ -1,26 +1,26 @@
-# About AVR-SD Card Module
+# AVR-SD Card Module
 Use an AVR microcontroller to execute SD card commands in SPI mode.
 
 
 ## Purpose
-This was just something fun to work on during quarantine. It's purpose was to establish a set of functions for SD card data access and control in SPI mode using an AVR microcontroller. This can be implemented on its own for raw data access of an SD card, or as the physical disk layer for a file system module.  
+This was just something fun to work on during quarantine. It's purpose was to establish a set of functions for SD card data access and control in SPI mode using an AVR microcontroller. This can be implemented on its own for raw data access of an SD card, or as the physical disk layer in a file system module.
 
 
 ## Technology
 * SD Specifications Part 1: Physical Layer Specification - Simplified Specification Version 7.10
 * TARGET: ATmega1280 - should be easily implemented on other AVR targets with sufficient memory and resources, but may require modification of port assignments and settings.
 * LANGUAGE: C
-* Built from a Mac using the [AVR-Toolchain](https://github.com/osx-cross/homebrew-avr) 9.3.0, This includes: 
+* Built on a Mac using the [AVR-Toolchain](https://github.com/osx-cross/homebrew-avr) 9.3.0, This includes: 
   * AVR-GCC 9.3.0
   * AVRDUDE 6.3
 
 
 ## Overview
-This full AVR-SD Card implementation is composed of multiple source and header files.  These are listed below in order of importance. The only SD_SPI_BASE.C(H) is required (this will include SD_SPI_CMDS.H).
+This full AVR-SD Card implementation is composed of multiple source and header files.  These are listed below in order of importance. Only SD_SPI_BASE.C(H) is required, which includes SD_SPI_CMDS.H.
 
 ### AVR-SD Card Module files
 1. SD_SPI_BASE.C(H) - *REQUIRED*
-    * Defines the SD card SPI mode initialization function, sd_spiModeInit(CTV * ctv), as well as the basic send command, send byte, and recieve byte functions.
+    * Defines the SD card SPI mode initialization function, ***sd_spiModeInit(CTV * ctv)***, as well as the basic send command, send byte, and recieve byte functions.
     * This will include SD_SPI_CMDS.H
 
 2. SD_SPI_RWE.C(H) - read/write/erase
@@ -42,9 +42,9 @@ The following source and header files are also required.  These are included in 
 
 ## How to use
  * Clone the repo and/or copy the required files, then build/download the module using your preferred method (Atmel Studio, AVR Toolchain, etc...). 
- * The source and header files contains full descriptions of each function and what they do.
+ * The source and header files contain full descriptions of each function and what they do.
  * A test file, **SD_TEST.C**, is probably the best way to understand how to implment the module. This file contains main(), and includes several function examples.
- * **SD_TEST.C** is structured in blocks to test out the various features and functions. These blocks are clearly marked and described in block-comments. They can be commented out independently of each other so you can easily test the various functions. 
+ * **SD_TEST.C** is structured in blocks to test out the various features and functions. These blocks are clearly marked and described in comments. The blocks can be commented out independently of each other so you can easily test the various functions. 
  * Below is an example of the simple initialization steps that must be implemented prior to using any other parts of the AVR-SD Card module files/functions. 
 
 ### Initialization:
@@ -59,6 +59,7 @@ When writing a program to implement the AVR-SD Card module, the following must o
 
 **Example**
  
+```
 int main(void)
 {
   uint32_t initResp;
@@ -80,6 +81,7 @@ int main(void)
     // initialization success!!
   }
 }
+```
 
  ### Additional Comments
  * A "MAKE.SH" file can also be referenced to see how I built the module from the source files and downloaded it to an ATmega1280 AVR target. The make file would primarily be useful for non-Windows users without access to Atmel Studio. Windows users should be able to just build/download the module from the source files using Atmel Studio (though I have not used this).
