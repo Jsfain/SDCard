@@ -45,7 +45,7 @@ The following source and header files are also required.  These are included in 
  * The source and header files contain full descriptions of each function and what they do.
  * A test file, **SD_TEST.C**, is probably the best way to understand how to implment the module. This file contains main(), and includes several function examples.
  * **SD_TEST.C** is structured in blocks to test out the various features and functions. These blocks are clearly marked and described in comments. The blocks can be commented out independently of each other so you can easily test the various functions. 
- * Below is an example of the simple initialization steps that must be implemented prior to using any other parts of the AVR-SD Card module files/functions. 
+ * Below is an example of the initialization steps that must be implemented in main() prior to using any other parts of the AVR-SD Card files/functions. 
 
 ### Initialization:
 
@@ -97,7 +97,7 @@ Anyone. Use it. Modify it for your specific purpose/system. If you want, you can
 
 
 ## Warnings / Disclaimers
-1. Use at your own risk. It is possible to erase or overwrite data, lockout the SD card, and/or place the SD card into a bad logical or physical state. I take no responsibility for the loss of data or property through the use of this AVR-SD card module/files. This was developed for fun and so it is offered "AS-IS" to anyone that wants to use it, look at it, or modify it for their purposes. There is no guarantee of operability under any circumstance.
+1. Use at your own risk. It is possible to erase or overwrite data, lockout the SD card, and/or place the SD card into a bad logical or physical state. I take no responsibility for the loss of data or property through the use of this AVR-SD card module/files. This was developed for fun and so it is offered AS-IS to anyone that wants to use it, look at it, or modify it for their purposes. There is no guarantee of operability under any circumstance.
 2. Backup Data! See 1.
 3. This module has only been tested on an ATmega1280 microcontroller. It is expected to be easily portable to other AVR's through simple port (e.g. SPI, USART) reassignments, provided the resources exist, but also see 1.
 4. This module has only been tested against version 2.x, 2GB and 4GB micro-SD cards of type SDSC (standard capacity) and SDHC (high capacity). It is unknown how it will behave running against other SD card types, versions, and capacities. Again, see 1.
