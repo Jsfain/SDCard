@@ -239,7 +239,7 @@ sd_writeSingleBlock (uint32_t blckAddr, uint8_t * dataArr)
            (dataTknMask & dataRespTkn) != 0x0B &&          // CRC_ERROR
            (dataTknMask & dataRespTkn) != 0x0D);           // WRITE_ERROR
     
-    // Data has been accepted
+    // Data Accepted
     if ((dataRespTkn & 0x05) == 0x05)                         
     {
         timeout = 0;
