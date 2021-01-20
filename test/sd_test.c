@@ -104,14 +104,17 @@ int main(void)
     // for USER INPUT section
     uint8_t answer;
     
-/*
-    // ----------------------------------------------------------------------
-    //                                         READ IN AND PRINT SINGLE BLOCK
+    
+    // ------------------------------------------------------------------------
+    //                                           READ IN AND PRINT SINGLE BLOCK
     // 
     // Demo sd_readSingleBlock() and sd_printSingleBlock(). This section will
     // use sd_readSingleBlock() to read a block at the address specified into
     // the an array. This array will then be passed to sd_printSingleBlock()
     // which will print the block's contents to the screen.
+    
+    // set to 0 to skip this section
+    #if 0
 
     // block to read in
     blckNum = 8192;
@@ -141,13 +144,12 @@ int main(void)
     // print block just loaded into the array.
     else
       sd_printSingleBlock (blckArr);
-
+    
+    #endif 
     //                                       END READ IN AND PRINT SINGLE BLOCK
     // ------------------------------------------------------------------------
-*/
+    
 
-
-/*
     // ------------------------------------------------------------------------
     //                                                    PRINT MULTIPLE BLOCKS
     // 
@@ -155,6 +157,9 @@ int main(void)
     // SD card blocks beginging at blckNum. The number of blocks printed is
     // specified by numOfBlcks. The function calls the READ_MULTIPLE_BLOCKS 
     // SD card command.
+
+    // set to 0 to skip this section
+    #if 0
 
     numOfBlcks = 2;
     blckNum = 20;
@@ -178,12 +183,13 @@ int main(void)
         sd_printReadError  (err16);
       }   
     }
+
+    #endif 
     //                                                END PRINT MULTIPLE BLOCKS
     // ------------------------------------------------------------------------
-*/
 
 
-/*
+
     // ------------------------------------------------------------------------
     //                                             WRITE and ERASE SINGLE BLOCK
     //
@@ -195,6 +201,8 @@ int main(void)
     // the block. Finally, it will read in and print the block again to confirm
     // the block was successfully written to. 
 
+    // set to 0 to skip this section
+    #if 1
 
     // block to be written.
     blckNum = 20;
@@ -320,12 +328,12 @@ int main(void)
       else
         sd_printSingleBlock (blckArr);
     }
+
+    #endif
     //                                         END WRITE and ERASE SINGLE BLOCK
     // ------------------------------------------------------------------------
-*/
 
 
-/*
     // ------------------------------------------------------------------------
     //                                          WRITE and ERASE MULTIPLE BLOCKS
     //
@@ -338,6 +346,8 @@ int main(void)
     // test this out yet. Finally, it will read-in and print the blocks again
     // to show successful write.
 
+    // set to 0 to skip this section
+    #if 0
 
     startBlckNum = 20;
     endBlckNum   = 22;                                     // used for erasing
@@ -465,12 +475,12 @@ int main(void)
         sd_printReadError  (err16);
       }
     }
+
+    #endif
     //                                      END WRITE and ERASE MULTIPLE BLOCKS
     // ------------------------------------------------------------------------
-*/
 
 
-/*
     // ------------------------------------------------------------------------
     //                                                       USER INPUT SECTION
     //
@@ -479,6 +489,9 @@ int main(void)
     // would like to print first, and then how many blocks they would like to 
     // print. The sd_printMultipleBlocks() function is then called with these
     // parameters and the blocks specified by the user are printed.
+
+    // set to 0 to skip this section
+    #if 0
 
     do
     {
@@ -527,12 +540,11 @@ int main(void)
     }
     while (answer != 'q');
 
+    #endif
     //                                                   END USER INPUT SECTION
     // ------------------------------------------------------------------------
-*/
 
 
-/*
     // ------------------------------------------------------------------------
     //                                                          MEMORY CAPACITY
     //
@@ -540,18 +552,22 @@ int main(void)
     // calculated depends on the card type (i.e. ctv.type) which is used to 
     // select the correct function.
 
+    // set to 0 to skip this section
+    #if 1
+
     print_str ("\n\n\n\r Memory capacity = ");
     if (ctv.type == SDHC) 
       print_dec (sd_getMemoryCapacitySDHC ());
     else // SDSC
       print_dec (sd_getMemoryCapacitySDSC ());
     print_str( " Bytes");
+
+    #endif
     //                                                      END MEMORY CAPACITY
     // ------------------------------------------------------------------------
-*/
 
 
-/*
+
     // ------------------------------------------------------------------------
     //                                                FIND NON-ZERO DATA BLOCKS
     //
@@ -559,6 +575,9 @@ int main(void)
     // numbers of any that have non-zero data. I made this to help locate raw 
     // data on the SD card. This is function is not fast in printing to the 
     // screen, so I do not suggest using it over a large range of blocks.
+
+    // set to 0 to skip this section
+    #if 0
 
     print_str ("\n\n\r\r sd_findNonZeroDataBlockNums() \n\r");
     startBlckNum = 8000;
@@ -570,9 +589,11 @@ int main(void)
       sd_findNonZeroDataBlockNums (startBlckNum * BLOCK_LEN, 
                                     endBlckNum * BLOCK_LEN);
     print_str("\n\r Done\n\r");
+
+    #endif
     //                                                      END MEMORY CAPACITY
     // ------------------------------------------------------------------------
-*/
+
   }
   // End SD Card Testing
 
