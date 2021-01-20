@@ -399,7 +399,7 @@ void sd_printInitError (uint32_t initResp)
 
 /*
  ******************************************************************************
- *                       "PRIVATE" FUNCTIONS DEFINITIONS
+ *                        "PRIVATE" FUNCTIONS DEFINITIONS
  ******************************************************************************
  */
 
