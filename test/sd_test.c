@@ -1,17 +1,13 @@
-/******************************************************************************
-* File    : SD_TEST.C
-* Author  : Joshua Fain
-* Target  : ATMega1280
-* License : MIT
-* Copyright (c) 2020
-*
-*
-* DESCRIPTION:
-* Test file to demonstrate how to implement several of the functions defined
-* in the SD_SPI_XXX files.
-******************************************************************************/
-
-
+/*
+ * File    : SD_TEST.C
+ * Author  : Joshua Fain
+ * Target  : ATMega1280
+ * License : MIT
+ * Copyright (c) 2020
+ *
+ * Test file to demonstrate how to implement several of the functions defined
+ * in the SD_SPI_XXX files.
+ */
 
 #include <stdint.h>
 #include <avr/io.h>
