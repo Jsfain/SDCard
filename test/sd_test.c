@@ -6,7 +6,7 @@
  * Copyright (c) 2020
  *
  * Test file to demonstrate how to implement several of the functions defined
- * in the SD_SPI_XXX files.
+ * in the SD_SPI files.
  */
 
 #include <stdint.h>
