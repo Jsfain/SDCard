@@ -110,7 +110,7 @@ int main(void)
     // which will print the block's contents to the screen.
     
     // set to 0 to skip this section
-    #if 0
+    #if 1
 
     // block to read in
     blckNum = 8192;
