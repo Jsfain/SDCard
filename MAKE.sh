@@ -91,17 +91,17 @@ else
 fi
 
 
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/usart.o" $sourceDir"/usart.c"
-"${Compile[@]}" $buildDir/usart.o $sourceDir/usart.c
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/usart0.o" $sourceDir"/usart0.c"
+"${Compile[@]}" $buildDir/usart0.o $sourceDir/usart0.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
 then
-    echo -e "error compiling usart.c"
+    echo -e "error compiling usart0.c"
     echo -e "program exiting with code $status"
     exit $status
 else
-    echo -e "Compiling USART.C successful"
+    echo -e "Compiling USART0.C successful"
 fi
 
 
@@ -119,8 +119,8 @@ else
 fi
 
 
-echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/sd_test.elf "$buildDir"/sd_test.o  "$buildDir"/spi.o "$buildDir"/sd_spi_base.o "$buildDir"/sd_spi_rwe.o "$buildDir"/sd_spi_misc.o "$buildDir"/usart.o "$buildDir"/prints.o"
-"${Link[@]}" $buildDir/sd_test.elf $buildDir/sd_test.o $buildDir/spi.o $buildDir/sd_spi_base.o $buildDir/sd_spi_rwe.o $buildDir/sd_spi_misc.o $buildDir/usart.o $buildDir/prints.o
+echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/sd_test.elf "$buildDir"/sd_test.o  "$buildDir"/spi.o "$buildDir"/sd_spi_base.o "$buildDir"/sd_spi_rwe.o "$buildDir"/sd_spi_misc.o "$buildDir"/usart0.o "$buildDir"/prints.o"
+"${Link[@]}" $buildDir/sd_test.elf $buildDir/sd_test.o $buildDir/spi.o $buildDir/sd_spi_base.o $buildDir/sd_spi_rwe.o $buildDir/sd_spi_misc.o $buildDir/usart0.o $buildDir/prints.o
 status=$?
 sleep $t
 if [ $status -gt 0 ]

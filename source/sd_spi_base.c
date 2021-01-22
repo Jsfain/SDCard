@@ -236,7 +236,7 @@ void sd_sendByteSPI (uint8_t byte)
 uint8_t sd_receiveByteSPI (void)
 {
   sd_sendByteSPI (0xFF);
-  return spi_masterRead();
+  return spi_masterReceive();
 }
 
 

@@ -1,103 +1,88 @@
 /*
-*******************************************************************************
-*                                  AVR-FAT MODULE
-*
-* File    : PRINTS.H
-* Version : 0.0.0.1 
-* Author  : Joshua Fain
-* Target  : ATMega1280
-* License : MIT
-* Copyright (c) 2020
-* 
-*
-* DESCRIPTION:
-* Interface for some print functions used to print strings and positive
-* integers in decimal, binary, and hex formats.
-*******************************************************************************
-*/
+ * File    : PRINTS.H
+ * Version : 0.0.0.2
+ * Author  : Joshua Fain
+ * Target  : ATMega1280
+ * License : MIT
+ * Copyright (c) 2020
+ * 
+ * Interface for some print functions used to print strings and unsigned
+ * integers in decimal, binary, and hex formats.
+ */
 
 #ifndef PRINTS_H
 #define PRINTS_H
 
 
+/*
+ ******************************************************************************
+ *                           FUNCTION PROTOTYPES   
+ ******************************************************************************
+ */
 
+/*
+ * ----------------------------------------------------------------------------
+ *                                    PRINT UNSIGNED DECIMAL (BASE-10) INTEGERS 
+ * 
+ * Description : Prints unsigned decimal integer form of argument to screen.
+ * 
+ * Arguments   : num     Unsigned integer to be printed to the screen.
+ * 
+ * Returns     : void
+ * ----------------------------------------------------------------------------
+ */
+
+void print_dec (uint32_t num);
 
 
 /*
-*******************************************************************************
-*******************************************************************************
- *                     
- *                           FUNCTION DECLARATIONS       
- *  
-*******************************************************************************
-*******************************************************************************
-*/
+ * ----------------------------------------------------------------------------
+ *                                                 PRINT BINARY FORM OF INTEGER 
+ *                                        
+ * Description : Prints the binary form of the integer argument to the screen.
+ * 
+ * Argument    : num     Unsigned integer to be printed to the screen.
+ * 
+ * Returns     : void 
+ * 
+ * Notes       : 1) The function will only print the number of bits required.
+ *               2) A space will be print between every 4-bit group.
+ * ----------------------------------------------------------------------------
+ */
 
-/*
--------------------------------------------------------------------------------
-|                  PRINT POSITIVE DECIMAL (BASE-10) INTEGERS 
-|                                        
-| Description : Prints unsigned base-10 integers to a screen.
-|
-| Argument    : num    - Unsigned integer to be printed to the screen.
--------------------------------------------------------------------------------
-*/
-
-void 
-print_dec (uint32_t num);
-
+void print_bin (uint32_t num);
 
 
 /*
--------------------------------------------------------------------------------
-|                           PRINT BINARY FORM OF INTEGER 
-|                                        
-| Description : Prints the binary form of the unsigned integer argument.
-|
-| Argument    : num    - Unsigned integer to be printed to the screen.
-|
-| Notes       : Prints the number as space-separated nibbles (4bits), and only 
-|               the number of required nibbles will be printed.
--------------------------------------------------------------------------------
-*/
+ * ----------------------------------------------------------------------------
+ *                                         PRINT HEXADECIMAL FORM OF AN INTEGER
+ *                                       
+ * Description : Prints the hexadecimal form of unsigned integer argument to
+ *               the screen.
+ * 
+ * Argument    : num     Unsigned integer to be printed to the screen.
+ * 
+ * Returns     : void
+ * ----------------------------------------------------------------------------
+ */
 
-void 
-print_bin (uint32_t num);
-
+void print_hex (uint32_t num);
 
 
 /*
--------------------------------------------------------------------------------
-|                      PRINT HEXADECIMAL FORM OF AN INTEGER
-|                                        
-| Description : Prints the hexadecimal form of the unsigned integer argument.
-|
-| Argument    : num    - Unsigned integer to be printed to the screen.
--------------------------------------------------------------------------------
-*/
+ * ----------------------------------------------------------------------------
+ *                                                               PRINT C-STRING
+ *                                       
+ * Description : Prints the C-string passed as the argument.
+ * 
+ * Argument    : str     Pointer to a null-terminated char array (i.e. 
+ *                       c-string), that will be printed to the screen. 
+ * 
+ * Notes       : Strings up to 999 characters + '\0' (null character) can
+ *               currently be handled by this function.
+ * ----------------------------------------------------------------------------
+ */
 
-void 
-print_hex (uint32_t num);
-
-
-
-/*
--------------------------------------------------------------------------------
-|                                 PRINT C-STRING
-|                                        
-| Description : Prints the C-string passed as the argument.
-|
-| Argument    : str  - ptr to the string that will be printed to the terminal. 
-|
-| Notes:      : (1)  C-strings are null-terminated '\0'.
-|               (2)  Only strings of 999 characters + NULL are currently
-|                    handled by this function.
--------------------------------------------------------------------------------
-*/
-
-void 
-print_str (char * str);
-
-
+void print_str (char * str);
 
 #endif //PRINTS_H

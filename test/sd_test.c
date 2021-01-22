@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 #include <avr/io.h>
-#include "usart.h"
+#include "usart0.h"
 #include "prints.h"
 #include "spi.h"
 #include "sd_spi_base.h"
@@ -110,7 +110,7 @@ int main(void)
     // which will print the block's contents to the screen.
     
     // set to 0 to skip this section
-    #if 0
+    #if 1
 
     // block to read in
     blckNum = 8192;
@@ -198,7 +198,7 @@ int main(void)
     // the block was successfully written to. 
 
     // set to 0 to skip this section
-    #if 1
+    #if 0
 
     // block to be written.
     blckNum = 20;
@@ -226,8 +226,9 @@ int main(void)
 
     // read in and print data block
     print_str ("\n\r Read and Print Block "); 
-    print_dec (blckNum); 
+    print_dec (blckNum);
     print_str (" after erasing.");
+    
     if (ctv.type == SDHC) 
       err16 = sd_readSingleBlock (blckNum, blckArr);
     else
@@ -298,7 +299,7 @@ int main(void)
     else 
     {
       print_str("\n\r Read and Print Block "); 
-      print_dec(blckNum); 
+      print_dec(blckNum);
       print_str(" after writing");
 
       if (ctv.type == SDHC)

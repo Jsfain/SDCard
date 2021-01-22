@@ -1,231 +1,175 @@
 /*
-*******************************************************************************
-*                                  AVR-FAT MODULE
-*
-* File    : PRINTS.C
-* Version : 0.0.0.1 
-* Author  : Joshua Fain
-* Target  : ATMega1280
-* License : MIT
-* Copyright (c) 2020
-* 
-*
-* DESCRIPTION:
-* Declare some print functions used to print strings and positive integers in 
-* decimal, binary, and hex formats.
-*******************************************************************************
-*/
-
+ * File    : PRINTS.C
+ * Version : 0.0.0.2
+ * Author  : Joshua Fain
+ * Target  : ATMega1280
+ * License : MIT
+ * Copyright (c) 2020
+ * 
+ * Implementation of PRINTS.H
+ */
 
 #include <stdint.h>
 #include <avr/io.h>
-#include "../includes/prints.h"
-#include "../includes/usart.h"
-
-
-
+#include "prints.h"
+#include "usart0.h"
 
 
 /*
-*******************************************************************************
-*******************************************************************************
- *                     
- *                                 FUNCTIONS   
- *  
-*******************************************************************************
-*******************************************************************************
-*/
+ ******************************************************************************
+ *                                  FUNCTIONS 
+ ******************************************************************************
+ */
 
 /*
--------------------------------------------------------------------------------
-|                  PRINT POSITIVE DECIMAL (BASE-10) INTEGERS 
-|                                        
-| Description : Prints unsigned base-10 integers to a screen.
-|
-| Argument    : num    - Unsigned integer to be printed to the screen.
--------------------------------------------------------------------------------
-*/
+ * ----------------------------------------------------------------------------
+ *                                    PRINT UNSIGNED DECIMAL (BASE-10) INTEGERS 
+ * 
+ * Description : Prints unsigned decimal integer form of argument to screen.
+ * 
+ * Arguments   : num     Unsigned integer to be printed to the screen.
+ * 
+ * Returns     : void
+ * ----------------------------------------------------------------------------
+ */
 
-void 
-print_dec (uint32_t num)
+void print_dec (uint32_t num)
 {
-    //Determine number of decimal digits required to represent the number.
-    //32 bit integer can have up to 10 digits
-    uint8_t len = 1;
+  uint8_t cnt = 0;                // count for number of digits required
+  char    arr[10];                // array length is maximum possible digits
 
-    if(num < 10)                len = 1;
-    else if(num <  100)         len = 2;
-    else if(num <  1000)        len = 3;
-    else if(num <  10000)       len = 4;
-    else if(num <  100000)      len = 5;
-    else if(num <  1000000)     len = 6;
-    else if(num <  10000000)    len = 7;
-    else if(num <  100000000)   len = 8;
-    else if(num <  1000000000)  len = 9;
-    else if(num <= 4294967295)  len = 10; //largest 32-bit integer value
+  //
+  // 1) Load remainder of number into array when divided by 10. 
+  // 2) Update the value of the number by dividing itself by 10. 
+  // 3) Repeat until number is 0. 
+  // Note: The array will be loaded in reverse order.
+  //
+  do
+  {
+    arr[cnt] = num%10 + 48;       // add 48 to convert to ascii
+    num /= 10;
+    cnt++;  
+  }
+  while (num > 0);
 
-    char dec[len];
-
-    // initialize each digit to 0.
-    for (uint8_t i = 0; i < len; i++) 
-      dec[i] = '0'; 
-
-    uint32_t result = num;
-    uint8_t  remainder = 0;
-
-    for (uint8_t i = 0; i < len; i++)
-    {
-        remainder = result % 10;
-        result = result / 10;
-
-        // convert digit to ascii character
-        dec[i] = remainder + 48;
-    }
-    
-    //print characters in decimal array
-    for (int i = len-1; i >= 0; i--) 
-      usart_transmit (dec[i]); 
+  // print digits. 
+  for (int i = cnt-1; i >= 0; i--)
+    usart_transmit (arr[i]);
 }
-//END print_int()
-
 
 
 /*
--------------------------------------------------------------------------------
-|                           PRINT BINARY FORM OF INTEGER 
-|                                        
-| Description : Prints the binary form of the unsigned integer argument.
-|
-| Argument    : num    - Unsigned integer to be printed to the screen.
-|
-| Notes       : Prints the number as space-separated nibbles (4bits), and only 
-|               the number of required nibbles will be printed.
--------------------------------------------------------------------------------
-*/
+ * ----------------------------------------------------------------------------
+ *                                                 PRINT BINARY FORM OF INTEGER 
+ *                                        
+ * Description : Prints the binary form of the integer argument to the screen.
+ * 
+ * Argument    : num     Unsigned integer to be printed to the screen.
+ * 
+ * Returns     : void 
+ * 
+ * Notes       : 1) The function will only print the number of bits required.
+ *               2) A space will be print between every 4-bit group.
+ * ----------------------------------------------------------------------------
+ */
 
-void 
-print_bin (uint32_t num)
+void print_bin (uint32_t num)
 {
-    //Determine number binary digits required to represent the number.
-    uint8_t len = 4;
-    
-    if(num < 0x10)              len = 4;
-    else if(num < 0x100)        len = 8;
-    else if(num < 0x1000)       len = 12;
-    else if(num < 0x10000)      len = 16;
-    else if(num < 0x100000)     len = 20;
-    else if(num < 0x1000000)    len = 24;
-    else if(num < 0x10000000)   len = 28;
-    else if(num <= 0xFFFFFFFF)  len = 32;
+  uint8_t cnt = 0;                // count for number of digits required
+  char    arr[32];                // array length is maximum possible digits
 
-    char bin[len];
+  //
+  // 1) Load remainder of number into array when divided by 2. 
+  // 2) Update the value of the number by dividing itself by 2. 
+  // 3) Repeat until number is 0. 
+  // Note: The array will be loaded in reverse order.
+  //
+  do
+  {
+    arr[cnt] = num%2 + 48;        // add 48 to convert to ascii
+    num /= 2;
+    cnt++;
+  }
+  while (num > 0);
 
-    //initialize each digit to '0'.
-    for (uint8_t i = 0; i < len; i++) 
-      bin[i] = '0'; 
-    
-    uint32_t result = num;
-    uint8_t  remainder = 0;
-
-    for (uint8_t i = 0; i < len; i++)
-    {
-        remainder = result % 2;
-        result = result / 2;
-
-        if (remainder == 0) 
-            bin[i] = '0';
-        else 
-            bin[i] = '1';
-    }
-
-    // print characters in binary array. 
-    // print a space every 4 bits.
-    for (int i = len-1; i >= 0; i--)
-    {
-        usart_transmit (bin[i]);
-        if ((i % 4) == 0) 
-          usart_transmit (' ');
-    }
+  // print digits
+  for (int i = cnt-1; i >= 0; i--)
+  {
+    usart_transmit (arr[i]);
+    // print space every 4 digits
+    if (i%4 == 0) 
+      usart_transmit (' ');
+  }    
 }
-//END print_bin()
-
 
 
 /*
--------------------------------------------------------------------------------
-|                      PRINT HEXADECIMAL FORM OF AN INTEGER
-|                                        
-| Description : Prints the hexadecimal form of the unsigned integer argument.
-|
-| Argument    : num    - Unsigned integer to be printed to the screen.
--------------------------------------------------------------------------------
-*/
+ * ----------------------------------------------------------------------------
+ *                                         PRINT HEXADECIMAL FORM OF AN INTEGER
+ *                                       
+ * Description : Prints the hexadecimal form of unsigned integer argument to
+ *               the screen.
+ * 
+ * Argument    : num     Unsigned integer to be printed to the screen.
+ * 
+ * Returns     : void
+ * ----------------------------------------------------------------------------
+ */
 
-void 
-print_hex(uint32_t num)
+void print_hex (uint32_t num)
 {
-    //Determine number of hexadecimal digits required to represent the number.
-    uint8_t len = 2;
-    
-    if (num < 0x100)           len = 2;
-    else if(num < 0x1000)      len = 3;
-    else if(num < 0x10000)     len = 4;
-    else if(num < 0x100000)    len = 5;
-    else if(num < 0x1000000)   len = 6;
-    else if(num < 0x10000000)  len = 7;
-    else if(num <= 0xFFFFFFFF) len = 8;
+  uint8_t cnt = 0;                // count for number of digits required
+  char    arr[8];                 // array length is maximum possible digits
+       
+  //
+  // 1) Load remainder of number into array when divided by 16. 
+  // 2) Update the value of the number by dividing itself by 16.
+  // 3) Convert the value to an ascii number or letter A-F.
+  // 4) Repeat until number is 0. 
+  // Note: The array will be loaded in reverse order.
+  //
+  do
+  {
+      arr[cnt] = num % 16;
+      num /= 16;
 
-    char hex[len];
-    
-    // initialize each digit to '0'.
-    for (int i = 0; i < len; i++) 
-      hex[i] = '0';
-    
-    uint32_t result = num;
-    uint8_t  remainder = 0;
+      // convert to ascii characters
+      if (arr[cnt] < 10)
+        arr[cnt] += 48;         // ascii numbers
+      else
+        arr[cnt] += 55;         // convert 10-15 to ascii A-F
+      
+      cnt++;
+  }
+  while (num > 0);
 
-    for (int i = 0; i < len; i++)
-    {
-        remainder = result % 16;
-        result = result / 16;
-
-        //convert to ascii characters.
-        if ((remainder < 10) && (remainder >= 0))
-          hex[i] = remainder + 48; //ascii numbers
-        else if ((remainder >= 10) && (remainder <= 16)) 
-          hex[i] = (remainder - 10) + 65; //ascii letters
-    }
-    
-    //print characters in hexadecimal array.
-    for (int i = len-1; i >= 0; i--) 
-      usart_transmit (hex[i]);
+  //print digits.
+  for (int i = cnt-1; i >= 0; i--) 
+    usart_transmit (arr[i]);
 }    
-//END print_hex()
-
 
 
 /*
--------------------------------------------------------------------------------
-|                                 PRINT C-STRING
-|                                        
-| Description : Prints the C-string passed as the argument.
-|
-| Argument    : str  - ptr to the string that will be printed to the terminal. 
-|
-| Notes:      : (1)  C-strings are null-terminated '\0'.
-|               (2)  Only strings of 999 characters + NULL are currently
-|                    handled by this function.
--------------------------------------------------------------------------------
-*/
+ * ----------------------------------------------------------------------------
+ *                                                               PRINT C-STRING
+ *                                       
+ * Description : Prints the C-string passed as the argument.
+ * 
+ * Argument    : str     Pointer to a null-terminated char array (i.e. string)
+ *                       that will be printed to the screen.
+ * 
+ * Notes       : Strings up to 999 characters + '\0' (null character) can
+ *               currently be handled by this function.
+ * ----------------------------------------------------------------------------
+ */
 
-void 
-print_str(char * str)
+void print_str (char * str)
 {
-    int i = 0;
-    while(str[i] != '\0' && i < 1001)
-    {
-        usart_transmit(str[i]);
-        i++;
-    };
+  uint16_t cnt = 0;
+  while (str[cnt] != '\0' && cnt <= 1000)
+  {
+    usart_transmit (str[cnt]);
+    cnt++;
+  };
 }
-//END print_str()
+

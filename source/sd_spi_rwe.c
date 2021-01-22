@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 #include <avr/io.h>
-#include "usart.h"
+#include "usart0.h"
 #include "prints.h"
 #include "spi.h"
 #include "sd_spi_base.h"
@@ -124,9 +124,15 @@ void sd_printSingleBlock (uint8_t * blckArr)
   print_str ("\n\n\r BLOCK OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
   for (; row < BLOCK_LEN/16; row++)
   {
-    // print row offset address
     print_str ("\n\r   ");
-    if (offset < 0x100)
+
+    // print row offset address
+    if (offset < 0x10)
+    {
+      print_str ("0x00"); 
+      print_hex (offset);
+    }
+    else if (offset < 0x100)
     {
       print_str ("0x0"); 
       print_hex (offset);
@@ -146,6 +152,12 @@ void sd_printSingleBlock (uint8_t * blckArr)
       if (space % 4 == 0) 
         print_str (" ");
       print_str (" ");
+
+      // if value is not two hex digits, then first print a 0. 
+      if (blckArr[offset] < 0x10)
+        usart_transmit ('0');
+
+      // print value in hex.
       print_hex (blckArr[offset]);
       space++;
     }
