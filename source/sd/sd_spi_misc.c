@@ -349,9 +349,9 @@ void sd_findNonZeroDataBlockNums (uint32_t startBlckAddr, uint32_t endBlckAddr)
       if (blkArr[i]!=0)
       {
         if (tab%5==0) 
-          print_str("\n\r");
-        print_str ("\t\t"); 
-        print_dec (blckNum);
+          print_Str("\n\r");
+        print_Str ("\t\t"); 
+        print_Dec (blckNum);
         tab++;
         break;
       }
@@ -396,8 +396,8 @@ uint16_t sd_printMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks)
   {
     for (uint8_t i = 0; i < numOfBlcks; i++)
     {
-      print_str ("\n\r Block ");
-      print_dec (startBlckAddr + i);
+      print_Str ("\n\r Block ");
+      print_Dec (startBlckAddr + i);
       timeout = 0;
 
       // wait for start block token.
@@ -452,8 +452,8 @@ uint16_t sd_printMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks)
  * ----------------------------------------------------------------------------
  */
 
-uint16_t sd_writeMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks, 
-                                 uint8_t * dataArr)
+uint16_t sd_writeMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks, 
+                                 uint8_t* dataArr)
 {
   uint8_t  r1;
   uint16_t timeout = 0;
@@ -462,7 +462,7 @@ uint16_t sd_writeMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks,
   uint8_t  dataTknMask = 0x1F;
 
   CS_SD_LOW;    
-  sd_sendCommand (WRITE_MULTIPLE_BLOCK, startBlckAddr);    //CMD25
+  sd_sendCommand(WRITE_MULTIPLE_BLOCK, startBlckAddr);    //CMD25
   r1 = sd_getR1();
   
   if (r1 > 0)
@@ -578,7 +578,7 @@ uint16_t sd_writeMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks,
  * ----------------------------------------------------------------------------
  */
 
-uint16_t sd_getNumOfWellWrittenBlocks (uint32_t * wellWrtnBlcks)
+uint16_t sd_getNumOfWellWrittenBlocks(uint32_t* wellWrtnBlcks)
 {
   uint8_t  r1;
   uint16_t timeout = 0; 

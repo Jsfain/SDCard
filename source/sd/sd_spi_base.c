@@ -47,7 +47,7 @@ uint8_t pvt_crc7 (uint64_t tca);
  * -----------------------------------------------------------------------------
  */
 
-uint32_t sd_spiModeInit (CTV * ctv)
+uint32_t sd_spiModeInit(CTV* ctv)
 {
   uint8_t  r1 = 0;                          // R1 response
   uint8_t  r7[5];                           // R7 response: SEND_IF_COND (CMD8)
@@ -65,7 +65,7 @@ uint32_t sd_spiModeInit (CTV * ctv)
 
   // Wait at least 80 clock cycles for power up to complete.
   for (uint8_t i = 0; i <= 10; i++)
-    sd_sendByteSPI (0xFF);
+    sd_sendByteSPI(0xFF);
 
 
   // Step 1: GO_IDLE_STATE (CMD0)
@@ -82,7 +82,7 @@ uint32_t sd_spiModeInit (CTV * ctv)
   uint8_t voltSuppRng  = 0x01;              // 2.7 to 3.6V
   
   CS_SD_LOW;
-  sd_sendCommand (SEND_IF_COND, (uint16_t)voltSuppRng << 8 | chkPtrn);
+  sd_sendCommand(SEND_IF_COND, (uint16_t)voltSuppRng << 8 | chkPtrn);
 
   // Get R7 response
   r7[0] = sd_getR1();                       // First R7 byte is R1 response.
@@ -209,9 +209,9 @@ uint32_t sd_spiModeInit (CTV * ctv)
  * ----------------------------------------------------------------------------
  */
 
-void sd_sendByteSPI (uint8_t byte)
+void sd_sendByteSPI(uint8_t byte)
 {
-  spi_masterTransmit (byte);
+  spi_MasterTransmit (byte);
 }
 
 
@@ -233,10 +233,10 @@ void sd_sendByteSPI (uint8_t byte)
  * ----------------------------------------------------------------------------
  */
 
-uint8_t sd_receiveByteSPI (void)
+uint8_t sd_receiveByteSPI(void)
 {
   sd_sendByteSPI (0xFF);
-  return spi_masterReceive();
+  return spi_MasterReceive();
 }
 
 
@@ -254,7 +254,7 @@ uint8_t sd_receiveByteSPI (void)
  * ----------------------------------------------------------------------------
  */
 
-void sd_sendCommand (uint8_t cmd, uint32_t arg)
+void sd_sendCommand(uint8_t cmd, uint32_t arg)
 {
   // Prepare the command to be sent. Total of 48 bits. 
   // The structure of a command (MSB --> LSB) is:
@@ -303,7 +303,7 @@ void sd_sendCommand (uint8_t cmd, uint32_t arg)
  * ----------------------------------------------------------------------------
  */
 
-uint8_t sd_getR1 (void)
+uint8_t sd_getR1(void)
 {
   uint8_t r1;
   uint8_t timeout = 0;
@@ -329,26 +329,26 @@ uint8_t sd_getR1 (void)
  * ----------------------------------------------------------------------------
  */
 
-void sd_printR1 (uint8_t r1)
+void sd_printR1(uint8_t r1)
 {
   if (r1 & R1_TIMEOUT)
-    print_str (" R1_TIMEOUT,");
+    print_Str (" R1_TIMEOUT,");
   if (r1 & PARAMETER_ERROR)
-    print_str (" PARAMETER_ERROR,");
+    print_Str (" PARAMETER_ERROR,");
   if (r1 & ADDRESS_ERROR)
-    print_str (" ADDRESS_ERROR,");
+    print_Str (" ADDRESS_ERROR,");
   if (r1 & ERASE_SEQUENCE_ERROR)
-    print_str (" ERASE_SEQUENCE_ERROR,");
+    print_Str (" ERASE_SEQUENCE_ERROR,");
   if (r1 & COM_CRC_ERROR)
-    print_str (" COM_CRC_ERROR,");
+    print_Str (" COM_CRC_ERROR,");
   if (r1 & ILLEGAL_COMMAND)
-    print_str (" ILLEGAL_COMMAND,");
+    print_Str (" ILLEGAL_COMMAND,");
   if (r1 & ERASE_RESET)
-    print_str (" ERASE_RESET,");
+    print_Str (" ERASE_RESET,");
   if (r1 & IN_IDLE_STATE)
-    print_str (" IN_IDLE_STATE");
+    print_Str (" IN_IDLE_STATE");
   if (r1 == 0)
-    print_str (" OUT_OF_IDLE");
+    print_Str (" OUT_OF_IDLE");
 }
 
 
@@ -372,28 +372,28 @@ void sd_printR1 (uint8_t r1)
  * ----------------------------------------------------------------------------
  */
 
-void sd_printInitError (uint32_t initResp)
+void sd_printInitError(uint32_t initResp)
 {
   if (initResp & FAILED_GO_IDLE_STATE)
-    print_str (" FAILED_GO_IDLE_STATE,");
+    print_Str (" FAILED_GO_IDLE_STATE,");
   if (initResp & FAILED_SEND_IF_COND)
-    print_str (" FAILED_SEND_IF_COND,");
+    print_Str (" FAILED_SEND_IF_COND,");
   if (initResp & UNSUPPORTED_CARD_TYPE)
-    print_str (" UNSUPPORTED_CARD_TYPE,");
+    print_Str (" UNSUPPORTED_CARD_TYPE,");
   if (initResp & FAILED_CRC_ON_OFF)
-    print_str (" FAILED_CRC_ON_OFF,");
+    print_Str (" FAILED_CRC_ON_OFF,");
   if (initResp & FAILED_APP_CMD)
-    print_str (" FAILED_APP_CMD,");
+    print_Str (" FAILED_APP_CMD,");
   if (initResp & FAILED_SD_SEND_OP_COND)
-    print_str (" FAILED_SD_SEND_OP_COND,");
+    print_Str (" FAILED_SD_SEND_OP_COND,");
   if (initResp & OUT_OF_IDLE_TIMEOUT)
-    print_str (" OUT_OF_IDLE_TIMEOUT,");
+    print_Str (" OUT_OF_IDLE_TIMEOUT,");
   if (initResp & FAILED_READ_OCR)
-    print_str (" FAILED_READ_OCR,");
+    print_Str (" FAILED_READ_OCR,");
   if (initResp & POWER_UP_NOT_COMPLETE)
-    print_str (" POWER_UP_NOT_COMPLETE,");
+    print_Str (" POWER_UP_NOT_COMPLETE,");
   if (initResp == 0)
-    print_str (" INIT_SUCCESS\n\r");
+    print_Str (" INIT_SUCCESS\n\r");
 }
 
 
@@ -415,7 +415,7 @@ void sd_printInitError (uint32_t initResp)
  * ----------------------------------------------------------------------------
  */
 
-uint8_t pvt_crc7 (uint64_t tca)
+uint8_t pvt_crc7(uint64_t tca)
 {
   // used to test if division will take place during a given iteration.
   uint64_t test = 0x800000000000; 

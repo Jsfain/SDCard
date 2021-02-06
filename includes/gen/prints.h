@@ -32,7 +32,7 @@
  * ----------------------------------------------------------------------------
  */
 
-void print_dec (uint32_t num);
+void print_Dec(uint32_t num);
 
 
 /*
@@ -50,7 +50,7 @@ void print_dec (uint32_t num);
  * ----------------------------------------------------------------------------
  */
 
-void print_bin (uint32_t num);
+void print_Bin(uint32_t num);
 
 
 /*
@@ -66,7 +66,7 @@ void print_bin (uint32_t num);
  * ----------------------------------------------------------------------------
  */
 
-void print_hex (uint32_t num);
+void print_Hex(uint32_t num);
 
 
 /*
@@ -83,6 +83,6 @@ void print_hex (uint32_t num);
  * ----------------------------------------------------------------------------
  */
 
-void print_str (char * str);
+void print_Str(char* str);
 
 #endif //PRINTS_H

@@ -13,12 +13,12 @@
 #include <avr/io.h>
 #include "usart0.h"
 
-
 /*
  ******************************************************************************
  *                                  FUNCTIONS
  ******************************************************************************
  */
+
 
 /*
  * ----------------------------------------------------------------------------
@@ -32,7 +32,7 @@
  * ----------------------------------------------------------------------------
  */
 
-void usart_init (void)
+void usart_Init(void)
 {
   //Set baud rate
   UBRR0H = (uint8_t)(UBRR_VALUE >> 8);
@@ -58,10 +58,10 @@ void usart_init (void)
  * ----------------------------------------------------------------------------
 */
 
-uint8_t usart_receive (void)
+uint8_t usart_Receive(void)
 {
   // poll the RX complete flag, until it is set
-  while ( !(UCSR0A & (1 << RXC0)))
+  while ( !(UCSR0A & 1 << RXC0))
   ;
   
   // return byte received into usart buffer
@@ -81,10 +81,10 @@ uint8_t usart_receive (void)
  * ----------------------------------------------------------------------------
  */
 
-void usart_transmit (uint8_t data)
+void usart_Transmit(uint8_t data)
 {
   // poll Data Reg Empty Flag until it is set.
-  while( !(UCSR0A & (1 << UDRE0)))
+  while( !(UCSR0A & 1 << UDRE0))
   ;
   
   // load data into usart buffer which will transmit it.

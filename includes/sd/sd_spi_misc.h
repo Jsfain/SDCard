@@ -30,9 +30,9 @@
  * ---------------------------------------------------------------------------
  */
 
-uint32_t sd_getMemoryCapacitySDSC (void);
+uint32_t sd_getMemoryCapacitySDSC(void);
 
-uint32_t sd_getMemoryCapacitySDHC (void);
+uint32_t sd_getMemoryCapacitySDHC(void);
 
 
 /* 
@@ -53,7 +53,7 @@ uint32_t sd_getMemoryCapacitySDHC (void);
  * ----------------------------------------------------------------------------
  */
 
-void sd_findNonZeroDataBlockNums (uint32_t startBlckAddr, uint32_t endBlckAddr);
+void sd_findNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr);
 
 
 /* 
@@ -73,7 +73,7 @@ void sd_findNonZeroDataBlockNums (uint32_t startBlckAddr, uint32_t endBlckAddr);
  * ----------------------------------------------------------------------------
  */
 
-uint16_t sd_printMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks);
+uint16_t sd_printMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks);
 
 
 /* 
@@ -98,8 +98,8 @@ uint16_t sd_printMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks);
  * ----------------------------------------------------------------------------
  */
 
-uint16_t sd_writeMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks, 
-                                 uint8_t * dataArr);
+uint16_t sd_writeMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks, 
+                                 uint8_t* dataArr);
 
 
 /* 
@@ -122,7 +122,7 @@ uint16_t sd_writeMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks,
  * ----------------------------------------------------------------------------
  */
 
-uint16_t sd_getNumOfWellWrittenBlocks (uint32_t *wellWrittenBlocks);
+uint16_t sd_getNumOfWellWrittenBlocks(uint32_t* wellWrittenBlocks);
 
 
 #endif // SD_SPI_MISC_H

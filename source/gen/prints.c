@@ -33,7 +33,7 @@
  * ----------------------------------------------------------------------------
  */
 
-void print_dec (uint32_t num)
+void print_Dec(uint32_t num)
 {
   uint8_t cnt = 0;                // count for number of digits required
   char    arr[10];                // array length is maximum possible digits
@@ -54,7 +54,7 @@ void print_dec (uint32_t num)
 
   // print digits. 
   for (int i = cnt-1; i >= 0; i--)
-    usart_transmit (arr[i]);
+    usart_Transmit (arr[i]);
 }
 
 
@@ -73,7 +73,7 @@ void print_dec (uint32_t num)
  * ----------------------------------------------------------------------------
  */
 
-void print_bin (uint32_t num)
+void print_Bin(uint32_t num)
 {
   uint8_t cnt = 0;                // count for number of digits required
   char    arr[32];                // array length is maximum possible digits
@@ -95,10 +95,10 @@ void print_bin (uint32_t num)
   // print digits
   for (int i = cnt-1; i >= 0; i--)
   {
-    usart_transmit (arr[i]);
+    usart_Transmit (arr[i]);
     // print space every 4 digits
     if (i%4 == 0) 
-      usart_transmit (' ');
+      usart_Transmit (' ');
   }    
 }
 
@@ -116,7 +116,7 @@ void print_bin (uint32_t num)
  * ----------------------------------------------------------------------------
  */
 
-void print_hex (uint32_t num)
+void print_Hex(uint32_t num)
 {
   uint8_t cnt = 0;                // count for number of digits required
   char    arr[8];                 // array length is maximum possible digits
@@ -145,7 +145,7 @@ void print_hex (uint32_t num)
 
   //print digits.
   for (int i = cnt-1; i >= 0; i--) 
-    usart_transmit (arr[i]);
+    usart_Transmit (arr[i]);
 }    
 
 
@@ -163,12 +163,12 @@ void print_hex (uint32_t num)
  * ----------------------------------------------------------------------------
  */
 
-void print_str (char * str)
+void print_Str(char* str)
 {
   uint16_t cnt = 0;
   while (str[cnt] != '\0' && cnt <= 1000)
   {
-    usart_transmit (str[cnt]);
+    usart_Transmit (str[cnt]);
     cnt++;
   };
 }

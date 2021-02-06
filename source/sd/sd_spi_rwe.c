@@ -53,7 +53,7 @@
  * ----------------------------------------------------------------------------
  */
 
-uint16_t sd_readSingleBlock (uint32_t blckAddr, uint8_t * blckArr)
+uint16_t sd_readSingleBlock(uint32_t blckAddr, uint8_t* blckArr)
 {
   uint8_t timeout = 0;
   uint8_t r1 = 0;                                
@@ -115,67 +115,67 @@ uint16_t sd_readSingleBlock (uint32_t blckAddr, uint8_t * blckArr)
  * ----------------------------------------------------------------------------
  */
 
-void sd_printSingleBlock (uint8_t * blckArr)
+void sd_printSingleBlock(uint8_t* blckArr)
 {
   uint16_t offset = 0;
   uint16_t space = 0;
   uint16_t row = 0;
   
-  print_str ("\n\n\r BLOCK OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
+  print_Str ("\n\n\r BLOCK OFFSET\t\t\t\t   HEX\t\t\t\t\t     ASCII\n\r");
   for (; row < BLOCK_LEN/16; row++)
   {
-    print_str ("\n\r   ");
+    print_Str ("\n\r   ");
 
     // print row offset address
     if (offset < 0x10)
     {
-      print_str ("0x00"); 
-      print_hex (offset);
+      print_Str ("0x00"); 
+      print_Hex (offset);
     }
     else if (offset < 0x100)
     {
-      print_str ("0x0"); 
-      print_hex (offset);
+      print_Str ("0x0"); 
+      print_Hex (offset);
     }
     else if (offset < 0x1000)
     {
-      print_str ("0x"); 
-      print_hex (offset);
+      print_Str ("0x"); 
+      print_Hex (offset);
     }
     
     // print HEX values of the block's row at offset
-    print_str ("\t ");
+    print_Str ("\t ");
     space = 0;
     for (offset = row*16; offset < row*16 + 16; offset++)
     {
       // every 4 bytes print an extra space.
       if (space % 4 == 0) 
-        print_str (" ");
-      print_str (" ");
+        print_Str (" ");
+      print_Str (" ");
 
       // if value is not two hex digits, then first print a 0. 
       if (blckArr[offset] < 0x10)
-        usart_transmit ('0');
+        usart_Transmit ('0');
 
       // print value in hex.
-      print_hex (blckArr[offset]);
+      print_Hex (blckArr[offset]);
       space++;
     }
     
     // print ASCII values of the block's row at offset
-    print_str ("\t\t");
+    print_Str ("\t\t");
     offset -= 16;
     for (offset = row*16; offset < row*16 + 16; offset++)
     {
       if (blckArr[offset] < 32) 
-        usart_transmit ( ' ' ); 
+        usart_Transmit ( ' ' ); 
       else if (blckArr[offset] < 128)
-        usart_transmit (blckArr[offset]);
+        usart_Transmit (blckArr[offset]);
       else 
-        usart_transmit ('.');
+        usart_Transmit ('.');
     }
   }    
-  print_str ("\n\n\r");
+  print_Str ("\n\n\r");
 }
  
 
@@ -196,7 +196,7 @@ void sd_printSingleBlock (uint8_t * blckArr)
  * ----------------------------------------------------------------------------
  */
 
-uint16_t sd_writeSingleBlock (uint32_t blckAddr, uint8_t * dataArr)
+uint16_t sd_writeSingleBlock(uint32_t blckAddr, uint8_t* dataArr)
 {
   uint8_t  r1;
   uint16_t timeout = 0;
@@ -293,7 +293,7 @@ uint16_t sd_writeSingleBlock (uint32_t blckAddr, uint8_t * dataArr)
  * ----------------------------------------------------------------------------
  */
 
-uint16_t sd_eraseBlocks (uint32_t startBlckAddr, uint32_t endBlckAddr)
+uint16_t sd_eraseBlocks(uint32_t startBlckAddr, uint32_t endBlckAddr)
 {
   uint8_t r1;
   uint16_t timeout = 0; 
@@ -354,21 +354,21 @@ uint16_t sd_eraseBlocks (uint32_t startBlckAddr, uint32_t endBlckAddr)
  * ----------------------------------------------------------------------------
  */
 
-void sd_printReadError (uint16_t err)
+void sd_printReadError(uint16_t err)
 {
   switch (err & 0xFF00)
   {
     case (R1_ERROR):
-      print_str ("\n\r R1_ERROR");
+      print_Str ("\n\r R1_ERROR");
       break;
     case (READ_SUCCESS):
-      print_str ("\n\r READ_SUCCESS");
+      print_Str ("\n\r READ_SUCCESS");
       break;
     case (START_TOKEN_TIMEOUT):
-      print_str ("\n\r START_TOKEN_TIMEOUT");
+      print_Str ("\n\r START_TOKEN_TIMEOUT");
       break;
     default:
-      print_str ("\n\r UNKNOWN RESPONSE");
+      print_Str ("\n\r UNKNOWN RESPONSE");
   }
 }
 
@@ -385,33 +385,33 @@ void sd_printReadError (uint16_t err)
  * ----------------------------------------------------------------------------
  */
 
-void sd_printWriteError (uint16_t err)
+void sd_printWriteError(uint16_t err)
 {
   switch(err&0xFF00)
   {
     case (DATA_ACCEPTED_TOKEN_RECEIVED):
-      print_str ("\n\r DATA_ACCEPTED_TOKEN_RECEIVED");
+      print_Str ("\n\r DATA_ACCEPTED_TOKEN_RECEIVED");
       break;
     case (CRC_ERROR_TOKEN_RECEIVED):
-      print_str ("\n\r CRC_ERROR_TOKEN_RECEIVED");
+      print_Str ("\n\r CRC_ERROR_TOKEN_RECEIVED");
       break;
     case (WRITE_ERROR_TOKEN_RECEIVED):
-      print_str ("\n\r WRITE_ERROR_TOKEN_RECEIVED");
+      print_Str ("\n\r WRITE_ERROR_TOKEN_RECEIVED");
       break;
     case (INVALID_DATA_RESPONSE):
-      print_str ("\n\r INVALID_DATA_RESPONSE"); // Successful data write
+      print_Str ("\n\r INVALID_DATA_RESPONSE"); // Successful data write
       break;
     case (DATA_RESPONSE_TIMEOUT):
-      print_str ("\n\r DATA_RESPONSE_TIMEOUT");
+      print_Str ("\n\r DATA_RESPONSE_TIMEOUT");
       break;
     case (CARD_BUSY_TIMEOUT):
-      print_str ("\n\r CARD_BUSY_TIMEOUT");
+      print_Str ("\n\r CARD_BUSY_TIMEOUT");
       break;
     case (R1_ERROR):
-      print_str ("\n\r R1_ERROR"); // Successful data write
+      print_Str ("\n\r R1_ERROR"); // Successful data write
       break;
     default:
-      print_str ("\n\r UNKNOWN RESPONSE");
+      print_Str ("\n\r UNKNOWN RESPONSE");
   }
 }
 
@@ -428,26 +428,26 @@ void sd_printWriteError (uint16_t err)
  * ----------------------------------------------------------------------------
  */
 
-void sd_printEraseError (uint16_t err)
+void sd_printEraseError(uint16_t err)
 {
   switch(err&0xFF00)
   {
     case (ERASE_SUCCESSFUL):
-      print_str ("\n\r ERASE_SUCCESSFUL");
+      print_Str ("\n\r ERASE_SUCCESSFUL");
       break;
     case (SET_ERASE_START_ADDR_ERROR):
-      print_str ("\n\r SET_ERASE_START_ADDR_ERROR");
+      print_Str ("\n\r SET_ERASE_START_ADDR_ERROR");
       break;
     case (SET_ERASE_END_ADDR_ERROR):
-      print_str ("\n\r SET_ERASE_END_ADDR_ERROR");
+      print_Str ("\n\r SET_ERASE_END_ADDR_ERROR");
       break;
     case (ERASE_ERROR):
-      print_str ("\n\r ERROR_ERASE");
+      print_Str ("\n\r ERROR_ERASE");
       break;
     case (ERASE_BUSY_TIMEOUT):
-      print_str ("\n\r ERASE_BUSY_TIMEOUT");
+      print_Str ("\n\r ERASE_BUSY_TIMEOUT");
       break;
     default:
-      print_str ("\n\r UNKNOWN RESPONSE");
+      print_Str ("\n\r UNKNOWN RESPONSE");
   }
 }

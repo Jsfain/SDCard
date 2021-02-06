@@ -174,7 +174,7 @@ typedef struct {
  * -----------------------------------------------------------------------------
  */
 
-uint32_t sd_spiModeInit (CTV* ctv);
+uint32_t sd_spiModeInit(CTV* ctv);
 
 
 /*
@@ -195,7 +195,7 @@ uint32_t sd_spiModeInit (CTV* ctv);
  * ----------------------------------------------------------------------------
  */
 
-void sd_sendByteSPI (uint8_t byte);
+void sd_sendByteSPI(uint8_t byte);
 
 
 /*
@@ -216,7 +216,7 @@ void sd_sendByteSPI (uint8_t byte);
  * ----------------------------------------------------------------------------
  */
 
-uint8_t sd_receiveByteSPI (void);
+uint8_t sd_receiveByteSPI(void);
 
 
 /*
@@ -233,7 +233,7 @@ uint8_t sd_receiveByteSPI (void);
  * ----------------------------------------------------------------------------
  */
 
-void sd_sendCommand (uint8_t cmd, uint32_t arg);
+void sd_sendCommand(uint8_t cmd, uint32_t arg);
 
 
 /*
@@ -256,7 +256,7 @@ void sd_sendCommand (uint8_t cmd, uint32_t arg);
  * ----------------------------------------------------------------------------
  */
 
-uint8_t sd_getR1 (void);
+uint8_t sd_getR1(void);
 
 
 /*
@@ -271,7 +271,7 @@ uint8_t sd_getR1 (void);
  * ----------------------------------------------------------------------------
  */
 
-void sd_printR1 (uint8_t r1);
+void sd_printR1(uint8_t r1);
 
 
 /*
@@ -293,6 +293,6 @@ void sd_printR1 (uint8_t r1);
  *               read the R1 portion pass initResp to sd_printR1().
  * ----------------------------------------------------------------------------
  */
-void sd_printInitError (uint32_t initErr);
+void sd_printInitError(uint32_t initErr);
 
 #endif //SD_SPI_H

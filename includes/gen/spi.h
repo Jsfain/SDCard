@@ -58,7 +58,7 @@
  * ----------------------------------------------------------------------------
  */
 
-void spi_masterInit (void);
+void spi_MasterInit(void);
 
 
 /*
@@ -73,7 +73,7 @@ void spi_masterInit (void);
  * ----------------------------------------------------------------------------
  */
 
-uint8_t spi_masterReceive (void);
+uint8_t spi_MasterReceive(void);
 
 
 /*
@@ -88,6 +88,6 @@ uint8_t spi_masterReceive (void);
  * ----------------------------------------------------------------------------
  */
 
-void spi_masterTransmit (uint8_t byte);
+void spi_MasterTransmit(uint8_t byte);
 
 #endif  //SPI_H

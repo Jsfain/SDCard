@@ -120,7 +120,7 @@
  * ----------------------------------------------------------------------------
  */
 
-uint16_t sd_readSingleBlock (uint32_t blckAddr, uint8_t * blckArr);
+uint16_t sd_readSingleBlock(uint32_t blckAddr, uint8_t* blckArr);
 
 
 /*
@@ -140,7 +140,7 @@ uint16_t sd_readSingleBlock (uint32_t blckAddr, uint8_t * blckArr);
  * ----------------------------------------------------------------------------
  */
 
-void sd_printSingleBlock (uint8_t * blckArr);
+void sd_printSingleBlock(uint8_t* blckArr);
 
 
 /*
@@ -160,7 +160,7 @@ void sd_printSingleBlock (uint8_t * blckArr);
  * ----------------------------------------------------------------------------
  */
 
-uint16_t sd_writeSingleBlock (uint32_t blckAddr, uint8_t * dataArr);
+uint16_t sd_writeSingleBlock(uint32_t blckAddr, uint8_t* dataArr);
 
 
 /*
@@ -178,7 +178,7 @@ uint16_t sd_writeSingleBlock (uint32_t blckAddr, uint8_t * dataArr);
  * ----------------------------------------------------------------------------
  */
 
-uint16_t sd_eraseBlocks (uint32_t startBlckAddr, uint32_t endBlckAddr);
+uint16_t sd_eraseBlocks(uint32_t startBlckAddr, uint32_t endBlckAddr);
 
 
 /*
@@ -200,7 +200,7 @@ uint16_t sd_eraseBlocks (uint32_t startBlckAddr, uint32_t endBlckAddr);
  * ----------------------------------------------------------------------------
  */
 
-void sd_printReadError (uint16_t err);
+void sd_printReadError(uint16_t err);
 
 
 /*
@@ -215,7 +215,7 @@ void sd_printReadError (uint16_t err);
  * ----------------------------------------------------------------------------
  */
 
-void sd_printWriteError (uint16_t err);
+void sd_printWriteError(uint16_t err);
 
 
 /*
@@ -230,6 +230,6 @@ void sd_printWriteError (uint16_t err);
  * ----------------------------------------------------------------------------
  */
 
-void sd_printEraseError (uint16_t err);
+void sd_printEraseError(uint16_t err);
 
 #endif // SD_SPI_RWE_H
