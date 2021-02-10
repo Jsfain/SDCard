@@ -13,7 +13,6 @@
 #include <avr/io.h>
 #include "spi.h"
 
-
 /*
  ******************************************************************************
  *                                  FUNCTIONS
@@ -31,7 +30,6 @@
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-
 void spi_MasterInit(void)
 {
   // Set MOSI, SCK, SS pins of SPI port as outputs.
@@ -51,7 +49,6 @@ void spi_MasterInit(void)
   SPSR &= ~(1 << SPI2X);
 }
 
-
 /*
  * ----------------------------------------------------------------------------
  *                                                             SPI RECEIVE BYTE
@@ -63,12 +60,10 @@ void spi_MasterInit(void)
  * Returns     : byte received by the SPI port.
  * ----------------------------------------------------------------------------
  */
-
 uint8_t spi_MasterReceive(void)
 { 
   return SPDR;
 }
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -81,7 +76,6 @@ uint8_t spi_MasterReceive(void)
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-
 void spi_MasterTransmit(uint8_t byte)
 {
   // load byte into SPDR to transmit data.

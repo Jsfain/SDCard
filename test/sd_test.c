@@ -47,7 +47,7 @@ int main(void)
   {
     print_Str ("\n\n\r >> SD Card Initialization Attempt "); 
     print_Dec(i);
-    initResp = sd_spiModeInit (&ctv);
+    initResp = sd_InitModeSPI (&ctv);
 
     // Failed to initialize if initResp is not 0.
     if (initResp != 0)

@@ -14,7 +14,6 @@
 #include "prints.h"
 #include "usart0.h"
 
-
 /*
  ******************************************************************************
  *                                  FUNCTIONS 
@@ -32,11 +31,11 @@
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-
 void print_Dec(uint32_t num)
 {
-  uint8_t cnt = 0;                // count for number of digits required
-  char    arr[10];                // array length is maximum possible digits
+  uint8_t radix = 10;             // decimal radix
+  uint8_t digitCntTot = 0;        // count of totalt number of digits required
+  uint8_t digit[10];             // length is maximum possible digits
 
   //
   // 1) Load remainder of number into array when divided by 10. 
@@ -46,17 +45,16 @@ void print_Dec(uint32_t num)
   //
   do
   {
-    arr[cnt] = num%10 + 48;       // add 48 to convert to ascii
-    num /= 10;
-    cnt++;  
+    digit[digitCntTot] = num % radix + 48;      // add 48 to convert to ascii
+    num /= radix;
+    digitCntTot++;
   }
   while (num > 0);
 
-  // print digits. 
-  for (int i = cnt-1; i >= 0; i--)
-    usart_Transmit (arr[i]);
+  // print digits
+  for (int digitPos = digitCntTot - 1; digitPos >= 0; digitPos--)
+    usart_Transmit(digit[digitPos]);
 }
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -72,36 +70,34 @@ void print_Dec(uint32_t num)
  *               2) A space will be print between every 4-bit group.
  * ----------------------------------------------------------------------------
  */
-
 void print_Bin(uint32_t num)
 {
-  uint8_t cnt = 0;                // count for number of digits required
-  char    arr[32];                // array length is maximum possible digits
-
+  uint8_t radix = 2;              // binary radix
+  uint8_t digitCntTot = 0;        // count of total number of digits required
+  uint8_t digit[32];              // length is max possible digits
+  
   //
-  // 1) Load remainder of number into array when divided by 2. 
-  // 2) Update the value of the number by dividing itself by 2. 
-  // 3) Repeat until number is 0. 
-  // Note: The array will be loaded in reverse order.
+  // 1) Load remainder of number into digit array when divided by 2. 
+  // 2) Update the value of the number by dividing itself by 2.
+  // 4) Repeat until number is 0. 
+  // Note: The array is loaded in reverse order.
   //
   do
   {
-    arr[cnt] = num%2 + 48;        // add 48 to convert to ascii
-    num /= 2;
-    cnt++;
+    digit[digitCntTot] = num % radix + 48;    // add 48 to convert to ascii
+    num /= radix; 
+    digitCntTot++;
   }
   while (num > 0);
 
-  // print digits
-  for (int i = cnt-1; i >= 0; i--)
+  // print digits.
+  for (int digitPos = digitCntTot - 1; digitPos >= 0; digitPos--)
   {
-    usart_Transmit (arr[i]);
-    // print space every 4 digits
-    if (i%4 == 0) 
-      usart_Transmit (' ');
-  }    
+    usart_Transmit(digit[digitPos]); 
+    if (digitPos % 4 == 0)
+      usart_Transmit(' ');
+  }
 }
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -115,39 +111,38 @@ void print_Bin(uint32_t num)
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-
 void print_Hex(uint32_t num)
 {
-  uint8_t cnt = 0;                // count for number of digits required
-  char    arr[8];                 // array length is maximum possible digits
-       
+  uint8_t radix = 16;             // hex radix
+  uint8_t digitCntTot = 0;        // total number of digits required
+  uint8_t digit[8];               // length is max possible digits
+  
   //
-  // 1) Load remainder of number into array when divided by 16. 
+  // 1) Load remainder of number into digit array when divided by 16. 
   // 2) Update the value of the number by dividing itself by 16.
-  // 3) Convert the value to an ascii number or letter A-F.
+  // 3) Convert the value to an ascii number or letter (A-F) character.
   // 4) Repeat until number is 0. 
-  // Note: The array will be loaded in reverse order.
+  // Note: The array is loaded in reverse order.
   //
   do
   {
-      arr[cnt] = num % 16;
-      num /= 16;
+    digit[digitCntTot] = num % radix;
+    num /= radix;
 
-      // convert to ascii characters
-      if (arr[cnt] < 10)
-        arr[cnt] += 48;         // ascii numbers
-      else
-        arr[cnt] += 55;         // convert 10-15 to ascii A-F
-      
-      cnt++;
+    // convert to ascii characters
+    if (digit[digitCntTot] < 10)
+      digit[digitCntTot] += 48;   // add 48 to convert to ascii numbers
+    else
+      digit[digitCntTot] += 55;   // convert 10 to 15 to ascii A to F
+    
+    digitCntTot++;
   }
   while (num > 0);
 
-  //print digits.
-  for (int i = cnt-1; i >= 0; i--) 
-    usart_Transmit (arr[i]);
+  // print digits.
+  for (int digitPos = digitCntTot - 1; digitPos >= 0; digitPos--)
+    usart_Transmit(digit[digitPos]);
 }    
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -162,14 +157,15 @@ void print_Hex(uint32_t num)
  *               currently be handled by this function.
  * ----------------------------------------------------------------------------
  */
-
 void print_Str(char* str)
 {
-  uint16_t cnt = 0;
-  while (str[cnt] != '\0' && cnt <= 1000)
+  uint16_t charCountMax = 1000;
+  for (uint16_t charCount = 0; charCount < charCountMax; charCount++)
   {
-    usart_Transmit (str[cnt]);
-    cnt++;
-  };
+    if (str[charCount] != '\0')
+      usart_Transmit(str[charCount]);
+    else
+      break;
+  }
 }
 

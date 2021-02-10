@@ -19,7 +19,6 @@
  ******************************************************************************
  */
 
-
 /*
  * ----------------------------------------------------------------------------
  *                                                             INITIALIZE USART
@@ -31,10 +30,9 @@
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-
 void usart_Init(void)
 {
-  //Set baud rate
+  // Set baud rate
   UBRR0H = (uint8_t)(UBRR_VALUE >> 8);
   UBRR0L = (uint8_t)UBRR_VALUE;
 
@@ -44,7 +42,6 @@ void usart_Init(void)
   // Set USART - Asynch mode, no parity, data frame = 8 data, 1 stop
   UCSR0C = 1 << UCSZ01 | 1 << UCSZ00;
 }
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -57,7 +54,6 @@ void usart_Init(void)
  * Returns     : byte received by the USART0, i.e. value in UDR0.
  * ----------------------------------------------------------------------------
 */
-
 uint8_t usart_Receive(void)
 {
   // poll the RX complete flag, until it is set
@@ -67,7 +63,6 @@ uint8_t usart_Receive(void)
   // return byte received into usart buffer
   return UDR0; 
 }
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -80,7 +75,6 @@ uint8_t usart_Receive(void)
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-
 void usart_Transmit(uint8_t data)
 {
   // poll Data Reg Empty Flag until it is set.
