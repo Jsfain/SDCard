@@ -104,7 +104,6 @@ uint32_t sd_InitModeSPI(CTV* ctv)
   //
   // Step 4: SD_SEND_OP_COND (ACMD41)
   //
-  
   uint8_t  timeout = 0;
   uint32_t acmd41Arg = 0;      // ACMD41 arg depends on card type host supports
   if (HOST_CAPACITY_SUPPORT == SDHC)
@@ -121,8 +120,7 @@ uint32_t sd_InitModeSPI(CTV* ctv)
   do
   {
     CS_SD_LOW;
-    // must send APP_CMD before an ACMD type commands.
-    sd_sendCommand(APP_CMD, 0);          
+    sd_sendCommand(APP_CMD, 0);      // send APP_CMD before ACMD type commands.
     r1 = sd_getR1();
     CS_SD_HIGH;
     if (r1 != IN_IDLE_STATE) 
@@ -141,11 +139,10 @@ uint32_t sd_InitModeSPI(CTV* ctv)
 
   //
   // Step 5: READ_OCR (CMD 58)
-  // 
   // The final init step is to read CCS bit of the OCR.
-    
-  // OCR Variables
-  uint8_t  ocr, ccs, uhsii, co2t, s18a;
+  //
+
+  uint8_t  ocr, ccs, uhsii, co2t, s18a;     // OCR Variables
   uint16_t vRngAcptd;
 
   CS_SD_LOW;

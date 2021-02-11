@@ -30,7 +30,6 @@
  */
 #define R1_ERROR                        0x8000
 
-
 /* 
  * ----------------------------------------------------------------------------
  *                                                       READ BLOCK ERROR FLAGS
@@ -44,7 +43,6 @@
  */
 #define START_TOKEN_TIMEOUT             0x0200
 #define READ_SUCCESS                    0x0400
-
 
 /* 
  * ----------------------------------------------------------------------------
@@ -64,8 +62,6 @@
 #define DATA_RESPONSE_TIMEOUT           0x1000
 #define CARD_BUSY_TIMEOUT               0x2000
 
-
-
 /* 
  * ----------------------------------------------------------------------------
  *                                                      ERASE BLOCK ERROR FLAGS
@@ -83,13 +79,11 @@
 #define ERASE_ERROR                     0x0400
 #define ERASE_BUSY_TIMEOUT              0x0800
 
-
 /*
  ******************************************************************************
  *                               FUNCTIONS   
  ******************************************************************************
  */
-
 
 /*
  * For the following read, write, and erase block functions, the returned error
@@ -101,7 +95,6 @@
  * of the error response) contains at least one flag that has been set which 
  * should then be read by passing it to sd_printR1() in SD_SPI_BASE. 
  */ 
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -119,9 +112,7 @@
  * Returns     : Read Block Error (upper byte) and R1 Response (lower byte).   
  * ----------------------------------------------------------------------------
  */
-
 uint16_t sd_readSingleBlock(uint32_t blckAddr, uint8_t* blckArr);
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -139,9 +130,7 @@ uint16_t sd_readSingleBlock(uint32_t blckAddr, uint8_t* blckArr);
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-
 void sd_printSingleBlock(uint8_t* blckArr);
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -159,9 +148,7 @@ void sd_printSingleBlock(uint8_t* blckArr);
  * Returns     : Write Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-
 uint16_t sd_writeSingleBlock(uint32_t blckAddr, uint8_t* dataArr);
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -177,9 +164,7 @@ uint16_t sd_writeSingleBlock(uint32_t blckAddr, uint8_t* dataArr);
  * Returns     : Erase Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-
 uint16_t sd_eraseBlocks(uint32_t startBlckAddr, uint32_t endBlckAddr);
-
 
 /*
  * If either of the three print error functions show that the R1_ERROR flag was
@@ -199,9 +184,7 @@ uint16_t sd_eraseBlocks(uint32_t startBlckAddr, uint32_t endBlckAddr);
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-
 void sd_printReadError(uint16_t err);
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -214,9 +197,7 @@ void sd_printReadError(uint16_t err);
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-
 void sd_printWriteError(uint16_t err);
-
 
 /*
  * ----------------------------------------------------------------------------
@@ -229,7 +210,6 @@ void sd_printWriteError(uint16_t err);
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-
 void sd_printEraseError(uint16_t err);
 
 #endif // SD_SPI_RWE_H

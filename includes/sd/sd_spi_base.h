@@ -23,6 +23,23 @@
 
 /* 
  * ----------------------------------------------------------------------------
+ *                                                                TIMEOUT LIMIT
+ *
+ * Description : This value determines the limit on number of attempts to get
+ *               valid values. The value can be any value < 0xFF. This is 
+ *               typically applied to loops polling for an SD card 
+ *               response/data. This does not represent a "time" value but
+ *               how many times an attempt to return a valid value will be made
+ *               before returning from a function with an error. 
+ * 
+ * Notes       : Some functions can have timeouts >= 0xFF and these are
+ *               implemented as multiples of and/or additions to this value.
+ * ----------------------------------------------------------------------------
+ */
+#define TIMEOUT_LIMIT           0xFE
+
+/* 
+ * ----------------------------------------------------------------------------
  *                                                                 BLOCK LENGTH
  *
  * Description : The SD card block length (in bytes) assumed by the host. 
@@ -31,7 +48,7 @@
  *               produce unexpected results and/or fail.
  * ----------------------------------------------------------------------------
  */
-#define BLOCK_LEN    512
+#define BLOCK_LEN               512
 
 /* 
  * ----------------------------------------------------------------------------
