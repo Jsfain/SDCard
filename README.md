@@ -22,7 +22,7 @@ There are multiple source/header files that are part of this AVR-SD Card module.
 1. **SD_SPI_BASE.C(H)** - *REQUIRED*
     * The only files required to implement the module.
     * This will include the SD_SPI_CMDS.H file which provides the macro definitions for the SD card commands available when operating in SPI mode. 
-    * These files implement the basic functions required to interact with the SD card in SPI mode. In particular they implement the SD card's SPI mode initialization function, ***sd_spiModeInit(CTV * ctv)***, as well as implement functions required by the initialization function, such as *sd_sendByteSPI()*, *sd_receiveByteSPI()*. 
+    * These files implement the basic functions required to interact with the SD card in SPI mode. In particular they implement the SD card's SPI mode initialization function, ***sd_InitModeSPI(CTV * ctv)***, as well as implement functions required by the initialization function, such as *sd_SendByteSPI()*, *sd_ReceiveByteSPI()*. 
     * Additionally, there is also provided some error printing functions for interpreting the output of R1 responses and the initialization routine.
     * See the *SD_SPI_BASE* files for a complete list of functions, structs, and macros and their full description.
 
@@ -59,10 +59,10 @@ The following source/header files are also required.  These are included in the 
 
 ### Initialization:
 When writing a program to implement the AVR-SD Card functions, the following must occur before anything else:
-  1. Initialize USART0 with ***usart_init()*** - *Required for any print functions.*
-  2. Initialize SPI port with ***spi_masterInit()*** - *Required for communincation on the AVR's SPI port.*
+  1. Initialize USART0 with ***usart_Init()*** - *Required for any print functions.*
+  2. Initialize SPI port with ***spi_MasterInit()*** - *Required for communincation on the AVR's SPI port.*
   3. Create an instance of a CTV struct (i.e. (C)ard (T)ype (V)ersion).
-  4. Initialize the SD Card into SPI mode by calling ***sd_spiModeInit(*ctv)*** - Pass a pointer of the CTV instance to the initialization routine, which will set its members to their correct values.
+  4. Initialize the SD Card into SPI mode by calling ***sd_InitModeSPI(*ctv)*** - Pass a pointer of the CTV instance to the initialization routine, which will set its members to their correct values.
     * The CTV instance members should only be set one time and this should only be done by the initialization routine.
     * The *type* member of CTV will be used for determining whether the card should be block or byte addressed.
 
@@ -74,16 +74,16 @@ int main(void)
   uint32_t initResp;                  
   CTV ctv;                 
 
-  usart_init();
-  spi_masterInit();
+  usart_Init();
+  spi_MasterInit();
 
-  initResp = sd_spiModeInit(&ctv);
+  initResp = sd_InitModeSPI(&ctv);
 
   if (initResp != 0)
   {   
       // Initialization failed
-      sd_printInitError(initResp);
-      sd_printR1(initResp);
+      sd_PrintInitError(initResp);
+      sd_PrintR1(initResp);
   }
   else
   {   
