@@ -199,19 +199,21 @@ void sd_printSingleBlock(uint8_t* blckArr)
  */
 uint16_t sd_writeSingleBlock(uint32_t blckAddr, uint8_t* dataArr)
 {
-  const uint8_t dataTknMask = 0x1F;    // for extracting data reponse token
   uint8_t  r1;
 
   CS_SD_LOW;    
   sd_sendCommand (WRITE_BLOCK, blckAddr);                  // CMD24
-  r1 = sd_getR1();
-  if (r1 != OUT_OF_IDLE)
+  if ((r1 = sd_getR1()) != OUT_OF_IDLE)
   {
     CS_SD_HIGH;
     return (R1_ERROR | r1);
   }
   else
   {
+    const uint8_t dataTknMask = 0x1F;    // for extracting data reponse token
+    uint8_t  dataRespTkn;
+    uint16_t timeout = 0;
+
     // send Start Block Token (0xFE) to initiate data transfer
     sd_sendByteSPI(0xFE); 
 
@@ -224,8 +226,6 @@ uint16_t sd_writeSingleBlock(uint32_t blckAddr, uint8_t* dataArr)
     sd_sendByteSPI(0xFF);
     
     // wait for valid data response token
-    uint8_t  dataRespTkn;
-    uint16_t timeout = 0;
     do
     { 
       dataRespTkn = sd_receiveByteSPI();
@@ -259,14 +259,12 @@ uint16_t sd_writeSingleBlock(uint32_t blckAddr, uint8_t* dataArr)
       CS_SD_HIGH;
       return (DATA_ACCEPTED_TOKEN_RECEIVED | r1);
     }
-
     // CRC Error --> Data Response Token = 0x0B 
     else if ((dataRespTkn & 0x0B) == 0x0B) 
     {
       CS_SD_HIGH;
       return (CRC_ERROR_TOKEN_RECEIVED | r1);
     }
-
     // Write Error --> Data Response Token = 0x0D
     else if ((dataRespTkn & 0x0D) == 0x0D)
     {

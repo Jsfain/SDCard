@@ -38,7 +38,7 @@
 #define GEN_CMD                     56      //CMD56
 #define READ_OCR                    58      //CMD58
 #define CRC_ON_OFF                  59      //CMD59
-// Application Specific Commands. To activate, first call APP_CMD.
+// Application Specific Commands. To use, first call APP_CMD (CMD55).
 #define SD_STATUS                   13      //ACMD13
 #define SEND_NUM_WR_BLOCKS          22      //ACMD22
 #define SET_WR_BLK_ERASE_COUNT      23      //ACMD23

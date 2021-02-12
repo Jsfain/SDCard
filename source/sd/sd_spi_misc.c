@@ -17,7 +17,6 @@
 #include "sd_spi_rwe.h"
 #include "sd_spi_misc.h"
 
-
 /*
  ******************************************************************************
  *                                 FUNCTIONS   
@@ -33,39 +32,38 @@
  * should be set in an instance of CTV while intializing the card.
  * ---------------------------------------------------------------------------
  */
-
-uint32_t sd_getMemoryCapacitySDSC (void)
+uint32_t sd_getMemoryCapacitySDSC(void)
 {
-  uint8_t  r1 = 0;
-  uint8_t  resp;
-  uint8_t  timeout = 0;
-  uint8_t  flag = 0;
-
+  uint8_t resp;
+  uint8_t exitLoopFlag;
+  uint8_t timeout;
   // CSD fields used to calculate memory capacity
   uint8_t  readBlckLen = 0;
   uint16_t cSize = 0;
   uint8_t  cSizeMult = 0;
-
-  // For memory cap calculation routine
+  // additional memory cap calculation variables
   uint16_t blockLen;
   uint16_t mult;
 
   // SEND_CSD (CMD9)
   CS_SD_LOW;
-  sd_sendCommand (SEND_CSD, 0);
-  r1 = sd_getR1();
-  if (r1 > 0) 
+  sd_sendCommand(SEND_CSD, 0);
+  if (sd_getR1() != OUT_OF_IDLE) 
   { 
     CS_SD_HIGH; 
     return 1; 
   }
 
-  // CSD_STRUCTURE - Must be 0 for SDSC types.
+  //
+  // CSD_STRUCTURE
+  //
+  timeout = 0;
   do
   { 
-    if (sd_receiveByteSPI() >> 6 == 0) 
+    // CSD structure is bit 6 and must be 0 for SDSC.
+    if (!(sd_receiveByteSPI() | 0x40)) 
       break;
-    if (timeout++ >= 0xFF)
+    if (timeout++ >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH;
       return 1; 
@@ -73,13 +71,16 @@ uint32_t sd_getMemoryCapacitySDSC (void)
   }
   while(1);
 
-  // TAAC - Bit 7 is reserved so must be 0
+  //
+  // TAAC
+  //
   timeout = 0;
   do
   { 
-    if (sd_receiveByteSPI() >> 7 != 0) 
+    // Bit 7 of TAAC is reserved so must be 0
+    if (!(sd_receiveByteSPI() | 0x80)) 
       break;
-    if (timeout++ >= 0xFF) 
+    if (timeout++ >= TIMEOUT_LIMIT) 
     { 
       CS_SD_HIGH; 
       return 1;
@@ -87,60 +88,73 @@ uint32_t sd_getMemoryCapacitySDSC (void)
   }
   while(1);
 
+  //
   // NSAC - Any value is valid
+  //
   sd_receiveByteSPI();
 
+  //
   // TRAN_SPEED
+  //
   timeout = 0;
   do
   { 
-    resp = sd_receiveByteSPI();  
+    resp = sd_receiveByteSPI();
+    // TRANS SPEED must be 0x32 or 0x5A to be valid
     if (resp == 0x32 || resp == 0x5A) 
       break;
-    if (timeout++ >= 0xFF)
+    if (timeout++ >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH; 
       return 1;
     }
   }
   while(1);
-
+ 
+  //
+  // CCC and READ_BL_LEN
+  // 
   // Next 2 bytes are the 12-bit CCC and 4-bit READ_BL_LEN. CCC is of the
   // form 01_110110101. READ_BL_LEN is needed to calculate memory capacity.
   // It's value must be 9, 10, or 11.
-  flag = 1;
-  while (flag == 1)
+  //
+  timeout = 0;
+  exitLoopFlag = 1;
+  while (exitLoopFlag == 1)
   {
-    // CCC[11:4]
-    if (sd_receiveByteSPI() & 0x7B)
+    // CCC[11:4] - converts _ bit to 1 and test = 0x7B
+    if ((sd_receiveByteSPI() | 0x40) == 0x7B)
     {
-      // CCC[3:0] and READ_BL_LEN
+      // CCC[3:0] = 0x5 and READ_BL_LEN is the lower byte
       if ((resp = sd_receiveByteSPI()) == 0x50) 
       {
-        readBlckLen = resp & 0b00001111;
+        readBlckLen = resp & 0x0F;
         if (readBlckLen < 9 || readBlckLen > 11) 
         { 
           CS_SD_HIGH;
           return 1;
         }
-        flag = 0;
+        exitLoopFlag = 0;
       }
     }
-    if (timeout++ >= 0xFF)
+    if (timeout++ >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH;
       return 1;
     }
   }
 
-  // Get remaining fields needed to calc memory capacity: 
-  // C_SIZE and C_SIZE_MULT
-  flag = 1;
+  //
+  // C_SIZE and C_SIZE_MULT are remaining fields needed to calculate capacity
+  // 
   timeout = 0;
-  while(flag == 1)
+  exitLoopFlag = 1;
+  while(exitLoopFlag == 1)
   {
+    //
     // READ_BLK_PARTIAL[7] = 1, WRITE_BLK_MISALIGN[6] = X,
     // READ_BLK_MISALIGN[5]  = X, DSR_IMP[4] = X, RESERVERED[3:2] = 0
+    //
     if((resp = sd_receiveByteSPI()) & 0xF3)
     {           
       cSize = resp & 0x03;         
@@ -152,64 +166,70 @@ uint32_t sd_getMemoryCapacitySDSC (void)
       cSizeMult  = (sd_receiveByteSPI() & 0x03) << 1;
       cSizeMult |=  sd_receiveByteSPI() >> 7;
       
-      flag = 0;
+      exitLoopFlag = 0;
     }
-    if (timeout++ >= 0xFF) 
+    if (timeout++ >= TIMEOUT_LIMIT) 
     {
       CS_SD_HIGH; 
       return 1; 
     }
   }
-
   CS_SD_HIGH;
 
-  // Calculate memory capacity
-  
+  //
+  // Calculate Memory Capacity
+  //
+
   // blockLen = 2^READ_BL_LEN
-  blockLen = 1;
-  for (uint8_t i = 0; i < readBlckLen; i++) 
+  blockLen = 1;                             
+  for (uint8_t pow = 0; pow < readBlckLen; pow++) 
     blockLen = blockLen * 2;
 
   // mult = 2^(cSizeMult + 2)
   mult = 1;
-  for (uint8_t i = 0; i < cSizeMult + 2; i++) 
+  for (uint8_t pow = 0; pow < cSizeMult + 2; pow++) 
     mult = mult * 2;
 
-  // Memory capacity in bytes
+  // Memory capacity in bytes. See SD card standard for calc formula.
   return ((cSize + 1) * mult * blockLen);
 }
 
-uint32_t sd_getMemoryCapacitySDHC (void)
+uint32_t sd_getMemoryCapacitySDHC(void)
 {
-  uint8_t  r1 = 0;
   uint8_t  resp;
-  uint8_t  timeout = 0;
-  uint64_t cSize = 0;
-  uint8_t  flag;
+  uint8_t  exitLoopFlag;
+  uint8_t  timeout;
+  
+  // Only C_SIZE is needed to calculate the memory capacity of SDHC/SDXC types
+  uint64_t cSize;
 
-
+  //
   // SEND_CSD (CMD9)
+  //
   CS_SD_LOW;
-  sd_sendCommand (SEND_CSD,0);
-  r1 = sd_getR1();
-  if (r1 > 0)
+  sd_sendCommand(SEND_CSD, 0);
+  if (sd_getR1() != OUT_OF_IDLE)
   {
     CS_SD_HIGH;
     return 1;
   }
   
+  //
+  // The CSD register fields accessed first, before C_SIZE, are used here to
+  // verfiy CSD is accurately being read-in, and the correct memory capacity
+  // function has been called.
+  //
 
-  // Only C_SIZE is needed to calculate the memory capacity of a SDHC/SDXC
-  // type cards. The CSD fields prior to the C_SIZE are used here to verfiy
-  // CSD is accurately being read-in, and the correct memory capacity function
-  // has been called.
-
-  // CSD_STRUCTURE - Must be 1 for SDHC types.
+  //
+  // CSD_STRUCTURE - Must be 1 for SDHC/SDXC types.
+  //
+  timeout = 0;
   do
   { 
-    if (sd_receiveByteSPI() >> 6 == 1) 
+    // CSD structure is bit 6 and must be 1 for SDHC/SDXC.
+    if (sd_receiveByteSPI() | 0x40)
       break;
-    if (timeout++ >= 0xFF)
+    if (timeout++ >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH; 
       return 1; 
@@ -217,13 +237,16 @@ uint32_t sd_getMemoryCapacitySDHC (void)
   }
   while(1);
 
-  // TAAC - Must be 0X0E (1ms)
+  //
+  // TAAC
+  //
   timeout = 0;
   do
   { 
+    // TAAC - Must be 0X0E (1ms)
     if (sd_receiveByteSPI() == 0x0E) 
       break;
-    if (timeout++ >= 0xFF) 
+    if (timeout++ >= TIMEOUT_LIMIT) 
     { 
       CS_SD_HIGH; 
       return 1; 
@@ -231,13 +254,16 @@ uint32_t sd_getMemoryCapacitySDHC (void)
   }
   while(1);
 
-  // NSAC - Must be 0X00
+  //
+  // NSAC
+  //
   timeout = 0;
   do
   { 
-    if (sd_receiveByteSPI() == 0x00) 
+    // NSAC - Must be 0
+    if (sd_receiveByteSPI() == 0) 
       break;
-    if (timeout++ >= 0xFF) 
+    if (timeout++ >= TIMEOUT_LIMIT) 
     {
       CS_SD_HIGH; 
       return 1; 
@@ -245,10 +271,13 @@ uint32_t sd_getMemoryCapacitySDHC (void)
   }
   while(1);
 
-  // TRAN_SPEED - Must be 0x32 for current implementation
+  //
+  // TRAN_SPEED
+  //
   timeout = 0;
   do
   { 
+    // TRAN_SPEED - Must be 0x32 for current implementation
     if (sd_receiveByteSPI() == 0x32)
       break;
     if (timeout++ >= 0xFF) 
@@ -259,49 +288,58 @@ uint32_t sd_getMemoryCapacitySDHC (void)
   }
   while(1);
 
+  //
+  // CCC and READ_BL_LEN
+  //
   // Next 2 bytes contain the 12-bit CCC and 4-bit READ_BL_LEN. CCC is of the
   // form _1_1101101_1 for SDHC/SDXC. READ_BL_LEN must be 9 for SDHC/SDXC.
-  flag = 1;
+  //
+  exitLoopFlag = 1;
   timeout = 0;
-  while (flag == 1)
+  while (exitLoopFlag == 1)
   {
-    //CCC[11:4]
-    if (sd_receiveByteSPI() == 0x5B) 
+    // CCC[11:4] - converts _ bits to 1 and test = 0xFB
+    if ((sd_receiveByteSPI() | 0xA0) == 0xFB) 
     {
-      //CCC[3:0] and READ_BL_LEN
+      // CCC[3:0] = 0x5 and READ_BL_LEN = 0x09
       if (sd_receiveByteSPI() != 0x59) 
       {
         CS_SD_HIGH; 
         return 1;
       }
-      flag = 0;
+      exitLoopFlag = 0;
     }
-    if (timeout++ >= 0xFF)
+    if (timeout++ >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH;
       return 1;
     }
   }
 
-  //This section gets the remaining bits leading up to C_SIZE.
-  flag = 1;
+  //
+  // C_SIZE is the remaining field needed to calculate capacity
+  // 
+  exitLoopFlag = 1;
   timeout = 0;
-  while(flag == 1)
+  while (exitLoopFlag == 1)
   {
+    //
+    // Remaining bits before reaching C_SIZE
     // READ_BLK_PARTIAL[7] = 0, WRITE_BLK_MISALIGN[6] = 0,
     // READ_BLK_MISALIGN[5] = 0, DSR_IMP[4] = X, RESERVERED[3:0] = 0;
+    //
     resp = sd_receiveByteSPI();
     if (resp == 0 || resp == 16) 
     {
-        
-        cSize = sd_receiveByteSPI() & 0x3F;       // Only [5:0] is C_SIZE          
-        cSize <<= 8;           
-        cSize |= sd_receiveByteSPI();
-        cSize <<= 8;        
-        cSize |= sd_receiveByteSPI();
-        flag = 0;
+      cSize = sd_receiveByteSPI() & 0x3F;   // Only [5:0] is C_SIZE          
+      cSize <<= 8;           
+      cSize |= sd_receiveByteSPI();
+      cSize <<= 8;        
+      cSize |= sd_receiveByteSPI();
+
+      exitLoopFlag = 0;
     }
-    if (timeout++ >= 0xFF) 
+    if (timeout++ >= TIMEOUT_LIMIT) 
     { 
       CS_SD_HIGH; 
       return 1; 
@@ -309,10 +347,9 @@ uint32_t sd_getMemoryCapacitySDHC (void)
   }
   CS_SD_HIGH;
 
-  // memory capacity in bytes
+  // memory capacity in bytes. See SD card standard for calc formula.
   return ((cSize + 1) * 512000);
 }
-
 
 /* 
  * ----------------------------------------------------------------------------
@@ -331,34 +368,30 @@ uint32_t sd_getMemoryCapacitySDHC (void)
  *               2) Not fast, so suggest only search over a small range.
  * ----------------------------------------------------------------------------
  */
-
-void sd_findNonZeroDataBlockNums (uint32_t startBlckAddr, uint32_t endBlckAddr)
+void sd_findNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr)
 {
-  uint8_t  blkArr[512];                          
-  uint16_t tab = 0;                              // for print format
-  uint32_t address = 0;
-  
-  uint32_t blckNum = startBlckAddr;
-  for (; blckNum <= endBlckAddr; blckNum++)
+  uint16_t newLine = 0;                     // for formatting output   
+
+  for (uint32_t blckNum = startBlckAddr; blckNum <= endBlckAddr; blckNum++)
   {
-    address = blckNum;
-    sd_readSingleBlock (address, blkArr);       
+    uint8_t  blkArr[BLOCK_LEN];             // data block array
+  
+    sd_readSingleBlock(blckNum, blkArr);       
     
-    for (uint16_t i = 0; i < BLOCK_LEN; i++)
+    for (uint16_t byteNum = 0; byteNum < BLOCK_LEN; byteNum++)
     {
-      if (blkArr[i]!=0)
+      if (blkArr[byteNum] != 0)
       {
-        if (tab%5==0) 
+        if (newLine % 5 == 0)               // newLine every 5 values output
           print_Str("\n\r");
-        print_Str ("\t\t"); 
-        print_Dec (blckNum);
-        tab++;
+        print_Str("\t\t"); 
+        print_Dec(blckNum);
+        newLine++;
         break;
       }
     }
   }
 }
-
 
 /* 
  * ----------------------------------------------------------------------------
@@ -376,59 +409,59 @@ void sd_findNonZeroDataBlockNums (uint32_t startBlckAddr, uint32_t endBlckAddr)
  * Returns     : Read Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-
-uint16_t sd_printMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks)
+uint16_t sd_printMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks)
 {
-  uint8_t  blckArr[512];
-  uint16_t timeout = 0;
-  uint8_t  r1;
+  uint8_t  r1;                    
 
   CS_SD_LOW;
-  sd_sendCommand (READ_MULTIPLE_BLOCK, startBlckAddr);     // CMD18
-  r1 = sd_getR1();
-  if (r1 > 0)
+  sd_sendCommand(READ_MULTIPLE_BLOCK, startBlckAddr);      // CMD18
+  if ((r1 = sd_getR1()) != OUT_OF_IDLE)
   {
     CS_SD_HIGH;
     return (R1_ERROR | r1);
   }
-
-  if (r1 == 0)
+  else
   {
-    for (uint8_t i = 0; i < numOfBlcks; i++)
+    for (uint8_t blckNum = 0; blckNum < numOfBlcks; blckNum++)
     {
-      print_Str ("\n\r Block ");
-      print_Dec (startBlckAddr + i);
-      timeout = 0;
+      uint8_t  blckArr[BLOCK_LEN];         // data block array
 
-      // wait for start block token.
+      print_Str("\n\r Block ");
+      print_Dec(startBlckAddr + blckNum);
+      
+      //
+      // 0xFE is the Start Block Token to be sent by
+      // SD Card to signal data is about to be sent.
+      //
+      uint16_t timeout = 0;
       while (sd_receiveByteSPI() != 0xFE) 
       {
-        if (timeout++ > 0xFFF) 
+        if (timeout++ > 0x0F * TIMEOUT_LIMIT) 
           return (START_TOKEN_TIMEOUT | r1);
       }
 
       // Load array with data from SD card block.
-      for (uint16_t k = 0; k < BLOCK_LEN; k++) 
-        blckArr[k] = sd_receiveByteSPI();
+      for (uint16_t byteNum = 0; byteNum < BLOCK_LEN; byteNum++) 
+        blckArr[byteNum] = sd_receiveByteSPI();
       
-      // get CRC
-      for (uint8_t k = 0; k < 2; k++) 
-        sd_receiveByteSPI(); 
+      // 16-bit CRC. Should be off (default) so values do not matter.
+      sd_receiveByteSPI(); 
+      sd_receiveByteSPI();
 
       // print the block to the screen.
-      sd_printSingleBlock (blckArr);
+      sd_printSingleBlock(blckArr);
     }
     
-    sd_sendCommand (STOP_TRANSMISSION, 0);
+    // stop SD card from sending data blocks
+    sd_sendCommand(STOP_TRANSMISSION, 0);
     
-    // get R1b response. Don't care.
+    // R1b response. Don't care.
     sd_receiveByteSPI(); 
   }
-
   CS_SD_HIGH;
+  
   return READ_SUCCESS;
 }
-
 
 /* 
  * ----------------------------------------------------------------------------
@@ -451,47 +484,48 @@ uint16_t sd_printMultipleBlocks (uint32_t startBlckAddr, uint32_t numOfBlcks)
  * Returns     : Write Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-
 uint16_t sd_writeMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks, 
-                                 uint8_t* dataArr)
+                                uint8_t* dataArr)
 {
-  uint8_t  r1;
-  uint16_t timeout = 0;
-  uint8_t  dataRespTkn;
-  uint16_t retTkn;
-  uint8_t  dataTknMask = 0x1F;
+  uint8_t  r1;                              // for the R1 response 
+  uint16_t retTkn;                          // for the return value
 
   CS_SD_LOW;    
   sd_sendCommand(WRITE_MULTIPLE_BLOCK, startBlckAddr);    //CMD25
-  r1 = sd_getR1();
   
-  if (r1 > 0)
+  if ((r1 = sd_getR1()) != OUT_OF_IDLE)
   {
     CS_SD_HIGH
     return (R1_ERROR | r1);
   }
-
-  if (r1 == 0)
+  else
   {
-    for (uint32_t k = 0; k < numOfBlcks; k++)
+    uint16_t timeout = 0;
+
+    for (uint32_t blckNum = 0; blckNum < numOfBlcks; blckNum++)
     {
-      // send Start Block Token to initiate data transfer
-      sd_sendByteSPI (0xFC); 
+      const uint8_t dataTknMask = 0x1F;    // for extracting data reponse token
+      uint8_t dataRespTkn;
+      
+      //
+      // 0xFC is multi-block write Start Block Token. 
+      // Send this token to initiate data transfer.
+      //
+      sd_sendByteSPI(0xFC); 
 
       // send data to SD card.
-      for (uint16_t i = 0; i < BLOCK_LEN; i++)
-        sd_sendByteSPI (dataArr[i]);
+      for (uint16_t byteNum = 0; byteNum < BLOCK_LEN; byteNum++)
+        sd_sendByteSPI(dataArr[byteNum]);
 
-      // Send 16-bit CRC. 
-      // CRC should be off (default), in which case these do not matter.
-      sd_sendByteSPI (0xFF);
-      sd_sendByteSPI (0xFF);
+      // Send 16-bit CRC. Off by default, so values do not matter.
+      sd_sendByteSPI(0xFF);
+      sd_sendByteSPI(0xFF);
       
       // wait for valid data response token
       do
       { 
         dataRespTkn = sd_receiveByteSPI();
-        if (timeout++ > 0x2FF)
+        if (timeout++ > 2 * TIMEOUT_LIMIT)
         {
           CS_SD_HIGH;
           return (DATA_RESPONSE_TIMEOUT | r1);
@@ -501,42 +535,43 @@ uint16_t sd_writeMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
              (dataTknMask & dataRespTkn) != 0x0B &&        // CRC_ERROR
              (dataTknMask & dataRespTkn) != 0x0D);         // WRITE_ERROR
 
-      // Data Accepted
+      // Data Accepted --> Data Response Token = 0x05 
       if ((dataRespTkn & 0x05) == 0x05)     
       {
         timeout = 0;
         
+        //
         // Wait for SD card to finish writing data to the block.
         // Data Out (DO) line held low while card is busy writing to block.
+        //
         while (sd_receiveByteSPI() == 0)
         {
-          if(timeout++ > 0x2FF) 
+          if (timeout++ > 2 * TIMEOUT_LIMIT) 
             return (CARD_BUSY_TIMEOUT | r1); 
         };
         retTkn = DATA_ACCEPTED_TOKEN_RECEIVED;
       }
-
-      // CRC Error
+      // CRC Error --> Data Response Token = 0x0B 
       else if ((dataRespTkn & 0x0B) == 0x0B)
       {
         retTkn = CRC_ERROR_TOKEN_RECEIVED;
         break;
       }
-
-      // Write Error
-      else if( (dataRespTkn & 0x0D) == 0x0D ) 
+      // Write Error --> Data Response Token = 0x0D
+      else if ((dataRespTkn & 0x0D) == 0x0D) 
       {
         retTkn = WRITE_ERROR_TOKEN_RECEIVED;
         break;
       }
     }
 
+    // Stop Transmission. 0xFD is the Stop Transmission Token
+    sd_sendByteSPI(0xFD);
+    
     timeout = 0;
-    // send Stop Transmission Token
-    sd_sendByteSPI (0xFD); 
     while (sd_receiveByteSPI() == 0)
     {
-      if (timeout++ > 0x2FF) 
+      if (timeout++ > 2 * TIMEOUT_LIMIT) 
       {
         CS_SD_HIGH;
         return (CARD_BUSY_TIMEOUT | r1);
@@ -544,19 +579,18 @@ uint16_t sd_writeMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
     }
   }
 
-  // Have found sometimes even after CARD_BUSY is no longer set,
-  // that if another command is immediately issued, it results 
-  // result in errors unless some delay is added before de-asserting
-  // CS here. So that's what this for loop is doing. 
+  //
+  // Have found sometimes even after CARD_BUSY is no longer set, that if
+  // another command is immediately issued, it results in errors unless some
+  // delay is added before de-asserting CS here. That's the reason for the loop
+  //
   for (uint8_t k = 0; k < 0xFE; k++)
     sd_sendByteSPI (0xFF);
 
   CS_SD_HIGH;
 
-  // successful write.
-  return retTkn; 
+  return retTkn;                            // successful write.
 }
-
 
 /* 
  * ----------------------------------------------------------------------------
@@ -577,33 +611,34 @@ uint16_t sd_writeMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
  * Returns     : Read Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-
 uint16_t sd_getNumOfWellWrittenBlocks(uint32_t* wellWrtnBlcks)
 {
   uint8_t  r1;
   uint16_t timeout = 0; 
 
   CS_SD_LOW;
-  // Send APP_CMD to signal next command is an ACMD
-  sd_sendCommand (APP_CMD, 0);                             
-  r1 = sd_getR1();
-  if (r1 > 0) 
+  // Send APP_CMD to signal next command is an ACMD type command
+  sd_sendCommand(APP_CMD, 0);                             
+  if ((r1 = sd_getR1()) != OUT_OF_IDLE) 
   {   
     CS_SD_HIGH;
     return (R1_ERROR | r1);
   }
-  sd_sendCommand (SEND_NUM_WR_BLOCKS, 0);
-  r1 = sd_getR1();
-  if (r1 > 0)
+  // Get number of well written blocks
+  sd_sendCommand(SEND_NUM_WR_BLOCKS, 0);
+  if ((r1 = sd_getR1()) != OUT_OF_IDLE) 
   {
     CS_SD_HIGH;
     return (R1_ERROR | r1);
   }
 
-  // check if Start Block Token received
+  //
+  // 0xFE is the Start Block Token to be sent by the
+  // SD Card to signal that data is about to be sent.
+  //
   while (sd_receiveByteSPI() != 0xFE)
   {
-    if(timeout++ > 0x1FF) 
+    if(timeout++ > 2 * TIMEOUT_LIMIT) 
     {
       CS_SD_HIGH;
       return (START_TOKEN_TIMEOUT | r1);
@@ -619,7 +654,7 @@ uint16_t sd_getNumOfWellWrittenBlocks(uint32_t* wellWrtnBlcks)
   *wellWrtnBlcks <<= 8;
   *wellWrtnBlcks |= sd_receiveByteSPI();
 
-  // CRC bytes
+  // get 16-bit CRC bytes. CRC is off by default so values do not matter.
   sd_receiveByteSPI();
   sd_receiveByteSPI();
 

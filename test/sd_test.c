@@ -80,7 +80,7 @@ int main(void)
     // which will print the block's contents to the screen.
     
     // set to 0 to skip this section
-    #if 1
+    #if 0
 
     uint32_t blckNum1 = 8192;               // block number to read in
     uint8_t  blckArr1[512];                 // array to hold block contents
@@ -473,7 +473,7 @@ int main(void)
     // to show successful write.
 
     // set to 0 to skip this section
-    #if 0
+    #if 1
 
     // Data (string) to be written to the block 
     uint8_t dataArr2[BLOCK_LEN] = "Would you like to play a game???"; 
@@ -693,7 +693,7 @@ int main(void)
     // select the correct function.
 
     // set to 0 to skip this section
-    #if 0
+    #if 1
 
     print_Str("\n\n\n\r Memory capacity = ");
     if (ctv.type == SDHC) 
@@ -717,11 +717,11 @@ int main(void)
     // screen, so I do not suggest using it over a large range of blocks.
 
     // set to 0 to skip this section
-    #if 0
+    #if 1
     
     // block number range to search for non-zero data.
-    uint32_t startBlckNum = 5001;
-    uint32_t endBlckNum = 8000;
+    uint32_t startBlckNum = 0;
+    uint32_t endBlckNum = 100;
 
     print_Str("\n\n\r\r sd_findNonZeroDataBlockNums() \n\r");
     if (ctv.type == SDHC) 
