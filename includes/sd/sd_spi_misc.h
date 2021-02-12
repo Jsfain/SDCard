@@ -28,8 +28,8 @@
  * should be set in an instance of CTV while intializing the card.
  * ---------------------------------------------------------------------------
  */
-uint32_t sd_getMemoryCapacitySDSC(void);
-uint32_t sd_getMemoryCapacitySDHC(void);
+uint32_t sd_GetMemoryCapacitySDSC(void);
+uint32_t sd_GetMemoryCapacitySDHC(void);
 
 /* 
  * ----------------------------------------------------------------------------
@@ -48,7 +48,7 @@ uint32_t sd_getMemoryCapacitySDHC(void);
  *               2) Not fast, so suggest only search over a small range.
  * ----------------------------------------------------------------------------
  */
-void sd_findNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr);
+void sd_FindNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr);
 
 /* 
  * ----------------------------------------------------------------------------
@@ -66,7 +66,7 @@ void sd_findNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr);
  * Returns     : Read Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-uint16_t sd_printMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks);
+uint16_t sd_PrintMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks);
 
 /* 
  * ----------------------------------------------------------------------------
@@ -89,7 +89,7 @@ uint16_t sd_printMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks);
  * Returns     : Write Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-uint16_t sd_writeMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks, 
+uint16_t sd_WriteMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks, 
                                 uint8_t* dataArr);
 
 /* 
@@ -111,6 +111,6 @@ uint16_t sd_writeMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
  * Returns     : Read Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-uint16_t sd_getNumOfWellWrittenBlocks(uint32_t* wellWrittenBlocks);
+uint16_t sd_GetNumOfWellWrittenBlocks(uint32_t* wellWrittenBlocks);
 
 #endif // SD_SPI_MISC_H
