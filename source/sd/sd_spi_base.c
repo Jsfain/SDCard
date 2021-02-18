@@ -411,7 +411,7 @@ static uint8_t pvt_CRC7(uint64_t tca)
   // initialize result with tx/cmd/arg portion of SD command.
   uint64_t result = tca;
 
-  // calculate CRC7
+  // calculate CRC7. 
   for (int cnt = 0; cnt < 40; cnt++)
   {
     if (result & test)

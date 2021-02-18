@@ -61,7 +61,7 @@ uint32_t sd_GetMemoryCapacitySDSC(void)
   do
   { 
     // CSD structure is bit 6 and must be 0 for SDSC.
-    if (!(sd_ReceiveByteSPI() | 0x40)) 
+    if ( !(sd_ReceiveByteSPI() | 0x40)) 
       break;
     if (timeout++ >= TIMEOUT_LIMIT)
     { 
@@ -370,7 +370,7 @@ uint32_t sd_GetMemoryCapacitySDHC(void)
  */
 void sd_FindNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr)
 {
-  uint16_t newLine = 0;                     // for formatting output   
+  uint16_t nextLine = 0;                     // for formatting output   
 
   for (uint32_t blckNum = startBlckAddr; blckNum <= endBlckAddr; blckNum++)
   {
@@ -382,11 +382,11 @@ void sd_FindNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr)
     {
       if (blkArr[byteNum] != 0)
       {
-        if (newLine % 5 == 0)               // newLine every 5 values output
+        if (nextLine % 5 == 0)               // nextLine every 5 values output
           print_Str("\n\r");
         print_Str("\t\t"); 
         print_Dec(blckNum);
-        newLine++;
+        nextLine++;
         break;
       }
     }
