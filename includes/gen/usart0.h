@@ -70,6 +70,6 @@ uint8_t usart_Receive(void);
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-void usart_Transmit(uint8_t data);
+void usart_Transmit(const uint8_t data);
 
 #endif //USART0_H

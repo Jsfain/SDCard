@@ -83,5 +83,5 @@ void spi_MasterTransmit(uint8_t byte)
 
   // wait for data transmission to complete.
   while ( !(SPSR & 1 << SPIF))
-  ; 
+    ;
 }

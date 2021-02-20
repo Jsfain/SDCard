@@ -58,7 +58,7 @@ uint8_t usart_Receive(void)
 {
   // poll the RX complete flag, until it is set
   while ( !(UCSR0A & 1 << RXC0))
-  ;
+    ;
   
   // return byte received into usart buffer
   return UDR0; 
@@ -75,11 +75,11 @@ uint8_t usart_Receive(void)
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-void usart_Transmit(uint8_t data)
+void usart_Transmit(const uint8_t data)
 {
   // poll Data Reg Empty Flag until it is set.
   while( !(UCSR0A & 1 << UDRE0))
-  ;
+    ;
   
   // load data into usart buffer which will transmit it.
   UDR0 = data;

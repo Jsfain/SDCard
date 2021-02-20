@@ -75,6 +75,6 @@ void print_Hex(uint32_t num);
  *               currently be handled by this function.
  * ----------------------------------------------------------------------------
  */
-void print_Str(char* str);
+void print_Str(char *str);
 
 #endif //PRINTS_H
