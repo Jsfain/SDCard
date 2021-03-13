@@ -38,6 +38,8 @@
 #define DD_SS1      DDB4
 #define SS1         PB4
 
+#define SPI_REG_BIT_LEN      8
+
 /*
  ******************************************************************************
  *                              FUNCTION PROTOTYPES

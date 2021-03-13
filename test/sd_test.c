@@ -53,7 +53,7 @@ int main(void)
       print_Str(": FAILED TO INITIALIZE SD CARD.");
       print_Str(" Initialization Error Response: "); 
       sd_PrintInitError (initResp);
-      print_Str(", R1 Response: "); 
+      print_Str(" R1 Response: "); 
       sd_PrintR1(initResp);
     }
     else
@@ -80,7 +80,7 @@ int main(void)
     // which will print the block's contents to the screen.
     
     // set to 0 to skip this section
-    #if 0
+    #if 1
 
     uint32_t blckNum1 = 8192;               // block number to read in
     uint8_t  blckArr1[512];                 // array to hold block contents
@@ -169,7 +169,7 @@ int main(void)
     // the block was successfully written to. 
 
     // set to 0 to skip this section
-    #if 1
+    #if 0
 
     // Data (string) to be written to the block 
     uint8_t  dataArr3[BLOCK_LEN] = "Well Hi, I See you brought a PIE!!!";
@@ -473,7 +473,7 @@ int main(void)
     // to show successful write.
 
     // set to 0 to skip this section
-    #if 1
+    #if 0
 
     // Data (string) to be written to the block 
     uint8_t dataArr2[BLOCK_LEN] = "Would you like to play a game???"; 

@@ -10,10 +10,11 @@
  * SD Card and an AVR microcontroller when operating in SPI mode.
  */
 
-#ifndef SD_SPI_H
-#define SD_SPI_H
+#ifndef SD_SPI_BASE_H
+#define SD_SPI_BASE_H
 
-#include "sd_spi_cmds.h"
+#include "sd_spi_car.h"
+#include "sd_spi_regs.h"
 
 /*
  ******************************************************************************
@@ -69,31 +70,6 @@
 
 /* 
  * ----------------------------------------------------------------------------
- *                                                            R1 RESPONSE FLAGS
- * 
- * Description : Flags returned by sd_GetR1().
- * 
- * Notes       : 1) With the exception of R1_TIMEOUT, these flags correspond to
- *                  the first byte returned by the SD card in response to any 
- *                  command.
- *      
- *               2) R1_TIMEOUT will be set in the sd_GetR1() return value if 
- *                  the SD card does not send an R1 response after set amount
- *                  of time.
- * ----------------------------------------------------------------------------
- */
-#define OUT_OF_IDLE             0x00
-#define IN_IDLE_STATE           0x01
-#define ERASE_RESET             0x02
-#define ILLEGAL_COMMAND         0x04
-#define COM_CRC_ERROR           0x08
-#define ERASE_SEQUENCE_ERROR    0x10
-#define ADDRESS_ERROR           0x20
-#define PARAMETER_ERROR         0x40
-#define R1_TIMEOUT              0x80
-
-/* 
- * ----------------------------------------------------------------------------
  *                                                   INITIALIZATION ERROR FLAGS
  * 
  * Description : Flags returned in bits 8 to 19 by sd_spiModeInit().
@@ -127,6 +103,7 @@
 #define VERSION_1      1
 #define VERSION_2      2
 
+
 /* 
  * ----------------------------------------------------------------------------
  *                                                        HOST CAPACITY SUPPORT
@@ -142,6 +119,7 @@
  * ----------------------------------------------------------------------------
  */
 #define HOST_CAPACITY_SUPPORT  SDHC
+
 
 /*
  ******************************************************************************
@@ -301,4 +279,4 @@ void sd_PrintR1(uint8_t r1);
  */
 void sd_PrintInitError(uint32_t initErr);
 
-#endif //SD_SPI_H
+#endif //SD_SPI_BASE_H
