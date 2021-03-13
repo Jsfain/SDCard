@@ -82,7 +82,7 @@ int main(void)
     // set to 0 to skip this section
     #if 1
 
-    uint32_t blckNum1 = 8192;               // block number to read in
+    uint32_t blckNum1 = 16384;               // block number to read in
     uint8_t  blckArr1[512];                 // array to hold block contents
     uint16_t err1;                           
 
@@ -412,7 +412,7 @@ int main(void)
           CS_SD_LOW;             
           sd_SendCommand(SEND_STATUS,0);
           // The first byte of R2 is R1
-          r2 = sd_GetR1(); 
+          uint16_t r2 = sd_GetR1(); 
           r2 <<= 8;
           r2 |= sd_ReceiveByteSPI();
           CS_SD_HIGH;
@@ -626,7 +626,7 @@ int main(void)
     // parameters and the blocks specified by the user are printed.
 
     // set to 0 to skip this section
-    #if 0
+    #if 1
 
     uint32_t startBlckNum6;                // first block to print
     uint32_t numOfBlcks6;                  // number of blocks to print
