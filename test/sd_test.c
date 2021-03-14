@@ -80,7 +80,7 @@ int main(void)
     // which will print the block's contents to the screen.
     
     // set to 0 to skip this section
-    #if 1
+    #if 0
 
     uint32_t blckNum1 = 16384;               // block number to read in
     uint8_t  blckArr1[512];                 // array to hold block contents
@@ -169,7 +169,7 @@ int main(void)
     // the block was successfully written to. 
 
     // set to 0 to skip this section
-    #if 0
+    #if 1
 
     // Data (string) to be written to the block 
     uint8_t  dataArr3[BLOCK_LEN] = "Well Hi, I See you brought a PIE!!!";
@@ -228,14 +228,14 @@ int main(void)
       sd_PrintSingleBlock(blckArr3);
 
     // write to data block
-    print_Str("\n\r Write to block "); 
+    print_Str("\n\n\n\r Write to block "); 
     print_Dec(blckNum3);
     if (ctv.type == SDHC) 
       err3 = sd_WriteSingleBlock(blckNum3, dataArr3);
     else
       err3 = sd_WriteSingleBlock(blckNum3 * BLOCK_LEN, dataArr3);
 
-    if (err3 != DATA_ACCEPTED_TOKEN_RECEIVED)
+    if (err3 != DATA_WRITE_SUCCESS)
     { 
       print_Str("\n\r >> sd_WriteSingleBlock() returned ");
       if (err3 & R1_ERROR)
@@ -251,7 +251,7 @@ int main(void)
         // Get the R2 (SEND_STATUS) response if the Write Error Token
         // was returned by the card while writing to the block.
         // May convert this to a function. 
-        if ((err3 & WRITE_ERROR_TOKEN_RECEIVED) == WRITE_ERROR_TOKEN_RECEIVED)
+        if ((err3 & WRITE_ERROR_TKN_RECEIVED) == WRITE_ERROR_TKN_RECEIVED)
         {
           print_Str("\n\r WRITE ERROR TOKEN returned.");
           print_Str("Getting R2 response.");

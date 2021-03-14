@@ -7,6 +7,8 @@
  * Copyright (c) 2020-2021
  * 
  * Macro definitions for SD Card registers.
+ * 
+ * This file should only be included using sd_spi_base.h
  */
 
 #ifndef SD_SPI_REGS_H

@@ -549,18 +549,18 @@ uint16_t sd_WriteMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
           if (timeout++ > 2 * TIMEOUT_LIMIT) 
             return (CARD_BUSY_TIMEOUT | r1); 
         };
-        retTkn = DATA_ACCEPTED_TOKEN_RECEIVED;
+        retTkn = DATA_WRITE_SUCCESS;
       }
       // CRC Error --> Data Response Token = 0x0B 
       else if ((dataRespTkn & 0x0B) == 0x0B)
       {
-        retTkn = CRC_ERROR_TOKEN_RECEIVED;
+        retTkn = CRC_ERROR_TKN_RECEIVED;
         break;
       }
       // Write Error --> Data Response Token = 0x0D
       else if ((dataRespTkn & 0x0D) == 0x0D) 
       {
-        retTkn = WRITE_ERROR_TOKEN_RECEIVED;
+        retTkn = WRITE_ERROR_TKN_RECEIVED;
         break;
       }
     }

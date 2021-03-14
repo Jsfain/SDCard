@@ -8,6 +8,8 @@
  * 
  * Macro definitions for the SD Card Commands, Arguments, Responses
  * available in SPI mode, and some related macros.
+ * 
+ * This file should only be included using sd_spi_base.h
  */
 
 #ifndef SD_SPI_CAR_H
