@@ -22,7 +22,6 @@
  */
 
 static uint8_t pvt_CRC7(const uint64_t tca);
-static void pvt_waitSendDummySPI(const uint16_t clckCycles);
 
 /*
  ******************************************************************************
@@ -59,7 +58,7 @@ uint32_t sd_InitModeSPI(CTV *ctv)
   if (prevSuccessFlag)
     return OUT_OF_IDLE;
 
-  pvt_waitSendDummySPI(80);                 // wait 80 SPI CCs for power up
+  sd_WaitSendDummySPI(80);                 // wait 80 SPI CCs for power up
 
   //
   // Step 1: GO_IDLE_STATE (CMD0)
@@ -245,7 +244,7 @@ uint8_t sd_ReceiveByteSPI(void)
 void sd_SendCommand(const uint8_t cmd, const uint32_t arg)
 {
   // Found forcing some delay between commands can improve stability/behavrior.
-  pvt_waitSendDummySPI(80);
+  sd_WaitSendDummySPI(80);
                            
   // 
   // Construct the command / argument packet to be sent to the SD card. The
@@ -372,6 +371,24 @@ void sd_PrintInitError(const uint32_t initResp)
 }
 
 /*
+ * ----------------------------------------------------------------------------
+ *                                              WAIT SPECIFIED SPI CLOCK CYCLES
+ * 
+ * Description : Used to wait a specified number of SPI clock cycles. While
+ *               doing so, it sends all 1's (DMY_TKN) on the SPI port.
+ * 
+ * Arguments   : clckCycles   - min num of clock cycles to wait.
+ * 
+ * Returns     : void
+ * ----------------------------------------------------------------------------
+ */
+void sd_WaitSendDummySPI(const uint16_t clckCycles)
+{
+  for (uint8_t waitCnt = 0; waitCnt < clckCycles / SPI_REG_BIT_LEN; ++waitCnt)
+    sd_SendByteSPI(DMY_TKN);
+}
+
+/*
  ******************************************************************************
  *                        "PRIVATE" FUNCTIONS DEFINITIONS
  ******************************************************************************
@@ -411,22 +428,4 @@ static uint8_t pvt_CRC7(const uint64_t tca)
     test >>= 1;
   }
   return result;
-}
-
-/*
- * ----------------------------------------------------------------------------
- *                                              WAIT SPECIFIED SPI CLOCK CYCLES
- * 
- * Description : Used to wait a specified number of SPI clock cycles. While
- *               doing so, it sends all 1's (DMY_TKN) on the SPI port.
- * 
- * Arguments   : clckCycles   - min num of clock cycles to wait.
- * 
- * Returns     : void
- * ----------------------------------------------------------------------------
- */
-static void pvt_waitSendDummySPI(const uint16_t clckCycles)
-{
-  for (uint8_t waitCnt = 0; waitCnt < clckCycles / SPI_REG_BIT_LEN; ++waitCnt)
-    sd_SendByteSPI(DMY_TKN);
 }

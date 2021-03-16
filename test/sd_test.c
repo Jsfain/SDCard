@@ -169,7 +169,7 @@ int main(void)
     // the block was successfully written to. 
 
     // set to 0 to skip this section
-    #if 1
+    #if 0
 
     // Data (string) to be written to the block 
     uint8_t  dataArr3[BLOCK_LEN] = "Well Hi, I See you brought a PIE!!!";
@@ -535,7 +535,7 @@ int main(void)
     // Write Multiple Blocks
     print_Str("\n\r WRITING BLOCKS ");
     err5 = sd_WriteMultipleBlocks(startBlckNum5, numOfBlcks5, dataArr2);
-    if (err5 != DATA_ACCEPTED_TOKEN_RECEIVED)
+    if (err5 != DATA_WRITE_SUCCESS)
     { 
       print_Str("\n\r >> sd_WriteMultipleBlocks() returned ");
       if (err5 & R1_ERROR)
@@ -550,7 +550,7 @@ int main(void)
 
         // Get the R2 (SEND_STATUS) response if the Write Error Token
         // was returned by the card while writing to the block.
-        if ((err5 & WRITE_ERROR_TOKEN_RECEIVED) == WRITE_ERROR_TOKEN_RECEIVED)
+        if ((err5 & WRITE_ERROR_TKN_RECEIVED) == WRITE_ERROR_TKN_RECEIVED)
         {
           // Getting R2 response.  May make this a function.
           print_Str("\n\r WRITE_ERROR_TOKEN set.");
@@ -626,7 +626,7 @@ int main(void)
     // parameters and the blocks specified by the user are printed.
 
     // set to 0 to skip this section
-    #if 1
+    #if 0
 
     uint32_t startBlckNum6;                // first block to print
     uint32_t numOfBlcks6;                  // number of blocks to print
@@ -695,10 +695,7 @@ int main(void)
     #if 1
 
     print_Str("\n\n\n\r Memory capacity = ");
-    if (ctv.type == SDHC) 
-      print_Dec(sd_GetMemoryCapacitySDHC());
-    else
-      print_Dec(sd_GetMemoryCapacitySDSC());
+    print_Dec(sd_GetCardByteCapacity(&ctv));
     print_Str(" Bytes");
 
     #endif
@@ -716,7 +713,7 @@ int main(void)
     // screen, so I do not suggest using it over a large range of blocks.
 
     // set to 0 to skip this section
-    #if 1
+    #if 0
     
     // block number range to search for non-zero data.
     uint32_t startBlckNum = 0;

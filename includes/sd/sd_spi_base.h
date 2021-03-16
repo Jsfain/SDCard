@@ -261,4 +261,18 @@ void sd_PrintR1(const uint8_t r1);
  */
 void sd_PrintInitError(const uint32_t initErr);
 
+/*
+ * ----------------------------------------------------------------------------
+ *                                              WAIT SPECIFIED SPI CLOCK CYCLES
+ * 
+ * Description : Used to wait a specified number of SPI clock cycles. While
+ *               doing so, it sends all 1's (DMY_TKN) on the SPI port.
+ * 
+ * Arguments   : clckCycles   - min num of clock cycles to wait.
+ * 
+ * Returns     : void
+ * ----------------------------------------------------------------------------
+ */
+void sd_WaitSendDummySPI(const uint16_t clckCycles);
+
 #endif //SD_SPI_BASE_H

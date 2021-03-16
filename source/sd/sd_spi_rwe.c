@@ -133,7 +133,7 @@ void sd_PrintSingleBlock(const uint8_t blckArr[])
         usart_Transmit(' ');
       usart_Transmit(' ');
 
-      // if value is not two hex digits, then first print a 0. 
+      // if value is not two hex digits, prefix a 0. 
       if (blckArr[offset] < 0x10)
         usart_Transmit('0');
 
@@ -150,9 +150,9 @@ void sd_PrintSingleBlock(const uint8_t blckArr[])
     print_Str("     ");
     for (offset = row * radix; offset < row * radix + radix; ++offset)
     {
-      if (blckArr[offset] < STD_ASCII_PRINT_RANGE_FIRST)    
+      if (blckArr[offset] < ASCII_PRINT_CHAR_FIRST)    
         usart_Transmit(' '); 
-      else if (blckArr[offset] <= STD_ASCII_PRINT_RANGE_LAST)
+      else if (blckArr[offset] <= ASCII_PRINT_CHAR_LAST)
         usart_Transmit(blckArr[offset]);
       else 
         usart_Transmit('.');
@@ -179,7 +179,6 @@ uint16_t sd_WriteSingleBlock(const uint32_t blckAddr, const uint8_t dataArr[])
 {
   uint8_t  r1;                              // for R1 response
   uint8_t  dataRespTkn = 0;
-  //uint16_t timeout = 0;
 
   // send the Write Single Block command to write data to blckAddr on SD card.
   CS_SD_LOW;    
@@ -191,10 +190,10 @@ uint16_t sd_WriteSingleBlock(const uint32_t blckAddr, const uint8_t dataArr[])
   }
 
   // send Start Block Token (0xFE) to initiate data transfer
-  sd_SendByteSPI(0xFE); 
+  sd_SendByteSPI(START_BLOCK_TKN); 
 
   // send data to write to SD card.
-  for (uint16_t pos = 0; pos < BLOCK_LEN; pos++) 
+  for (uint16_t pos = 0; pos < BLOCK_LEN; ++pos) 
     sd_SendByteSPI (dataArr[pos]);
 
   // Send 16-bit CRC. CRC should be off (default), so these do not matter.
@@ -218,7 +217,7 @@ uint16_t sd_WriteSingleBlock(const uint32_t blckAddr, const uint8_t dataArr[])
   //
   // if SD card signals the data was accepted by returning the Data Accepted
   // Token then the card will enter 'busy' state while it writes the data to 
-  // the block. While busy, the card will hold the DI line at 0. If the timeout
+  // the block. While busy, the card will hold the DO line at 0. If the timeout
   // limit is reached then the function will return CARD_BUSY_TIMEOUT.
   //
   if (dataRespTkn == DATA_ACCEPTED_TKN)
@@ -377,7 +376,6 @@ void sd_PrintWriteError(uint16_t err)
       print_Str("\n\r UNKNOWN RESPONSE");
   }
 }
-
 
 /*
  * ----------------------------------------------------------------------------

@@ -19,24 +19,43 @@
  *                                  MACROS   
  ******************************************************************************
  */
-#define STD_ASCII_PRINT_RANGE_FIRST      32
-#define STD_ASCII_PRINT_RANGE_LAST      127
 
+/* 
+ * ----------------------------------------------------------------------------
+ *                                                   ASCII PRINTABLE CHAR RANGE
+ *
+ * Description : These are used to define the printable ascii char range.
+ * ----------------------------------------------------------------------------
+ */
+#define ASCII_PRINT_CHAR_FIRST     32
+#define ASCII_PRINT_CHAR_LAST      127
 
 /* 
  * ----------------------------------------------------------------------------
  *                                                            START BLOCK TOKEN
  *
- * Description : 
+ * Description : Token sent by the SD card to signal it is ready to 
+ *               send/receive data for a block read/write.
  * ----------------------------------------------------------------------------
  */
 #define START_BLOCK_TKN     0xFE
 
-// used for extracting response tokens after a write command
-#define DATA_RESPONSE_TKN_MASK       0x1F    // used to extract the data response token
-#define DATA_ACCEPTED_TKN   0x05
-#define CRC_ERROR_TKN       0x0B
-#define WRITE_ERROR_TKN     0x0D
+/* 
+ * ----------------------------------------------------------------------------
+ *                                                         DATA RESPONSE TOKENS
+ *
+ * Description : Used for data responses during a write operation. These tokens
+ *               are sent by the SD card to indicate whether the data was
+ *               accepted for write, or an error occurred. The mask is used to
+ *               filter the token from the rest of the bytes since the byte 
+ *               containing the token will has the form - XXX0TTT1, where the 
+ *               X's are don't care, and the T's are the token bits. 
+ * ----------------------------------------------------------------------------
+ */
+#define DATA_ACCEPTED_TKN          0x05
+#define CRC_ERROR_TKN              0x0B
+#define WRITE_ERROR_TKN            0x0D
+#define DATA_RESPONSE_TKN_MASK     0x1F
 
 /* 
  * ----------------------------------------------------------------------------
@@ -46,39 +65,39 @@
  *               error in the R1 response portion.
  * ----------------------------------------------------------------------------
  */
-#define R1_ERROR              0x8000
+#define R1_ERROR     0x8000
 
 /* 
  * ----------------------------------------------------------------------------
  *                                                       READ BLOCK ERROR FLAGS
  *
- * Description : Flags returned by READ block functions, 
- *               e.g. sd_readSingleBlock().
+ * Description : Flags returned by READ block functions,
+ *               e.g. sd_ReadSingleBlock.
  * 
- * Notes       : The lower byte is reserved for the R1 Response Flags, 
- *               see SD_SPI_BASE.H. 
+ * Notes       : The lower byte is reserved for the R1 Response Flags; see
+ *               SD_SPI_BASE.H. 
  * ----------------------------------------------------------------------------
  */
-#define START_TOKEN_TIMEOUT   0x0200
-#define READ_SUCCESS          0x0400
+#define START_TOKEN_TIMEOUT     0x0200
+#define READ_SUCCESS            0x0400
 
 /* 
  * ----------------------------------------------------------------------------
  *                                                      WRITE BLOCK ERROR FLAGS
  *
  * Description : Flags returned by WRITE block functions, 
- *               e.g. sd_writeSingleBlock().
+ *               e.g. sd_WriteSingleBlock().
  * 
- * Notes       : The lower byte is reserved for the R1 Response Flags,
- *               see SD_SPI_BASE.H. 
+ * Notes       : The lower byte is reserved for the R1 Response Flags; see
+ *               SD_SPI_BASE.H. 
  * ----------------------------------------------------------------------------
  */
-#define DATA_WRITE_SUCCESS            0x0100
-#define CRC_ERROR_TKN_RECEIVED        0x0200
-#define WRITE_ERROR_TKN_RECEIVED      0x0400
-#define INVALID_DATA_RESPONSE         0x0800
-#define DATA_RESPONSE_TIMEOUT         0x1000
-#define CARD_BUSY_TIMEOUT             0x2000
+#define DATA_WRITE_SUCCESS           0x0100
+#define CRC_ERROR_TKN_RECEIVED       0x0200
+#define WRITE_ERROR_TKN_RECEIVED     0x0400
+#define INVALID_DATA_RESPONSE        0x0800
+#define DATA_RESPONSE_TIMEOUT        0x1000
+#define CARD_BUSY_TIMEOUT            0x2000
 
 /* 
  * ----------------------------------------------------------------------------
@@ -87,15 +106,15 @@
  * Description : Flags returned by ERASE block functions, 
  *               e.g. sd_eraseSingleBlock().
  * 
- * Notes       : The lower byte is reserved for the R1 Response Flags, 
- *               see SD_SPI_BASE.H. 
+ * Notes       : The lower byte is reserved for the R1 Response Flags; see
+ *               SD_SPI_BASE.H. 
  * ----------------------------------------------------------------------------
  */
-#define ERASE_SUCCESSFUL                0x0000
-#define SET_ERASE_START_ADDR_ERROR      0x0100
-#define SET_ERASE_END_ADDR_ERROR        0x0200
-#define ERASE_ERROR                     0x0400
-#define ERASE_BUSY_TIMEOUT              0x0800
+#define ERASE_SUCCESSFUL               0x0000
+#define SET_ERASE_START_ADDR_ERROR     0x0100
+#define SET_ERASE_END_ADDR_ERROR       0x0200
+#define ERASE_ERROR                    0x0400
+#define ERASE_BUSY_TIMEOUT             0x0800
 
 /*
  ******************************************************************************
@@ -106,7 +125,7 @@
 /*
  * For the following read, write, and erase block functions, the returned error
  * response values can be read by their corresponding print error function. For
- * example, the returned value of sd_readSingleBlock() can be read by passing
+ * example, the returned value of sd_ReadSingleBlock() can be read by passing
  * it to sd_PrintReadError(). These print functions will read the upper byte of
  * of the returned error response. If in the error response the R1_ERROR flag 
  * is set in the upper byte, then the lower byte (i.e. the R1 Response portion
