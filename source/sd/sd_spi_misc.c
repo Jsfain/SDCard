@@ -377,7 +377,7 @@ uint16_t sd_GetNumOfWellWrittenBlocks(uint32_t *wellWrtnBlcks)
 
 /* 
  * ----------------------------------------------------------------------------
- *                                            GET MEMORY CAPACITY FOR TYPE SDSC 
+ *                                  (PRIVATE) GET MEMORY CAPACITY FOR TYPE SDSC 
  * 
  * Description : This function will get the parameters from an SDSC type SD 
  *               card that are needed to calculate the card's capacity and use
@@ -411,7 +411,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   // CSD_STRUCTURE
   //
   for (uint16_t timeout = 0; 
-       CSD_STRUCT_VSN_CALC(sd_ReceiveByteSPI()) != CSD_STRUCT_V_SDSC;)
+       CSD_VSN_CALC(sd_ReceiveByteSPI()) != CSD_VSN_SDSC;)
     if (++timeout >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH;
@@ -421,7 +421,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   //
   // TAAC
   //
-  for (uint16_t timeout = 0; !TAAC_CHECK_SDSC(sd_ReceiveByteSPI());)
+  for (uint16_t timeout = 0; !TAAC_CHK_SDSC(sd_ReceiveByteSPI());)
     if (++timeout >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH;
@@ -448,12 +448,12 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   //
 
   // Next 2 bytes contain the 12-bit CCC and 4-bit READ_BL_LEN.
-  for (uint16_t timeout = 0; ; ++timeout)
+  for (uint16_t timeout = 0;; ++timeout)
   {
-    if (CCC_HI_BYTE_SDSC_CHK(sd_ReceiveByteSPI()))
+    if (CCC_HI_BYTE_CHK_SDSC(sd_ReceiveByteSPI()))
     {
-      readBlkLen = sd_ReceiveByteSPI() & READ_BL_LEN_SDSC_MASK;
-      if (readBlkLen >= RBL_SDSC_LO || readBlkLen <= RBL_SDSC_HI)
+      readBlkLen = sd_ReceiveByteSPI() & RBL_MASK;
+      if (readBlkLen >= RBL_LO_SDSC || readBlkLen <= RBL_HI_SDSC)
         break;
       else
       {
@@ -471,17 +471,19 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   //
   // C_SIZE and C_SIZE_MULT are remaining fields needed to calculate capacity
   // 
-  for (uint16_t timeout = 0; ; ++timeout)
+  for (uint16_t timeout = 0;; ++timeout)
   {
     cSize = sd_ReceiveByteSPI() & C_SIZE_HI_MASK_SDSC;
     if(cSize == C_SIZE_HI_MASK_SDSC)
     {                   
+      // position and load cSize bytes
       cSize <<= 8;           
       cSize |= sd_ReceiveByteSPI();
       cSize <<= 2;        
       cSize |= sd_ReceiveByteSPI() >> 6;
       
-      cSizeMult  = (sd_ReceiveByteSPI() & C_SIZE_MULT_MASK) << 1;
+      // postion and load cSizeMult bits
+      cSizeMult  = (sd_ReceiveByteSPI() & C_SIZE_MULT_HI_MASK) << 1;
       cSizeMult |= sd_ReceiveByteSPI() >> 7;
 
     }
@@ -513,7 +515,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
 
 /* 
  * ----------------------------------------------------------------------------
- *                                            GET MEMORY CAPACITY FOR TYPE SDHC 
+ *                                  (PRIVATE) GET MEMORY CAPACITY FOR TYPE SDHC 
  * 
  * Description : This function will get the parameters from an SDHC type SD 
  *               card that are needed to calculate the card's capacity and use
@@ -526,14 +528,14 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
  */
 static uint32_t pvt_GetByteCapacitySDHC(void)
 {
-  // Only C_SIZE is needed to calculate the memory capacity of SDHC/SDXC types
+  // Only C_SIZE is needed to calculate the memory capacity of SDHC types
   uint64_t cSize;
 
   //
-  // SEND_CSD (CMD9)
+  // SEND_CSD (CMD9) - Request SD card send contents of CSD register
   //
   CS_SD_LOW;
-  sd_SendCommand(SEND_CSD, 0);
+  sd_SendCommand(SEND_CSD, 0);              // arg = 0 for this command
   if (sd_GetR1() != OUT_OF_IDLE)
   {
     CS_SD_HIGH;
@@ -550,7 +552,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   // CSD_STRUCTURE - Must be 1 for SDHC/SDXC types.
   //
   for (uint16_t timeout = 0; 
-       CSD_STRUCT_VSN_CALC(sd_ReceiveByteSPI()) != CSD_STRUCT_V_SDHC;)
+       CSD_VSN_CALC(sd_ReceiveByteSPI()) != CSD_VSN_SDHC;)
     if (++timeout >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH;
@@ -592,18 +594,18 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   //
 
   // Next 2 bytes contain the 12-bit CCC and 4-bit READ_BL_LEN.
-  for (uint16_t timeout = 0; ; ++timeout)
+  for (uint16_t timeout = 0;; ++timeout)
   {
-    if (CCC_HI_BYTE_SDHC_CHK(sd_ReceiveByteSPI()))
+    if (CCC_HI_BYTE_CHK_SDHC(sd_ReceiveByteSPI()))
     {
-      if (sd_ReceiveByteSPI() != CCC_LO_NIB + READ_BL_LEN_SDHC)
+      if (sd_ReceiveByteSPI() != CCC_LO_MASK + RBL_SDHC)
       {
         CS_SD_HIGH; 
         return FAILED_CAPACITY_CALC;
       }
       break;
     }
-    if (timeout++ >= TIMEOUT_LIMIT)
+    if (timeout >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH;
       return FAILED_CAPACITY_CALC;
@@ -613,12 +615,12 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   //
   // C_SIZE is the remaining field needed to calculate capacity
   // 
-  for (uint16_t timeout = 0; ; ++timeout)
+  for (uint16_t timeout = 0;; ++timeout)
   {
     // Remaining bits before reaching C_SIZE
-    if (RW_PRTL_MA_DSR_RSRVD_CHK_SDHC(sd_ReceiveByteSPI()))
+    if (RP_WBM_RBM_DSR_RSRVD_CHK_SDHC(sd_ReceiveByteSPI()))
     {
-      cSize = sd_ReceiveByteSPI() & C_SIZE_HI_MASK_SDHC;   // Only [5:0] is C_SIZE
+      cSize = sd_ReceiveByteSPI() & C_SIZE_HI_MASK_SDHC;// Only [5:0] is C_SIZE
       cSize <<= 8;           
       cSize |= sd_ReceiveByteSPI();
       cSize <<= 8;        
