@@ -35,87 +35,100 @@
  */
 
 //
-// The CSD-related macros below are to be used to parse and verify the byte 
-// contents of the CSD register. They do not necessarily represent the expected
-// values. There is a lot of byte overlap in the register contents. 
+// The macros in this section are used to parse the 128 bit CSD register into
+// its fields and verify them. In SPI mode, these 128 bits are sent in 8-bit
+// byte packets - many fields lie in multiple bytes and/or share bytes. As
+// such, many of the macros do not necessarily equal their respective field 
+// values, but rather values related to the partial fields within a byte and/or
+// where the field is placed within the byte. 
+// 
+// Notes: 1) many of the CSD bits are reserved (not used). 
+//        2) when referring to the byte numbers below, these number are the 
+//           order that the CSD bytes are received from the SD card, though in
+//           actuality, they being sent MSB (bit 127) --> LSB (bit 0).
+//  
+ 
 //
-
-//
-// CSD STRUCTURE 
+// CSD STRUCTURE
 // 
 // This value is unique to the card type. Its value is represented by the two
 // MSBits in the first byte of the CSD returned. The lower 6 bits of the byte
 // are reserved and do not matter (they should = 0).
 //
-#define CSD_VSN_SDSC        0x00
-#define CSD_VSN_SDHC        0x01
-//#define CSD_STRUCT_V_SDUC 0x10            // ultra capacity not used here.
-#define CSD_STRUCT_MASK     0x40            // extracts the CSD Struct bits.
+#define CSD_VSN_SDSC        0x00            // version 1 type
+#define CSD_VSN_SDHC        0x01            // version 2 type 
+//#define CSD_STRUCT_V_SDUC 0x10            // version 3 type. not used.
 
 //
 // Determines the CSD Struct Version from the first byte of the CSD register
 // and returns the value of the appropriate CSD_STRUCT_V_XXXX macro above.
 // 
-#define CSD_VSN_CALC(CSD_BYTE)    (((CSD_BYTE) & CSD_STRUCT_MASK)             \
-                                    ? CSD_VSN_SDHC : CSD_VSN_SDSC)           
+#define CSD_STRUCT_MASK           0x40      // extracts the CSD Struct bits.
+#define GET_CSD_VSN(CSD_BYTE)    (((CSD_BYTE) & CSD_STRUCT_MASK)             \
+                                    ? CSD_VSN_SDHC : CSD_VSN_SDSC)
+
+/*
+ ------------------------------------------------------------------------------
+ *                                                  CSD VERSION 1 (SDSC) MACROS
+ * 
+ * Description : Macros to be used with CSD Version 1 (SDSC) type cards.
+ ------------------------------------------------------------------------------
+ */
 
 //
-// TAAC
+// TAAC for SDSC (8b) - byte 2 of CSD register.
 //
-// Byte 2 of the CSD register is the TAAC. For SDSC type cards, bit 7 of TAAC 
-// is reserved, so must be 0. All others could be 1 or 0 and so only bit 7 is
-// used to verify the TAAC byte. For SDHC type cards it must be 0x0E (1ms).
+// Bit 7 of the TAAC in SDSC types is reserved, it must be 0. All others bits 
+// could be 1 or 0. As such bit 7 is used as a weak check to verify the TAAC 
+// byte. The TAAC checker will return true if bit 7 is 0 (assume TAAC) and 
+// false otherwise.
 //
-#define TAAC_SDHC                  0x0E     // SDHC - fixed at 0x0E (1ms)
-// TAAC check for SDSC type cards. Returns true if TAAC and false otherwise.
 #define TAAC_RSVD_BIT_SDSC         0x80
 #define TAAC_CHK_SDSC(TAAC_BYTE)   !((TAAC_BYTE) & TAAC_RSVD_BIT_SDSC)
 
 //
-// NSAC - Byte 3 of CSD register
+// NSAC for SDSC (8b) - Byte 3 of CSD register. Could be any value and it is
+//                      not used in this current implementation.
 //
-//#define NSAC_SDSC         NA             // could be any value.
-#define NSAC_SDHC           0              // Not used. Field is present
+//#define NSAC_SDSC         NA
 
 //
-// TRANS SPEED - Byte 4 of the CSD register.
-//
-#define TRANS_SPEED         0x32           // Default val.
+// TRANS SPEED for SDSC (8b) - Byte 4 of the CSD register. 0x32 is the default
+//                             value and the only one that will work here.
+//                             
+#define TRANS_SPEED_SDSC    0x32
 
 // 
-// CCC
-//
-// 12 bits beginning at byte 5 through the upper 4 bits of the byte 6. For
-// SDSC, CCC has form 01_1101101_1, and for SDHC it has form _1_1101101_1.
+// CCC for SDSC (12b) - Occupies all of CSD byte 5 and the upper 4 bits of 
+//                      byte 6. The form of the CCC field for SDSC is 
+//                      01_1101101_1, where the '_' indicates either 1 or 0.
 //
 
 //
-// Pass the high CCC byte (byte 5 of CSD) to the appropriate checker below, 
-// depending on card type. The checker will return true if it is valid.
+// Pass the high CCC byte of SDSC types (byte 5 of CSD) to the checker below. 
+// The checker will test that this byte has a valid pattern by converting the
+// '_' bit to 1 and then testing that this is equal to 0x7B. The checker will 
+// return true (1) if it is valid, and false (0) if not. 
 //
 #define CCC_HI_BYTE_CHK_SDSC(CCC_HI_BYTE)  ((CCC_HI_BYTE) | 0x40) == 0x7B
-#define CCC_HI_BYTE_CHK_SDHC(CCC_HI_BYTE)  ((CCC_HI_BYTE) | 0xA0) == 0xFB
 
 //
 // The lower 4 bits of CCC are the upper 4 bits of byte 6 of the CSD. This mask
 // can be used to test/extract these from byte 6.
 //
-#define CCC_LO_MASK     0x50                // same for SDSC and SDHC
+#define CCC_LO_BITS_MASK_SDSC     0x50      // same for SDSC and SDHC
 
 //
-// READ_BL_LEN - The lower 4 bits of byte 6 of the CSD.
+// READ_BL_LEN (4b) - The lower 4 bits of byte 6 of the CSD. These must be
+//                    either 9, 10, or 11.
 //
-#define RBL_MASK        0x0F                // to extract RBL
-#define RBL_SDHC        0x09                // must be 9 for SDHC
-#define RBL_LO_SDSC     0x09                // RBL for SDSC is 9, 10, or 11
+#define RBL_MASK_SDSC   0x0F                // extracts RBL from low CCC bits
+#define RBL_LO_SDSC     0x09                
 #define RBL_HI_SDSC     0x0B
 
 // 
-// BYTE 7 of CSD includes the listed single bit fields (with values).
-//
-
-//
-// For SDSC, this checker verifies expected value of CSD byte 7:
+// BYTE 7 of CSD in SDSC - structured as below, with several Single Bit Felds,
+//                         and the two highest bits of the C_SIZE field.
 //
 // READ_BLK_PARTIAL[7] = 1, 
 // WRITE_BLK_MISALIGN[6] = X,
@@ -124,10 +137,91 @@
 // RESERVED[3:2] = 0
 // 2 Highest bits of C_SIZE[1:0]
 //
-#define RP_WBM_RBM_DSR_RSRVD_CHK_SDSC(MBF)   (((MBF) & 0x8C) == 0x80)
+
+// This checker returns true if pattern of SBF matches that expected in byte 7
+#define CSD_BYTE_7_CHK_SDSC(SBF)     ((SBF) & 0x8C) == 0x80
 
 //
-// For SDHC, this checker verifies expected value of CSD byte 7:
+// C_SIZE for SDSC (12b) - This field spans 3 CSD bytes (2b:8b:2b). There is no
+//                         specific pattern that can be used to verify the 
+//                         field. The upper 2 bits of the field are the lowest 
+//                         two bits of byte 7 above. The lowest two bits of the
+//                         field are the upper 2 bits of byte 9.
+//
+#define C_SIZE_HI_MASK_SDSC     0x03        // extract lower 2 bits of byte 7
+#define C_SIZE_LO_MASK_SDSC     0xC0        // extract upper 2 bits of byte 9
+
+
+//
+// Between the C_SIZE and C_SIZE_MULT fields are the R/W min/max current
+// fields. These are not currently used in this implementation.
+//
+
+//
+// C_SIZE_MULT for SDSC (3b) - This field spans bytes 10 and 11 of the CSD. The
+//                             upper 2 bits of this field are the lower 2 bits
+//                             of byte 10, and the lowest byte of this field is
+//                             bit 7 of byte 11.
+//
+#define C_SIZE_MULT_HI_MASK_SDSC     0x03   // extract lower 2 bits of byte 10
+#define C_SIZE_MULT_LO_MASK_SDSC     0x80   // extract highest bit of byte 11
+
+//
+// There are other fields beyond C_SIZE_MULT but they are not currently used in 
+// this implementation.
+//
+
+/*
+ ------------------------------------------------------------------------------
+ *                                                  CSD VERSION 2 (SDHC) MACROS
+ * 
+ * Description : Macros to be used with CSD Version 2 (SDHC) type cards.
+ ------------------------------------------------------------------------------
+ */
+
+//
+// TAAC for SDHC (8b) - byte 2 of CSD register.
+//
+#define TAAC_SDHC     0x0E                  // SDHC - fixed at 0x0E (1ms)
+
+//
+// NSAC for SDHC (8b) - byte 3 of CSD register.
+//
+#define NSAC_SDHC     0                     // Not used, but field is present.
+
+//
+// TRANS SPEED for SDHC (8b) - Byte 4 of the CSD register. Same default value
+//                             as SDSC type.
+//
+#define TRANS_SPEED_SDHC    TRANS_SPEED_SDSC
+
+//
+// CCC for SDHC (12b) - Occupies all of CSD byte 5 and the upper 4 bits of
+//                      byte 6. The form of the CCC field for SDHC is 
+//                      _1_1101101_1, where the '_' indicates either 1 or 0.
+
+//
+// Pass the high byte (byte 5 of CSD) to the checker, and it will test that 
+// this byte has a valid pattern by converting the '_' bit to 1's and then 
+// testing the result is 0xFB. The checker will return true (1) if it is valid,
+// and false (0) if not. 
+//
+#define CCC_HI_BYTE_CHK_SDHC(CCC_HI_BITS)     ((CCC_HI_BITS) | 0xA0) == 0xFB
+
+//
+// The lower 4 bits of CCC are the upper 4 bits of byte 6 of the CSD. This mask
+// can be used to test/extract these from byte 6.
+//
+#define CCC_LO_BITS_MASK_SDHC     CCC_LO_BITS_MASK_SDSC
+
+//
+// READ_BL_LEN - The lower 4 bits of byte 6 of the CSD.
+//
+#define RBL_MASK_SDHC   RBL_MASK_SDSC       // to extract RBL
+#define RBL_SDHC        0x09                // must be 9 for SDHC
+
+// 
+// BYTE 7 of CSD in SDHC - structured as below, with several Single Bit Felds.
 //
 // READ_BLK_PARTIAL[7] = 0, 
 // WRITE_BLK_MISALIGN[6] = 0,
@@ -135,32 +229,22 @@
 // DSR_IMP[4] = X, 
 // RESERVED[3:0] = 0;
 //
-#define RP_WBM_RBM_DSR_RSRVD_CHK_SDHC(MBF)   (((MBF) == 0) || ((MBF) == 0x10))
+
+// For SDHC, this checker verifies expected pattern of CSD byte 7:
+#define CSD_BYTE_7_CHK_SDHC(SBF)     (SBF) == 0 || (SBF) == 0x10
 
 //
-// C_SIZE - byte span in CSD is dependent on card type.
-//
-
-//
-// for SDSC, C_SIZE is 12 bits and the upper 2 bits of the field are the lowest
-// two bits of byte 7. Use this mask to extract these bits from CSD byte 7.
-//
-#define C_SIZE_HI_MASK_SDSC     0x03
-
-//
-// for SDHC, C_SIZE is 22 bits and the upper 6 bits of the field are, are the
-// lower 6 bits of byte 8. The upper 2 bits of byte 8 are reserved (0). This
-// mask is used to extract these upper bits.
+// C_SIZE for SDHC (22b) - This field spans 3 CSD bytes (6b:8b:8b). There is no
+//                         specific pattern that can be used to verify the 
+//                         field. The upper 6 bits of the field are the lowest 
+//                         6 bits of byte 8 above. The HI_MASK is used to 
+//                         extract these bits from byte 8.
 //
 #define C_SIZE_HI_MASK_SDHC     0x3F
 
 //
-// C_SIZE_MULT
+// There are other fields beyond C_SIZE in SDHC CSD but they are not currently used in 
+// this implementation.
 //
-// Only used for SDSC. The field is 3 bits, but spans two CSD bytes. This mask
-// is used to extract the upper two bits of the field from CSD byte 10. The
-// lowest field bit is the MSBit of CSD byte 11.
-//
-#define C_SIZE_MULT_HI_MASK     0x03
 
 #endif //SD_SPI_REGS_H

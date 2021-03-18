@@ -13,6 +13,8 @@
 #ifndef SD_SPI_MISC_H
 #define SD_SPI_MISC_H
 
+#define INCLUDE_CSD     1
+
 #define FAILED_CAPACITY_CALC     1
 
 #define NZDBN_PER_LINE           5
@@ -22,7 +24,7 @@
 
 
 // memory capacity in bytes. See SD card standard for calc formula.
-#define CAPACITY_CALC_SDHC(CSZ)   (((CSZ) + 1) * 512000)
+#define CAPACITY_CALC_SDHC(CSZ)   (((CSZ) + 1) * 512000
 /*
  ******************************************************************************
  *                                 FUNCTIONS   

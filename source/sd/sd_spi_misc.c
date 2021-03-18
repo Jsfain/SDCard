@@ -411,7 +411,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   // CSD_STRUCTURE
   //
   for (uint16_t timeout = 0; 
-       CSD_VSN_CALC(sd_ReceiveByteSPI()) != CSD_VSN_SDSC;)
+       GET_CSD_VSN(sd_ReceiveByteSPI()) != CSD_VSN_SDSC;)
     if (++timeout >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH;
@@ -434,9 +434,9 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   sd_ReceiveByteSPI();
 
   //
-  // TRAN_SPEED - this only tests for default speed.
+  // TRAN_SPEED - this only tests for default value.
   //
-  for (uint16_t timeout = 0; sd_ReceiveByteSPI() != TRANS_SPEED;)
+  for (uint16_t timeout = 0; sd_ReceiveByteSPI() != TRANS_SPEED_SDSC;)
     if (++timeout >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH;
@@ -452,7 +452,8 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   {
     if (CCC_HI_BYTE_CHK_SDSC(sd_ReceiveByteSPI()))
     {
-      readBlkLen = sd_ReceiveByteSPI() & RBL_MASK;
+      // value required for capacity calculation
+      readBlkLen = sd_ReceiveByteSPI() & RBL_MASK_SDSC;
       if (readBlkLen >= RBL_LO_SDSC || readBlkLen <= RBL_HI_SDSC)
         break;
       else
@@ -483,7 +484,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
       cSize |= sd_ReceiveByteSPI() >> 6;
       
       // postion and load cSizeMult bits
-      cSizeMult  = (sd_ReceiveByteSPI() & C_SIZE_MULT_HI_MASK) << 1;
+      cSizeMult  = (sd_ReceiveByteSPI() & C_SIZE_MULT_HI_MASK_SDSC) << 1;
       cSizeMult |= sd_ReceiveByteSPI() >> 7;
 
     }
@@ -552,7 +553,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   // CSD_STRUCTURE - Must be 1 for SDHC/SDXC types.
   //
   for (uint16_t timeout = 0; 
-       CSD_VSN_CALC(sd_ReceiveByteSPI()) != CSD_VSN_SDHC;)
+       GET_CSD_VSN(sd_ReceiveByteSPI()) != CSD_VSN_SDHC;)
     if (++timeout >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH;
@@ -582,7 +583,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   //
   // TRAN_SPEED
   //
-  for (uint16_t timeout = 0; sd_ReceiveByteSPI() != TRANS_SPEED;)
+  for (uint16_t timeout = 0; sd_ReceiveByteSPI() != TRANS_SPEED_SDHC;)
     if (++timeout >= TIMEOUT_LIMIT)
     { 
       CS_SD_HIGH;
@@ -598,7 +599,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   {
     if (CCC_HI_BYTE_CHK_SDHC(sd_ReceiveByteSPI()))
     {
-      if (sd_ReceiveByteSPI() != CCC_LO_MASK + RBL_SDHC)
+      if (sd_ReceiveByteSPI() != CCC_LO_BITS_MASK_SDHC + RBL_SDHC)
       {
         CS_SD_HIGH; 
         return FAILED_CAPACITY_CALC;
@@ -618,7 +619,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   for (uint16_t timeout = 0;; ++timeout)
   {
     // Remaining bits before reaching C_SIZE
-    if (RP_WBM_RBM_DSR_RSRVD_CHK_SDHC(sd_ReceiveByteSPI()))
+    if (CSD_BYTE_7_CHK_SDHC(sd_ReceiveByteSPI()))
     {
       cSize = sd_ReceiveByteSPI() & C_SIZE_HI_MASK_SDHC;// Only [5:0] is C_SIZE
       cSize <<= 8;           
@@ -633,7 +634,8 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
       return FAILED_CAPACITY_CALC; 
     }
   }
-
   CS_SD_HIGH;
-  return CAPACITY_CALC_SDHC(cSize);
-}
+
+  // see std for calculation description
+  return ((cSize + 1) * 512000);
+}    
