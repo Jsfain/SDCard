@@ -2,7 +2,7 @@
  * File    : SD_TEST.C
  * Author  : Joshua Fain
  * Target  : ATMega1280
- * License : MIT
+ * License : GNU GPLv3
  * Copyright (c) 2020, 2021
  *
  * Test file to demonstrate the implementation of several functions defined in

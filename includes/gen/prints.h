@@ -1,9 +1,9 @@
 /*
  * File    : PRINTS.H
- * Version : 0.0.0.2
+ * Version : 2.0
  * Author  : Joshua Fain
  * Target  : ATMega1280
- * License : MIT
+ * License : GNU GPLv3
  * Copyright (c) 2020
  * 
  * Interface for some print functions used to print strings and unsigned

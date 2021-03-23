@@ -3,7 +3,7 @@
  * Version : 1.0
  * Author  : Joshua Fain
  * Target  : ATMega1280
- * License : MIT
+ * License : GNU GPLv3
  * Copyright (c) 2020, 2021
  * 
  * Provides several functions and macros for basic interaction between an SD

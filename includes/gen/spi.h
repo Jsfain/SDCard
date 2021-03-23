@@ -1,9 +1,9 @@
 /*
  * File    : SPI.H
- * Version : 0.0.0.1 
+ * Version : 1.0 
  * Author  : Joshua Fain
  * Target  : ATMega1280
- * License : MIT
+ * License : GNU GPLv3
  * Copyright (c) 2020
  * 
  * Interface for interacting with the ATMega's SPI port.
