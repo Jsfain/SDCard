@@ -64,8 +64,8 @@
 // and returns the value of the appropriate CSD_STRUCT_V_XXXX macro above.
 // 
 #define CSD_STRUCT_MASK           0x40      // extracts the CSD Struct bits.
-#define GET_CSD_VSN(CSD_BYTE)    (((CSD_BYTE) & CSD_STRUCT_MASK)             \
-                                    ? CSD_VSN_SDHC : CSD_VSN_SDSC)
+#define GET_CSD_VSN(CSD_BYTE)     (((CSD_BYTE) & CSD_STRUCT_MASK)             \
+                                  ? CSD_VSN_SDHC : CSD_VSN_SDSC)
 
 /*
  ------------------------------------------------------------------------------

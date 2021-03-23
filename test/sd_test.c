@@ -5,8 +5,8 @@
  * License : MIT
  * Copyright (c) 2020
  *
- * Test file to demonstrate how to implement several of the functions defined
- * in the SD_SPI_XXX files.
+ * Test file to demonstrate the implementation of several functions defined in
+ * the SD_SPI_XXXX files.
  */
 
 #include <stdint.h>
@@ -18,41 +18,179 @@
 #include "sd_spi_rwe.h"
 #include "sd_spi_misc.h"
 
-// local function
-uint32_t enterBlockNumber();
+#define SD_CARD_INIT_ATTEMPTS_MAX      5
+#define MAX_DATA_BYTES_32_BIT          2147483648    
+#define MAX_BLOCK_NUM_32_BIT           MAX_DATA_BYTES_32_BIT / BLOCK_LEN
+#define BACKSPACE                      127  // used for keyboard backspace here
 
-int main(void)
+// 
+// SD Card Feature Testing Macros
+//
+// This first set of macro definitions will enable the various test sections in
+// main below. The macro section below this, will include the relevant macro
+// definitions as required according to the test sections that are enabled in 
+// this section. A description of what each section does is provided above its
+// set of enabled macro paramters provided in the next section.
+//
+#define READ_IN_AND_PRINT_SINGLE_BLOCK_TESTING     0
+#define PRINT_MULTIPLE_BLOCKS_TESTING              0
+#define WRITE_ERASE_SINGLE_BLOCK_TESTING           0
+#define COPY_SINGLE_BLOCK_TESTING                  0
+#define WRITE_ERASE_MULTIPLE_BLOCKS_TESTING        0
+#define USER_INPUT_SECTION_TESTING                 0
+#define MEMORY_CAPACITY_TESTING                    0
+#define FIND_NONZERO_DATA_BLOCKS_TESTING           1
+
+//
+// ----------------------------------------------------------------------------
+//                                       READ_IN_AND_PRINT_SINGLE_BLOCK_TESTING
+// 
+// The corresponding section in main demos the functions sd_ReadSingleBlock()
+// and sd_PrintSingleBlock(). This section will use sd_ReadSingleBlock() to 
+// read the contents of the block at the address specified by BLK_ADDR_RSB into
+// an array. This array will then be passed to sd_PrintSingleBlock() which will
+// print the block's contents to the screen. 
+//
+#if READ_IN_AND_PRINT_SINGLE_BLOCK_TESTING
+#define BLK_ADDR_RSB         16384           // addr of blk to read in and print
+#endif
+
+// ----------------------------------------------------------------------------
+//                                                PRINT_MULTIPLE_BLOCKS_TESTING
+// 
+// The corresponding section in main demos sd_PrintMultipleBlocks(). This will
+// print the number of blocks specified by NUM_OF_BLKS_PMB, beginging at 
+// START_BLK_ADDR_PMB. The function calls the READ_MULTIPLE_BLOCKS SD card 
+// command.
+//
+#if PRINT_MULTIPLE_BLOCKS_TESTING
+#define START_BLK_ADDR_PMB   20             // addr of first blk to print
+#define NUM_OF_BLKS_PMB      2              // total num of blks to print
+#endif
+
+// ----------------------------------------------------------------------------
+//                                             WRITE_ERASE_SINGLE_BLOCK_TESTING
+//
+// The corresponding section in main demos the functions sd_WriteSingleBlock(), 
+// sd_EraseBlocks(), sd_ReadSingleBlock() and sd_printSingleBlocks(). This will
+// will first erase the single block at the block address specified by 
+// BLK_ADDR_WSB using sd_EraseBlocks(), then read in and print this block to 
+// confirm it is erased using sd_ReadSingleBlock and sd_PrintSingleBlock(). 
+// Next, it will call the sd_WriteSingleBlock() function to the data specified
+// by WRITE_STR_WSB to the same block. Finally, it will read in and print the 
+// block again to confirm the block write was successful.
+//
+#if WRITE_ERASE_SINGLE_BLOCK_TESTING
+// string/data that will be written to the block
+#define WRITE_STR_WSB        "Well Hi, I See you brought a PIE!!!"
+#define BLK_ADDR_WSB         20            // block that will be written to
+#endif
+
+// ----------------------------------------------------------------------------
+//                                                    COPY_SINGLE_BLOCK_TESTING
+//
+// The corresponding section in main will copy the contents in the block
+// specified by SOURCE_BLK_CSB into the block specified by DEST_BLK_CSB. It
+// does this by reading the contents at SOURCE_BLK_CSB into an array using 
+// sd_ReadSingleBlock, and then passing a pointer to this array to 
+// sd_WriteSingleBlock to write its contents to DEST_BLK_CSB.
+//
+#if COPY_SINGLE_BLOCK_TESTING
+#define SOURCE_BLK_CSB       0    // block holding data that will be copied
+#define DEST_BLK_CSB         20   // block where data will be copied to
+#endif
+
+// ----------------------------------------------------------------------------
+//                                          WRITE_ERASE_MULTIPLE_BLOCKS_TESTING
+//
+// The corresponding section in main will demos sd_writeMultipleBlock, 
+// sd_EraseBlocks, and sd_PrintMultipleBlocks. This section will first erase
+// the multiple blocks using sd_EraseBlocks, then read-in and print the same
+// blocks using sd_PrintMultipleBlocks to verify the blocks have been erased. 
+// Next it will write to the multiple blocks. It should then do some error 
+// handling if WRITE_ERROR_TKN_RECEIVED is returned, but this has not been 
+// tested yet. Finally, it will read-in and print the same blocks again to show
+// successful write. The data/string that will be written is the value of 
+// WRITE_STR_WMB. This data/string will be copied to the beginning of each
+// block written to. The total number of blocks to be erased and written to is
+// given by NUM_OF_BLKS_WSB and begins at START_BLK_ADDR_WMB.
+//
+#if WRITE_ERASE_MULTIPLE_BLOCKS_TESTING
+// Data (string) to be written to the block 
+#define WRITE_STR_WMB        "Would you like to play a game???"
+#define START_BLK_ADDR_WMB   20             // start block for erasing
+#define NUM_OF_BLKS_WMB      2              // used for writing
+#endif
+
+// ----------------------------------------------------------------------------
+//                                                   USER_INPUT_SECTION_TESTING 
+//
+// This section allows a user to interact with the function 
+// sd_PrintMultipleBlocks, and no additional macros are needed for this. The 
+// user is asked which block number they would like to print first, and then 
+// how many blocks they would like to print. The sd_PrintMultipleBlocks 
+// function is then called with these parameters and the blocks specified are 
+// printed. This function uses the local function enterBlockNumber, to get the 
+// user-entered block number.
+//
+#if USER_INPUT_SECTION_TESTING
+// local function used to get block number from user
+uint32_t enterBlockNumber();  
+#endif
+
+// ----------------------------------------------------------------------------
+//                                                      MEMORY_CAPACITY_TESTING
+//
+// The section calls the function sd_GetCardByteCapacity which will calculate
+// and return the card's data capacity in bytes. No additional macros are 
+// needed for this function.
+
+// ----------------------------------------------------------------------------
+//                                             FIND_NONZERO_DATA_BLOCKS_TESTING
+//
+// The corresponding section in main will demo the function 
+// sd_FindNonZeroDataBlockNums which will print the block address/number of any
+// block in the range of START_BLK_ADDR_FNZDB to END_BLK_ADDR_FNZDB (inclusive)
+// that has any non-zero data in it. This function was created to help locate 
+// raw data on the SD card, but it is not fast in printing to the screen, so I
+// recommend testing it over a small range of blocks first.
+//
+#if FIND_NONZERO_DATA_BLOCKS_TESTING
+// block number range to search for non-zero data.
+#define START_BLK_ADDR_FNZDB  0
+#define END_BLK_ADDR_FNZDB    100
+#endif
+
+int main(void)                                        
 {
   // Initializat usart and spi ports.
   usart_Init();
   spi_MasterInit();
 
-  // --------------------------------------------------------------------------
-  //                                                    SD CARD INITILIAIZATION
+  //
+  // SD CARD INITILIAIZATION
   //
   // The first step to using the AVR-SD Card modules is to initialize the card 
-  // into SPI mode. This is done by calling the sd_spiModeInit() function and 
-  // passing it a ptr to a CTV instance. The members of the instance will be
-  // set by the initialization routine. In particular, how the 'type' member is
-  // set will determine how the data blocks on the card will be addressed.
-
+  // into SPI mode. This is done by calling the sd_spiModeInit function and 
+  // passing it a pointer to a CTV instance. The members of the instance will 
+  // be set by the initialization routine. The value of the 'type' member is
+  // used to determine how the data blocks on the card will be addressed.
+  //
   uint32_t initResp;
-
   CTV ctv;
 
-  // Attempt SD card initialization up to 5 times.
-  for (uint8_t i = 0; i < 5; i++)
+  // Loop will continue until SD card init succeeds or max attempts reached.
+  for (uint8_t att = 0; att < SD_CARD_INIT_ATTEMPTS_MAX; ++att)
   {
     print_Str("\n\n\r >> SD Card Initialization Attempt "); 
-    print_Dec(i);
-    initResp = sd_InitModeSPI(&ctv);
+    print_Dec(att);
+    initResp = sd_InitModeSPI(&ctv);        // init SD Card
 
-    // Failed to initialize if initResp is not 0.
-    if (initResp != 0)
+    if (initResp != OUT_OF_IDLE)            // Fail to init if not OUT_OF_IDLE
     {    
-      print_Str(": FAILED TO INITIALIZE SD CARD.");
-      print_Str(" Initialization Error Response: "); 
-      sd_PrintInitError (initResp);
+      print_Str(": FAILED TO INITIALIZE SD CARD."
+                " Initialization Error Response: "); 
+      sd_PrintInitError(initResp);
       print_Str(" R1 Response: "); 
       sd_PrintR1(initResp);
     }
@@ -62,723 +200,651 @@ int main(void)
       break;
     }
   }
-  //                                                END SD CARD INITILIAIZATION
-  // --------------------------------------------------------------------------
 
-
-
-  // initialization successful
-  if (initResp == 0)
+  if (initResp == OUT_OF_IDLE)              // initialization successful
   {      
-    
     // ------------------------------------------------------------------------
-    //                                           READ IN AND PRINT SINGLE BLOCK
-    // 
-    // Demo sd_ReadSingleBlock() and sd_PrintSingleBlock(). This section will
-    // use sd_ReadSingleBlock() to read a block at the address specified into
-    // the an array. This array will then be passed to sd_PrintSingleBlock()
-    // which will print the block's contents to the screen.
-    
-    // set to 0 to skip this section
-    #if 0
+    //                                   READ_IN_AND_PRINT_SINGLE_BLOCK_TESTING
+    //
+    #if READ_IN_AND_PRINT_SINGLE_BLOCK_TESTING
 
-    uint32_t blckNum1 = 16384;               // block number to read in
-    uint8_t  blckArr1[512];                 // array to hold block contents
-    uint16_t err1;                           
+    uint8_t  blckArrRSB[BLOCK_LEN];         // array to hold block contents
+    uint16_t errRSB;                        // for returned errors
 
-    // read in the single block into the array
+    // read single block into array. Determine if byte or block addressable.
     if (ctv.type == SDHC)
-      err1 = sd_ReadSingleBlock(blckNum1, blckArr1);
+      errRSB = sd_ReadSingleBlock(BLK_ADDR_RSB, blckArrRSB);
     else
-      err1 = sd_ReadSingleBlock(blckNum1 * BLOCK_LEN, blckArr1);
+      errRSB = sd_ReadSingleBlock((uint64_t)BLK_ADDR_RSB * BLOCK_LEN, 
+                                   blckArrRSB);
     
-    if (err1 != READ_SUCCESS)
+    if (errRSB == READ_SUCCESS)             // if block read was successful
+      sd_PrintSingleBlock(blckArrRSB);      // then print block loaded in array
+    else                                    // else read block failed
     { 
       print_Str("\n\r >> sd_ReadSingleBlock() returned ");
-      if (err1 & R1_ERROR)
+      if (errRSB & R1_ERROR)                // if failed with R1 error
       {
-        print_Str("R1 error: ");
-        sd_PrintR1(err1);
+        print_Str("R1 error: ");            
+        sd_PrintR1(errRSB);                 // the print the R1 error
       }
-      else 
+      else                                  // else failed with non-R1 error
       { 
-        print_Str(" error "); 
-        sd_PrintReadError(err1);
+        print_Str(" error ");               
+        sd_PrintReadError(errRSB);          // so print the Read Error.
       }
     }
-
-    // print block just loaded into the array.
-    else
-      sd_PrintSingleBlock(blckArr1);
     
     #endif 
-    //                                       END READ IN AND PRINT SINGLE BLOCK
+    //                               END READ_IN_AND_PRINT_SINGLE_BLOCK_TESTING
     // ------------------------------------------------------------------------
     
 
     // ------------------------------------------------------------------------
-    //                                                    PRINT MULTIPLE BLOCKS
+    //                                            PRINT_MULTIPLE_BLOCKS_TESTING
     // 
-    // Demo sd_PrintMultipleBlocks(). This will print multiple, consecutive 
-    // SD card blocks beginging at blckNum. The number of blocks printed is
-    // specified by numOfBlcks. The function calls the READ_MULTIPLE_BLOCKS 
-    // SD card command.
+    #if PRINT_MULTIPLE_BLOCKS_TESTING
 
-    // set to 0 to skip this section
-    #if 0
+    uint16_t errPMB;   
 
-    uint32_t numOfBlcks2 = 2;          // total number of blocks to print
-    uint32_t blckNum2 = 20;            // first block to be printed
-    uint16_t err2;   
-
-    // print the multiple blocks
+    // print multiple blocks. Must determine if byte or block addressable.
     if (ctv.type == SDHC) 
-      err2 = sd_PrintMultipleBlocks(blckNum2, numOfBlcks2);
+      errPMB = sd_PrintMultipleBlocks(START_BLK_ADDR_PMB, NUM_OF_BLKS_PMB);
     else
-      err2 = sd_PrintMultipleBlocks(blckNum2 * BLOCK_LEN, numOfBlcks2);
+      errPMB = sd_PrintMultipleBlocks((uint64_t)START_BLK_ADDR_PMB * BLOCK_LEN,
+                                      NUM_OF_BLKS_PMB);
     
-    if (err2 != READ_SUCCESS)
+    // If an error was returned determine type and print it. 
+    if (errPMB != READ_SUCCESS)
     { 
       print_Str("\n\r >> sd_PrintMultipleBlocks() returned ");
-      if (err2 & R1_ERROR)
+      if (errPMB & R1_ERROR)                // R1 error returned
       {
         print_Str("R1 error: ");
-        sd_PrintR1(err2);
+        sd_PrintR1(errPMB);
       }
-      else 
+      else                                  // non-R1 error returned
       { 
-        print_Str(" error "); 
-        sd_PrintReadError(err2);
+        print_Str(" error ");              
+        sd_PrintReadError(errPMB);
       }   
     }
 
     #endif 
-    //                                                END PRINT MULTIPLE BLOCKS
+    //                                        END PRINT_MULTIPLE_BLOCKS_TESTING
     // ------------------------------------------------------------------------
 
 
     // ------------------------------------------------------------------------
-    //                                             WRITE and ERASE SINGLE BLOCK
+    //                                         WRITE_ERASE_SINGLE_BLOCK_TESTING
     //
-    // Demo sd_WriteSingleBlock(), sd_EraseBlocks(), and sd_ReadSingleBlock()
-    // and sd_printSingleBlocks(). This demo will first erase a single 
-    // block using sd_EraseBlocks(), then read in and print the block to 
-    // confirm it is erased using sd_ReadSingleBlock and sd_PrintSingleBlock().
-    // It will then call the sd_WriteSingleBlock() function to write data to
-    // the block. Finally, it will read in and print the block again to confirm
-    // the block was successfully written to. 
+    #if WRITE_ERASE_SINGLE_BLOCK_TESTING
 
-    // set to 0 to skip this section
-    #if 0
+    uint8_t  dataArrWSB[BLOCK_LEN] = WRITE_STR_WSB;   // data to be written
+    uint8_t  blckArrWSB[BLOCK_LEN];         // array for read in and print
+    uint16_t errWSB;                        // for returned error
 
-    // Data (string) to be written to the block 
-    uint8_t  dataArr3[BLOCK_LEN] = "Well Hi, I See you brought a PIE!!!";
-    
-    uint32_t blckNum3 = 20;                 // block to be written to
-    uint8_t  blckArr3[512];                 // array to hold block contents
-    uint16_t err3;
+    print_Str("\n\n\r Erasing Block ");
+    print_Dec(BLK_ADDR_WSB);
 
-    print_Str("\n\r Erasing Block ");
-    print_Dec(blckNum3);
-
-    // erase single block (i.e. erase start block = erase end block)
+    //
+    // First erase the data block. Use erase start block = erase end block.
+    // Must determine whether to use block or byte addressing.
+    //
     if (ctv.type == SDHC)
-      err3 = sd_EraseBlocks(blckNum3, blckNum3);
+      errWSB = sd_EraseBlocks(BLK_ADDR_WSB, BLK_ADDR_WSB);
     else
-      err3 = sd_EraseBlocks(blckNum3 * BLOCK_LEN, blckNum3 * BLOCK_LEN);
+      errWSB = sd_EraseBlocks((uint64_t)BLK_ADDR_WSB * BLOCK_LEN, 
+                              (uint64_t)BLK_ADDR_WSB * BLOCK_LEN);
     
-    if (err3 != ERASE_SUCCESSFUL)
+    if (errWSB != ERASE_SUCCESSFUL)         // if erase was not successful
     {
       print_Str("\n\r >> sd_EraseBlocks() returned ");
-      if (err3 & R1_ERROR)
+      if (errWSB & R1_ERROR)
       {
         print_Str("R1 error: ");
-        sd_PrintR1(err3);
+        sd_PrintR1(errWSB);
       }
       print_Str(" error "); 
-      sd_PrintEraseError(err3);
+      sd_PrintEraseError(errWSB);
     }
 
-    // read in and print data block
     print_Str("\n\r Read and Print Block "); 
-    print_Dec(blckNum3);
+    print_Dec(BLK_ADDR_WSB);
     print_Str(" after erasing.");
     
+    // read in single block regardless of success/failure or erase.
     if (ctv.type == SDHC) 
-      err3 = sd_ReadSingleBlock(blckNum3, blckArr3);
+      errWSB = sd_ReadSingleBlock(BLK_ADDR_WSB, blckArrWSB);
     else
-      err3 = sd_ReadSingleBlock(blckNum3 * BLOCK_LEN, blckArr3);
+      errWSB = sd_ReadSingleBlock((uint64_t)BLK_ADDR_WSB * BLOCK_LEN, 
+                                  blckArrWSB);
 
-    if (err3 != READ_SUCCESS)
+    if (errWSB == READ_SUCCESS)             // if block read was successful
+      sd_PrintSingleBlock(blckArrWSB);      // then print block loaded in array
+    else                                    // else read block failed
     { 
       print_Str("\n\r >> sd_ReadSingleBlock() returned ");
-      if (err3 & R1_ERROR)
+      if (errWSB & R1_ERROR)                // if failed with R1 error
       {
-        print_Str("R1 error: ");
-        sd_PrintR1(err3);
+        print_Str("R1 error: ");            
+        sd_PrintR1(errWSB);                 // the print the R1 error
       }
-      else 
+      else                                  // else failed with non-R1 error
       { 
-        print_Str(" error "); 
-        sd_PrintReadError(err3);
+        print_Str(" error ");               
+        sd_PrintReadError(errWSB);          // so print the Read Error.
       }
     }
-    // print data block just loaded into the array.
-    else
-      sd_PrintSingleBlock(blckArr3);
 
-    // write to data block
+    // write to data block regardless of success/failure for erase or read
     print_Str("\n\n\n\r Write to block "); 
-    print_Dec(blckNum3);
+    print_Dec(BLK_ADDR_WSB);
     if (ctv.type == SDHC) 
-      err3 = sd_WriteSingleBlock(blckNum3, dataArr3);
+      errWSB = sd_WriteSingleBlock(BLK_ADDR_WSB, dataArrWSB);
     else
-      err3 = sd_WriteSingleBlock(blckNum3 * BLOCK_LEN, dataArr3);
+      errWSB = sd_WriteSingleBlock((uint64_t)BLK_ADDR_WSB * BLOCK_LEN, 
+                                    dataArrWSB);
 
-    if (err3 != DATA_WRITE_SUCCESS)
+    if (errWSB != DATA_WRITE_SUCCESS)
     { 
       print_Str("\n\r >> sd_WriteSingleBlock() returned ");
-      if (err3 & R1_ERROR)
+      if (errWSB & R1_ERROR)                // if R1 error
       {
         print_Str("R1 error: ");
-        sd_PrintR1(err3);
+        sd_PrintR1(errWSB);
       }
-      else 
+      else                                  // else non-R1 error
       { 
         print_Str("error "); 
-        sd_PrintWriteError(err3);
-
-        // Get the R2 (SEND_STATUS) response if the Write Error Token
-        // was returned by the card while writing to the block.
-        // May convert this to a function. 
-        if ((err3 & WRITE_ERROR_TKN_RECEIVED) == WRITE_ERROR_TKN_RECEIVED)
+        sd_PrintWriteError(errWSB);
+        
+        //
+        // Get the R2 (SEND_STATUS) response if the WRITE ERROR TOKEN was
+        // returned by the card while writing to the block. R2 response is two
+        // bytes, with first byte being the same as the R1 response.
+        //
+        if ((errWSB & WRITE_ERROR_TKN_RECEIVED) == WRITE_ERROR_TKN_RECEIVED)
         {
-          print_Str("\n\r WRITE ERROR TOKEN returned.");
-          print_Str("Getting R2 response.");
+          print_Str("\n\r WRITE ERROR TOKEN returned. "
+                    "Getting R2 response.");
           
           CS_SD_LOW;             
           sd_SendCommand(SEND_STATUS,0);
-          // The first byte of R2 is R1
-          uint16_t r2 = sd_GetR1(); 
+          uint16_t r2 = sd_GetR1();         // The first byte of R2 is R1
           r2 <<= 8;
           r2 |= sd_ReceiveByteSPI();
           CS_SD_HIGH;
-          print_Str("\n\r R2 Response = ");
-          print_Dec(r2);
+          print_Str("\n\r R2 Response = 0x");
+          print_Hex(r2);
         }
       }
     }
-
-    // Verify data has been written to the block 
-    // by reading in and printing the block
-    else 
+    else    // Verify block write by reading in and printing the block contents
     {
       print_Str("\n\r Read and Print Block "); 
-      print_Dec(blckNum3);
+      print_Dec(BLK_ADDR_WSB);
       print_Str(" after writing");
-
+      
+      // read in block
       if (ctv.type == SDHC)
-        err3 = sd_ReadSingleBlock(blckNum3, blckArr3);
+        errWSB = sd_ReadSingleBlock(BLK_ADDR_WSB, blckArrWSB);
       else
-        err3 = sd_ReadSingleBlock(blckNum3 * BLOCK_LEN, blckArr3);
+        errWSB = sd_ReadSingleBlock((uint64_t)BLK_ADDR_WSB * BLOCK_LEN, 
+                                    blckArrWSB);
 
-      if (err3 != READ_SUCCESS)
+      if (errWSB == READ_SUCCESS)           // if block read was successful
+        sd_PrintSingleBlock(blckArrWSB);    // then print block loaded in array
+      else                                  // else read block failed
       { 
         print_Str("\n\r >> sd_ReadSingleBlock() returned ");
-        if (err3 & R1_ERROR)
+        if (errWSB & R1_ERROR)              // if failed with R1 error
         {
-          print_Str("R1 error: ");
-          sd_PrintR1(err3);
+          print_Str("R1 error: ");            
+          sd_PrintR1(errWSB);               // the print the R1 error
         }
-        else 
+        else                                // else failed with non-R1 error
         { 
-          print_Str(" error "); 
-          sd_PrintReadError(err3);
+          print_Str(" error ");               
+          sd_PrintReadError(errWSB);        // so print the Read Error.
         }
       }
-      // print the single data block that was just read in.
-      else
-        sd_PrintSingleBlock(blckArr3);
     }
 
     #endif
-    //                                         END WRITE and ERASE SINGLE BLOCK
+    //                                     END WRITE_ERASE_SINGLE_BLOCK_TESTING
     // ------------------------------------------------------------------------
 
 
     // ------------------------------------------------------------------------
-    //                                                        COPY SINGLE BLOCK
+    //                                                COPY_SINGLE_BLOCK_TESTING
     //
-    // Reads data into an array using sd_ReadSingleBlock() then writes this
-    // to another block using sd_WriteSingleBlock().
+    #if COPY_SINGLE_BLOCK_TESTING
 
-    // set to 0 to skip this section
-    #if 0
+    uint8_t  blckArrCSB[BLOCK_LEN];         // array for source block contents
+    uint16_t errCSB;
 
-    // block to be written.
-    uint32_t srcBlck4  = 0;        // block holding data that will be copied
-    uint32_t destBlck4 = 20;       // block where data will be copied to
-    uint8_t  blckArr4[512];        // array to hold block contents */
-    uint16_t err4;
-
-    // read in and print destination block before copying source contents.
-    print_Str("\n\n\r Read in and print contents of destination block");
-    print_Str(" before copying.");
-    print_Str("\n\r Destination Block Number: "); 
-    print_Dec(destBlck4);
+    print_Str("\n\n\r Read in and print contents of destination block "
+              "before copying."
+              "\n\r Destination Block Number: "); 
+    print_Dec(DEST_BLK_CSB);
     
+    // read in initial contents of destination block
     if (ctv.type == SDHC) 
-      err4 = sd_ReadSingleBlock(destBlck4, blckArr4);
+      errCSB = sd_ReadSingleBlock(DEST_BLK_CSB, blckArrCSB);
     else
-      err4 = sd_ReadSingleBlock(destBlck4 * BLOCK_LEN, blckArr4);
+      errCSB = sd_ReadSingleBlock((uint64_t)DEST_BLK_CSB * BLOCK_LEN, 
+                                  blckArrCSB);
 
-    if (err4 != READ_SUCCESS)
+    if (errCSB == READ_SUCCESS)             // if block read was successful
+        sd_PrintSingleBlock(blckArrCSB);    // then print block loaded in array
+    else                                    // else read block failed
     { 
       print_Str("\n\r >> sd_ReadSingleBlock() returned ");
-      if (err4 & R1_ERROR)
+      if (errCSB & R1_ERROR)                // if failed with R1 error
       {
-        print_Str("R1 error: ");
-        sd_PrintR1(err4);
+        print_Str("R1 error: ");            
+        sd_PrintR1(errCSB);                 // the print the R1 error
       }
-      else 
+      else                                  // else failed with non-R1 error
       { 
-        print_Str(" error "); 
-        sd_PrintReadError(err4);
+        print_Str(" error ");               
+        sd_PrintReadError(errCSB);          // so print the Read Error.
       }
     }
-    // print data block just loaded into the array.
-    else
-      sd_PrintSingleBlock(blckArr4);
-
 
     // read in and print source data block
-    print_Str("\n\n\r Read in and print contents of source block.");
-    print_Str("\n\r Source Block Number: "); 
-    print_Dec(srcBlck4);
-    
-    if (ctv.type == SDHC) 
-      err4 = sd_ReadSingleBlock(srcBlck4, blckArr4);
-    else
-      err4 = sd_ReadSingleBlock(srcBlck4 * BLOCK_LEN, blckArr4);
+    print_Str("\n\n\r Read in and print contents of source block."
+              "\n\r Source Block Number: "); 
+    print_Dec(SOURCE_BLK_CSB);
 
-    if (err4 != READ_SUCCESS)
+    // read in contents of source block
+    if (ctv.type == SDHC) 
+      errCSB = sd_ReadSingleBlock(SOURCE_BLK_CSB, blckArrCSB);
+    else
+      errCSB = sd_ReadSingleBlock((uint64_t)SOURCE_BLK_CSB * BLOCK_LEN, 
+                                  blckArrCSB);
+
+    if (errCSB == READ_SUCCESS)             // if block read was successful
+        sd_PrintSingleBlock(blckArrCSB);    // then print block loaded in array
+    else                                    // else read block failed
     { 
       print_Str("\n\r >> sd_ReadSingleBlock() returned ");
-      if (err4 & R1_ERROR)
+      if (errCSB & R1_ERROR)                // if failed with R1 error
       {
-        print_Str("R1 error: ");
-        sd_PrintR1(err4);
+        print_Str("R1 error: ");            
+        sd_PrintR1(errCSB);                 // the print the R1 error
       }
-      else 
+      else                                  // else failed with non-R1 error
       { 
-        print_Str(" error "); 
-        sd_PrintReadError(err4);
+        print_Str(" error ");               
+        sd_PrintReadError(errCSB);          // so print the Read Error.
       }
     }
-    // print data block just loaded into the array.
-    else
-      sd_PrintSingleBlock(blckArr4);
 
-
-    // copy source contents to destination block.
+    // copy source block's contents to destination block.
     print_Str("\n\n\r Copying source block to destination block.");
-
     if (ctv.type == SDHC) 
-      err4 = sd_WriteSingleBlock(destBlck4, blckArr4);
+      errCSB = sd_WriteSingleBlock(DEST_BLK_CSB, blckArrCSB);
     else
-      err4 = sd_WriteSingleBlock(destBlck4 * BLOCK_LEN, blckArr4);
+      errCSB = sd_WriteSingleBlock(DEST_BLK_CSB * BLOCK_LEN, blckArrCSB);
 
-    if (err4 != DATA_ACCEPTED_TOKEN_RECEIVED)
+    if (errCSB != DATA_WRITE_SUCCESS)       // if data write was not successful
     { 
       print_Str("\n\r >> sd_WriteSingleBlock() returned ");
-      if (err4 & R1_ERROR)
+      if (errCSB & R1_ERROR)
       {
         print_Str("R1 error: ");
-        sd_PrintR1(err4);
+        sd_PrintR1(errCSB);
       }
       else 
       { 
         print_Str("error "); 
-        sd_PrintWriteError(err4);
+        sd_PrintWriteError(errCSB);
 
-        // Get the R2 (SEND_STATUS) response if the Write Error Token
-        // was returned by the card while writing to the block.
-        // May convert this to a function. 
-        if ((err4 & WRITE_ERROR_TOKEN_RECEIVED) == WRITE_ERROR_TOKEN_RECEIVED)
+        //
+        // Get the R2 (SEND_STATUS) response if the WRITE ERROR TOKEN was
+        // returned by the card while writing to the block. R2 response is two
+        // bytes, with first byte being the same as the R1 response.
+        //
+        if ((errCSB & WRITE_ERROR_TKN_RECEIVED) == WRITE_ERROR_TKN_RECEIVED)
         {
-          print_Str("\n\r WRITE ERROR TOKEN returned.");
-          print_Str("Getting R2 response.");
-          
+          print_Str("\n\r WRITE ERROR TOKEN returned. "
+                    "Getting R2 response.");
           CS_SD_LOW;             
           sd_SendCommand(SEND_STATUS,0);
-          // The first byte of R2 is R1
-          uint16_t r2 = sd_GetR1(); 
+          uint16_t r2 = sd_GetR1();         // The first byte of R2 is R1
           r2 <<= 8;
           r2 |= sd_ReceiveByteSPI();
           CS_SD_HIGH;
           print_Str("\n\r R2 Response = ");
-          print_Dec(r2);
+          print_Hex(r2);
         }
       }
     }
-
-    // Verify data has been written to the block 
-    // by reading in and printing the block
-    else 
+    else    // Verify block write by reading in and printing the block contents
     {
       print_Str("\n\n\r Read destination block after copying contents."); 
       print_Str("\n\r Destination Block Number: "); 
-      print_Dec(destBlck4);
-
+      print_Dec(DEST_BLK_CSB);
+      
+      // read in contents of destination block, post copy.
       if (ctv.type == SDHC)
-        err4 = sd_ReadSingleBlock(destBlck4, blckArr4);
+        errCSB = sd_ReadSingleBlock(DEST_BLK_CSB, blckArrCSB);
       else
-        err4 = sd_ReadSingleBlock(destBlck4 * BLOCK_LEN, blckArr4);
+        errCSB = sd_ReadSingleBlock(DEST_BLK_CSB * BLOCK_LEN, blckArrCSB);
 
-      if (err4 != READ_SUCCESS)
+      if (errCSB == READ_SUCCESS)           // if block read was successful
+          sd_PrintSingleBlock(blckArrCSB);  // then print block loaded in array
+      else                                  // else read block failed
       { 
         print_Str("\n\r >> sd_ReadSingleBlock() returned ");
-        if (err4 & R1_ERROR)
+        if (errCSB & R1_ERROR)              // if failed with R1 error
         {
-          print_Str("R1 error: ");
-          sd_PrintR1(err4);
+          print_Str("R1 error: ");            
+          sd_PrintR1(errCSB);               // the print the R1 error
         }
-        else 
+        else                                // else failed with non-R1 error
         { 
-          print_Str(" error "); 
-          sd_PrintReadError(err4);
+          print_Str(" error ");               
+          sd_PrintReadError(errCSB);        // so print the Read Error.
         }
       }
-      // print the single data block that was just read in.
-      else
-        sd_PrintSingleBlock(blckArr4);
     }
 
     #endif
-    //                                         END WRITE and ERASE SINGLE BLOCK
+    //                                            END COPY_SINGLE_BLOCK_TESTING
     // ------------------------------------------------------------------------
 
 
 
     // ------------------------------------------------------------------------
-    //                                          WRITE and ERASE MULTIPLE BLOCKS
+    //                                      WRITE_ERASE_MULTIPLE_BLOCKS_TESTING
     //
-    // Demos sd_writeMultipleBlock(), sd_EraseBlocks(), and 
-    // sd_PrintMultipleBlocks(). This demo will first erase the multiple blocks
-    // using sd_EraseBlocks(), then read-in and print the same blocks using 
-    // sd_PrintMultipleBlocks() to verify the blocks have been erased. Next it
-    // will write to the multiple blocks. It should then do some error handling
-    // if WRITE_BLOCK_TOKEN_RECIEVED is returned, but I haven't been able to
-    // test this out yet. Finally, it will read-in and print the blocks again
-    // to show successful write.
+    #if WRITE_ERASE_MULTIPLE_BLOCKS_TESTING
 
-    // set to 0 to skip this section
-    #if 0
+    uint8_t  dataArrWMB[BLOCK_LEN] = WRITE_STR_WMB;   // data to be written
+    uint64_t endEraseBlkAddr = START_BLK_ADDR_WMB + NUM_OF_BLKS_WMB + 1;
+    uint16_t errWMB;
 
-    // Data (string) to be written to the block 
-    uint8_t dataArr2[BLOCK_LEN] = "Would you like to play a game???"; 
-
-    uint32_t startBlckNum5 = 20;                 // start block for erasing
-    uint32_t endBlckNum5   = 22;                 // end block for erasing
-    uint32_t numOfBlcks5   = 2;                  // used for writing
-    uint16_t err5;
-    
-    // R2 response for SEND_STATUS. Used if write error.
-    uint16_t r2;
-
-    // number of well-written blocks. Used for multi-block write error.
-    uint32_t nwwb5;
-    
     // erase multiple blocks
-    print_Str("\n\r ERASING BLOCKS ");
+    print_Str("\n\n\r ERASING BLOCKS ");
     if (ctv.type == SDHC)
-      err5 = sd_EraseBlocks(startBlckNum5, endBlckNum5);
+      errWMB = sd_EraseBlocks(START_BLK_ADDR_WMB, endEraseBlkAddr);
     else
-      err5 = sd_EraseBlocks(startBlckNum5 * BLOCK_LEN, 
-                            endBlckNum5 * BLOCK_LEN);
+      errWMB = sd_EraseBlocks((uint64_t)START_BLK_ADDR_WMB * BLOCK_LEN, 
+                               endEraseBlkAddr * BLOCK_LEN);
     
-    if (err5 != ERASE_SUCCESSFUL)
+    if (errWMB != ERASE_SUCCESSFUL)         // if erase failed
     {
       print_Str("\n\r >> sd_EraseBlocks() returned ");
-      if (err5 & R1_ERROR)
+      if (errWMB & R1_ERROR)
       {
         print_Str("R1 error: ");
-        sd_PrintR1(err5);
+        sd_PrintR1(errWMB);
       }
       print_Str("error "); 
-      sd_PrintEraseError(err5);
+      sd_PrintEraseError(errWMB);
     }
 
-
     // Print Multiple Blocks
-    print_Str("\n\r PRINTING BLOCKS BEFORE WRITE ");
+    print_Str("\n\n\r PRINTING BLOCKS BEFORE WRITE ");
     if (ctv.type == SDHC)
-      err5 = sd_PrintMultipleBlocks(startBlckNum5, numOfBlcks5);
+      errWMB = sd_PrintMultipleBlocks(START_BLK_ADDR_WMB, NUM_OF_BLKS_WMB);
     else 
-      err5 = sd_PrintMultipleBlocks(startBlckNum5 * BLOCK_LEN, numOfBlcks5);
+      errWMB = sd_PrintMultipleBlocks((uint64_t)START_BLK_ADDR_WMB * BLOCK_LEN,
+                                       NUM_OF_BLKS_WMB);
     
-    if (err5 != READ_SUCCESS)
+    if (errWMB != READ_SUCCESS)             // if print multiple blocks failed
     { 
       print_Str("\n\r >> sd_PrintMultipleBlocks() returned ");
-      if (err5 & R1_ERROR)
+      if (errWMB & R1_ERROR)
       {
         print_Str("R1 error: ");
-        sd_PrintR1(err5);
+        sd_PrintR1(errWMB);
       }
       else 
       { 
         print_Str(" error "); 
-        sd_PrintReadError(err5);
-      }
+        sd_PrintReadError(errWMB);
+      } 
     }
 
     // Write Multiple Blocks
-    print_Str("\n\r WRITING BLOCKS ");
-    err5 = sd_WriteMultipleBlocks(startBlckNum5, numOfBlcks5, dataArr2);
-    if (err5 != DATA_WRITE_SUCCESS)
+    print_Str("\n\n\r WRITING BLOCKS ");
+    errWMB = sd_WriteMultipleBlocks(START_BLK_ADDR_WMB, NUM_OF_BLKS_WMB, 
+                                    dataArrWMB);
+    if (errWMB != DATA_WRITE_SUCCESS)       // if write multiple blocks failed
     { 
       print_Str("\n\r >> sd_WriteMultipleBlocks() returned ");
-      if (err5 & R1_ERROR)
+      if (errWMB & R1_ERROR)                // then if failed with R1 error
       {
         print_Str("R1 error: ");
-        sd_PrintR1(err5);
-      }
-      else 
+        sd_PrintR1(errWMB);
+      } 
+      else                                  // else if failed with non-R1 error
       { 
         print_Str("error "); 
-        sd_PrintWriteError(err5);
+        sd_PrintWriteError(errWMB);
 
-        // Get the R2 (SEND_STATUS) response if the Write Error Token
-        // was returned by the card while writing to the block.
-        if ((err5 & WRITE_ERROR_TKN_RECEIVED) == WRITE_ERROR_TKN_RECEIVED)
+        //
+        // Get the R2 (SEND_STATUS) response if the WRITE ERROR TOKEN was
+        // returned by the card while writing to the block. R2 response is two
+        // bytes, with first byte being the same as the R1 response.
+        //
+        if ((errWMB & WRITE_ERROR_TKN_RECEIVED) == WRITE_ERROR_TKN_RECEIVED)
         {
-          // Getting R2 response.  May make this a function.
-          print_Str("\n\r WRITE_ERROR_TOKEN set.");
-          print_Str("\n\r Getting STATUS (R2) response.");
+          print_Str("\n\n\r WRITE_ERROR_TOKEN set."
+                    "\n\r Getting STATUS (R2) response.");
           CS_SD_LOW;             
           sd_SendCommand(SEND_STATUS, 0);
-          // The first byte of R2 is R1
-          r2 = sd_GetR1(); 
+          uint16_t r2 = sd_GetR1();         // The first byte of R2 is R1
           r2 <<= 8;
           r2 |= sd_ReceiveByteSPI();
           CS_SD_HIGH;
           print_Str("\n\r R2 Response = ");
-          print_Dec(r2);
+          print_Hex(r2);
 
-          // Number of Well Written Blocks
+          // Get Number of Well Written Blocks when WRITE ERROR TOKEN was RXd
           print_Str("\n\r Getting Number of Well Written Blocks.");
-          
-          err5 = sd_GetNumOfWellWrittenBlocks(&nwwb5);
-          if (err5 != READ_SUCCESS)
+          uint32_t nwwb;
+          errWMB = sd_GetNumOfWellWrittenBlocks(&nwwb);
+          if (errWMB != READ_SUCCESS)
           { 
             print_Str("\n\r >> SD_GetNumberOfWellWritteBlocks() returned ");
-            if (err5 & R1_ERROR)
+            if (errWMB & R1_ERROR)
             {
               print_Str("R1 error: ");
-              sd_PrintR1(err5);
+              sd_PrintR1(errWMB);
             }
             else 
             { 
               print_Str("error "); 
-              sd_PrintReadError(err5);
+              sd_PrintReadError(errWMB);
             }
             print_Str("\n\r Number of well written write blocks = ");
-            print_Dec(nwwb5);
+            print_Dec(nwwb);
           }
         }
       }
     }
         
-    // post multi-block write READ amd PRINT blocks.
+    // post multi-block write READ and PRINT blocks.
     print_Str("\n\r PRINTING BLOCKS AFTER WRITE ");
     if (ctv.type == SDHC)
-      err5 = sd_PrintMultipleBlocks(startBlckNum5, numOfBlcks5);
+      errWMB = sd_PrintMultipleBlocks(START_BLK_ADDR_WMB, NUM_OF_BLKS_WMB);
     else
-      err5 = sd_PrintMultipleBlocks(startBlckNum5 * BLOCK_LEN, numOfBlcks5);
+      errWMB = sd_PrintMultipleBlocks((uint64_t)START_BLK_ADDR_WMB * BLOCK_LEN,
+                                       NUM_OF_BLKS_WMB);
     
-    if (err5 != READ_SUCCESS)
+    if (errWMB != READ_SUCCESS)             // print multiple blocks failed
     { 
       print_Str("\n\r >> sd_PrintMultipleBlocks() returned ");
-      if (err5 & R1_ERROR)
+      if (errWMB & R1_ERROR)
       {
         print_Str("R1 error: ");
-        sd_PrintR1(err5);
+        sd_PrintR1(errWMB);
       }
       else 
       { 
         print_Str("error "); 
-        sd_PrintReadError(err5);
+        sd_PrintReadError(errWMB);
       }
     }
 
     #endif
-    //                                      END WRITE and ERASE MULTIPLE BLOCKS
+    //                                  END WRITE_ERASE_MULTIPLE_BLOCKS_TESTING
     // ------------------------------------------------------------------------
 
 
     // ------------------------------------------------------------------------
-    //                                                       USER INPUT SECTION
+    //                                               USER_INPUT_SECTION_TESTING
     //
-    // This section allows a user to interact with the function 
-    // sd_PrintMultipleBlocks(). The user is asked which block number they 
-    // would like to print first, and then how many blocks they would like to 
-    // print. The sd_PrintMultipleBlocks() function is then called with these
-    // parameters and the blocks specified by the user are printed.
+    #if USER_INPUT_SECTION_TESTING
 
-    // set to 0 to skip this section
-    #if 0
+    uint64_t startBlckNumUIS;               // first block to print
+    uint64_t numOfBlcksUIS;                 // number of blocks to print
+    uint8_t  ansUIS;                        // answer
+    uint16_t errUIS;
 
-    uint32_t startBlckNum6;                // first block to print
-    uint32_t numOfBlcks6;                  // number of blocks to print
-    uint8_t  ans6;                         // answer
-    uint16_t err6;
-
+    //
+    // loop that requests user to specify blocks to read in and then reads in
+    // and prints the blocks by calling sd_PrintMultipleBlocks. The loop exits 
+    // when user enters 'q' after reading in blocks.
+    //
     do
     {
+      // loop to get user input. Continues until user replies with 'y'
       do
       {
         print_Str("\n\n\n\rEnter Start Block\n\r");
-        startBlckNum6 = enterBlockNumber();
+        startBlckNumUIS = enterBlockNumber();
         print_Str("\n\rHow many blocks do you want to print?\n\r");
-        numOfBlcks6 = enterBlockNumber();
+        numOfBlcksUIS = enterBlockNumber();
         print_Str("\n\rYou have selected to print "); 
-        print_Dec(numOfBlcks6);
+        print_Dec(numOfBlcksUIS);
         print_Str(" blocks beginning at block number "); 
-        print_Dec(startBlckNum6);
+        print_Dec(startBlckNumUIS);
         print_Str("\n\rIs this correct? (y/n)");
-        ans6 = usart_Receive();
-        usart_Transmit(ans6);
+        ansUIS = usart_Receive();
+        usart_Transmit(ansUIS);
         print_Str("\n\r");
       }
-      while (ans6 != 'y');
+      while (ansUIS != 'y');
 
       // print the blocks specified above.
       if (ctv.type == SDHC) 
-        err6 = sd_PrintMultipleBlocks(startBlckNum6, numOfBlcks6);
+        errUIS = sd_PrintMultipleBlocks(startBlckNumUIS, numOfBlcksUIS);
       else
-        err6 = sd_PrintMultipleBlocks(startBlckNum6 * BLOCK_LEN, numOfBlcks6);
+        errUIS = sd_PrintMultipleBlocks(startBlckNumUIS * BLOCK_LEN, numOfBlcksUIS);
       
-      if (err6 != READ_SUCCESS)
+      if (errUIS != READ_SUCCESS)
       { 
         print_Str("\n\r >> sd_PrintMultipleBlocks() returned ");
-        if (err6 & R1_ERROR)
+        if (errUIS & R1_ERROR)
         {
           print_Str("R1 error: ");
-          sd_PrintR1(err6);
+          sd_PrintR1(errUIS);
         }
         else 
         { 
           print_Str(" error "); 
-          sd_PrintReadError(err6);
+          sd_PrintReadError(errUIS);
         }
       }
 
       print_Str("\n\rPress 'q' to quit: ");
-      ans6 = usart_Receive();
-      usart_Transmit(ans6);
+      ansUIS = usart_Receive();
+      usart_Transmit(ansUIS);
     }
-    while (ans6 != 'q');
+    while (ansUIS != 'q');
 
     #endif
-    //                                                   END USER INPUT SECTION
+    //                                           END USER_INPUT_SECTION_TESTING
     // ------------------------------------------------------------------------
 
 
     // ------------------------------------------------------------------------
-    //                                                          MEMORY CAPACITY
+    //                                                  MEMORY_CAPACITY_TESTING
     //
-    // Get the total memory capacity of the card, in bytes. How this is
-    // calculated depends on the card type (i.e. ctv.type) which is used to 
-    // select the correct function.
-
-    // set to 0 to skip this section
-    #if 1
+    #if MEMORY_CAPACITY_TESTING
 
     print_Str("\n\n\n\r Memory capacity = ");
     print_Dec(sd_GetCardByteCapacity(&ctv));
     print_Str(" Bytes");
 
     #endif
-    //                                                      END MEMORY CAPACITY
+    //                                              END MEMORY_CAPACITY_TESTING
     // ------------------------------------------------------------------------
 
 
 
     // ------------------------------------------------------------------------
-    //                                                FIND NON-ZERO DATA BLOCKS
+    //                                         FIND_NONZERO_DATA_BLOCKS_TESTING
     //
-    // Uses the function sd_FindNonZeroDataBlockNums() to print the block 
-    // numbers of any that have non-zero data. I made this to help locate raw 
-    // data on the SD card. This is function is not fast in printing to the 
-    // screen, so I do not suggest using it over a large range of blocks.
-
-    // set to 0 to skip this section
-    #if 0
+    #if FIND_NONZERO_DATA_BLOCKS_TESTING
     
-    // block number range to search for non-zero data.
-    uint32_t startBlckNum = 0;
-    uint32_t endBlckNum = 100;
-
     print_Str("\n\n\r\r sd_FindNonZeroDataBlockNums() \n\r");
     if (ctv.type == SDHC) 
-      sd_FindNonZeroDataBlockNums(startBlckNum, endBlckNum);
+      sd_FindNonZeroDataBlockNums(START_BLK_ADDR_FNZDB, END_BLK_ADDR_FNZDB);
     else
-      sd_FindNonZeroDataBlockNums(startBlckNum * BLOCK_LEN, 
-                                  endBlckNum * BLOCK_LEN);
+      sd_FindNonZeroDataBlockNums((uint64_t)START_BLK_ADDR_FNZDB * BLOCK_LEN, 
+                                  (uint64_t)END_BLK_ADDR_FNZDB * BLOCK_LEN);
     print_Str("\n\r Done\n\r");
 
     #endif
-    //                                                      END MEMORY CAPACITY
+    //                                     END FIND_NONZERO_DATA_BLOCKS_TESTING
     // ------------------------------------------------------------------------
-
   }
-  // End SD Card Testing
-
 
   // This is just something to do after SD card testing has completed.
   while (1)
     usart_Transmit(usart_Receive());
   
-  
   return 0;
 }
 // END MAIN()
 
+//
+// LOCAL FUNCTION - gets and returns block number for user input section.
+//
+#if USER_INPUT_SECTION_TESTING
 
-// local function for taking user input to specify a block
-// number. If nothing is entered then the block number is 0.
 uint32_t enterBlockNumber()
 {
-  uint8_t x;
-  uint8_t c;
-  uint32_t blckNum = 0;
+  uint8_t  decDigit;
+  uint8_t  asciiChar;
+  uint32_t blkNum = 0;
+  uint8_t  radix = 10;                      // decimal radix
 
-  c = usart_Receive();
+  asciiChar = usart_Receive();
   
-  while (c != '\r')
+  while (asciiChar != '\r')
   {
-    if (c >= '0' && c <= '9')
+    if (asciiChar >= '0' && asciiChar <= '9') // if decimal ascii char entered
     {
-      x = c - '0';
-      blckNum = blckNum * 10;
-      blckNum += x;
+      decDigit = asciiChar - '0';           // convert ascii to decimal digit
+      blkNum *= radix;
+      blkNum += decDigit;
     }
-    else if (c == 127) // backspace
+    else if (asciiChar == BACKSPACE)        // if backspace on keyboard entered
     {
-      print_Str("\b ");
-      blckNum = blckNum / 10;
+      print_Str("\b ");                     // print backspace and space chars
+      blkNum = blkNum / radix;       // reduce current blkNum by factor of 10
     }
-
     print_Str("\r");
-    print_Dec(blckNum);
+    print_Dec(blkNum);
     
-    if (blckNum >= 4194304)
+    if (blkNum >= MAX_BLOCK_NUM_32_BIT)
     {
-      blckNum = 0;
-      print_Str("\n\rblock number is too large.");
-      print_Str("\n\rEnter value < 4194304\n\r");
+      blkNum = 0;                           // reset block number
+      print_Str("\n\rblock number too large. Enter value < ");
+      print_Dec(MAX_BLOCK_NUM_32_BIT);
+      print_Str("\n\r");  
     }
-    c = usart_Receive();
+    asciiChar = usart_Receive();
   }
-  return blckNum;
+  return blkNum;
 }
+
+#endif

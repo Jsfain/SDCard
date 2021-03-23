@@ -27,8 +27,8 @@
  * Description : These are used to define the printable ascii char range.
  * ----------------------------------------------------------------------------
  */
-#define ASCII_PRINT_CHAR_FIRST     32
-#define ASCII_PRINT_CHAR_LAST      127
+#define ASCII_PRINT_CHAR_FIRST         32
+#define ASCII_PRINT_CHAR_LAST          127
 
 /* 
  * ----------------------------------------------------------------------------
@@ -38,7 +38,7 @@
  *               send/receive data for a block read/write.
  * ----------------------------------------------------------------------------
  */
-#define START_BLOCK_TKN     0xFE
+#define START_BLOCK_TKN                0xFE
 
 /* 
  * ----------------------------------------------------------------------------
@@ -52,10 +52,10 @@
  *               X's are don't care, and the T's are the token bits. 
  * ----------------------------------------------------------------------------
  */
-#define DATA_ACCEPTED_TKN          0x05
-#define CRC_ERROR_TKN              0x0B
-#define WRITE_ERROR_TKN            0x0D
-#define DATA_RESPONSE_TKN_MASK     0x1F
+#define DATA_ACCEPTED_TKN              0x05
+#define CRC_ERROR_TKN                  0x0B
+#define WRITE_ERROR_TKN                0x0D
+#define DATA_RESPONSE_TKN_MASK         0x1F
 
 /* 
  * ----------------------------------------------------------------------------
@@ -65,7 +65,7 @@
  *               error in the R1 response portion.
  * ----------------------------------------------------------------------------
  */
-#define R1_ERROR     0x8000
+#define R1_ERROR                       0x8000
 
 /* 
  * ----------------------------------------------------------------------------
@@ -78,8 +78,8 @@
  *               SD_SPI_BASE.H. 
  * ----------------------------------------------------------------------------
  */
-#define START_TOKEN_TIMEOUT     0x0200
-#define READ_SUCCESS            0x0400
+#define START_TOKEN_TIMEOUT            0x0200
+#define READ_SUCCESS                   0x0400
 
 /* 
  * ----------------------------------------------------------------------------
@@ -92,12 +92,12 @@
  *               SD_SPI_BASE.H. 
  * ----------------------------------------------------------------------------
  */
-#define DATA_WRITE_SUCCESS           0x0100
-#define CRC_ERROR_TKN_RECEIVED       0x0200
-#define WRITE_ERROR_TKN_RECEIVED     0x0400
-#define INVALID_DATA_RESPONSE        0x0800
-#define DATA_RESPONSE_TIMEOUT        0x1000
-#define CARD_BUSY_TIMEOUT            0x2000
+#define DATA_WRITE_SUCCESS             0x0100
+#define CRC_ERROR_TKN_RECEIVED         0x0200
+#define WRITE_ERROR_TKN_RECEIVED       0x0400
+#define INVALID_DATA_RESPONSE          0x0800
+#define DATA_RESPONSE_TIMEOUT          0x1000
+#define CARD_BUSY_TIMEOUT              0x2000
 
 /* 
  * ----------------------------------------------------------------------------

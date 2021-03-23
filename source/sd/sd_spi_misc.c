@@ -154,7 +154,7 @@ uint16_t sd_PrintMultipleBlocks(const uint32_t startBlckAddr,
     uint8_t  blckArr[BLOCK_LEN];
 
     // print the block number for the current iteration.
-    print_Str("\n\r Block ");
+    print_Str("\n\n\r                                    BLOCK ");
     print_Dec(startBlckAddr + blckNum);
     
     // loop until Start Block Token received. Return error if timeout.
@@ -434,7 +434,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   sd_ReceiveByteSPI();
 
   //
-  // TRAN_SPEED - this only tests for default value.
+  // TRAN_SPEED - this tests for default value.
   //
   for (uint16_t timeout = 0; sd_ReceiveByteSPI() != TRANS_SPEED_SDSC;)
     if (++timeout >= TIMEOUT_LIMIT)
@@ -474,10 +474,11 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   // 
   for (uint16_t timeout = 0;; ++timeout)
   {
-    cSize = sd_ReceiveByteSPI() & C_SIZE_HI_MASK_SDSC;
-    if(cSize == C_SIZE_HI_MASK_SDSC)
+    // get byte containing 2 highest bits of cSize
+    cSize = sd_ReceiveByteSPI() & C_SIZE_HI_MASK_SDSC; 
+    if (cSize == C_SIZE_HI_MASK_SDSC)
     {                   
-      // position and load cSize bytes
+      // position and load rest of cSize bits
       cSize <<= 8;           
       cSize |= sd_ReceiveByteSPI();
       cSize <<= 2;        
@@ -488,7 +489,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
       cSizeMult |= sd_ReceiveByteSPI() >> 7;
 
     }
-    if (++timeout >= TIMEOUT_LIMIT) 
+    if (timeout >= TIMEOUT_LIMIT) 
     {
       CS_SD_HIGH; 
       return FAILED_CAPACITY_CALC; 
@@ -561,7 +562,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
     }
 
   //
-  // TAAC - fixed at 1ms for SDHC
+  // TAAC - fixed at 1ms (0x0E) for SDHC
   //
   for (uint16_t timeout = 0; sd_ReceiveByteSPI() != TAAC_SDHC;)
     if (++timeout >= TIMEOUT_LIMIT)
