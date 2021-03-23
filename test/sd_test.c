@@ -3,10 +3,12 @@
  * Author  : Joshua Fain
  * Target  : ATMega1280
  * License : MIT
- * Copyright (c) 2020
+ * Copyright (c) 2020, 2021
  *
  * Test file to demonstrate the implementation of several functions defined in
- * the SD_SPI_XXXX files.
+ * the SD_SPI_XXXX files. main is organized in various sections that can be 
+ * enabled independently using the SD Card Feature Testing Macros provided in
+ * this file. 
  */
 
 #include <stdint.h>
@@ -19,7 +21,7 @@
 #include "sd_spi_misc.h"
 
 #define SD_CARD_INIT_ATTEMPTS_MAX      5
-#define MAX_DATA_BYTES_32_BIT          2147483648    
+#define MAX_DATA_BYTES_32_BIT          2147483648 
 #define MAX_BLOCK_NUM_32_BIT           MAX_DATA_BYTES_32_BIT / BLOCK_LEN
 #define BACKSPACE                      127  // used for keyboard backspace here
 
@@ -38,7 +40,7 @@
 #define COPY_SINGLE_BLOCK_TESTING                  0
 #define WRITE_ERASE_MULTIPLE_BLOCKS_TESTING        0
 #define USER_INPUT_SECTION_TESTING                 0
-#define MEMORY_CAPACITY_TESTING                    0
+#define MEMORY_CAPACITY_TESTING                    1
 #define FIND_NONZERO_DATA_BLOCKS_TESTING           1
 
 //

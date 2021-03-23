@@ -14,7 +14,6 @@
 #define SD_SPI_BASE_H
 
 #include "sd_spi_car.h"
-#include "sd_spi_regs.h"
 
 /*
  ******************************************************************************
@@ -105,6 +104,21 @@
 #define OUT_OF_IDLE_TIMEOUT     0x04000     // ACMD41 error
 #define FAILED_READ_OCR         0x08000     // CMD58 error
 #define POWER_UP_NOT_COMPLETE   0x10000     // CMD58 error
+
+
+/*
+ ******************************************************************************
+ *                      OPERATION CONDITIONS REGISTER (OCR)
+ ******************************************************************************
+ */
+#define POWER_UP_BIT_MASK     0x80
+#define CCS_BIT_MASK          0x40          // Card Capacity Support
+#define UHSII_BIT_MASK        0x20          // UHS-II Card Status
+#define CO2T_BIT_MASK         0x10          // Over 2TB support status
+#define S18A_BIT_MASK         0x08          // switching to 1.8V accepted
+
+// Volt Range Accepted by card: 2.7 - 3.6V. Only this range currently supported
+#define VRA_OCR_MASK          0xFF80
 
 /*
  ******************************************************************************

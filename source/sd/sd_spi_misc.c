@@ -637,6 +637,6 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   }
   CS_SD_HIGH;
 
-  // see std for calculation description
+  // see std for calculation description. (cSize + 1) + 512kB
   return ((cSize + 1) * 512000);
 }    
