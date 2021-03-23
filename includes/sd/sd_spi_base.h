@@ -1,10 +1,10 @@
 /*
  * File    : SD_SPI_BASE.H
- * Version : 0.0.0.1 
+ * Version : 1.0
  * Author  : Joshua Fain
  * Target  : ATMega1280
  * License : MIT
- * Copyright (c) 2020-2021
+ * Copyright (c) 2020, 2021
  * 
  * Provides several functions and macros for basic interaction between an SD
  * SD Card and an AVR microcontroller when operating in SPI mode.
