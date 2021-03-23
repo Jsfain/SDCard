@@ -4,7 +4,7 @@
  * Author  : Joshua Fain
  * Target  : ATMega1280
  * License : GNU GPLv3
- * Copyright (c) 2020
+ * Copyright (c) 2020, 2021
  * 
  * Interface for some print functions used to print strings and unsigned
  * integers in decimal, binary, and hex formats.

@@ -4,7 +4,7 @@
  * Author  : Joshua Fain
  * Target  : ATMega1280
  * License : GNU GPLv3
- * Copyright (c) 2020
+ * Copyright (c) 2020, 2021
  * 
  * Interface for interacting with the ATMega's SPI port.
  */

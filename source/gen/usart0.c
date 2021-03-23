@@ -1,10 +1,10 @@
 /*
  * File    : USART0.C
- * Version : 1.0
+ * Version : 1.0 
  * Author  : Joshua Fain
  * Target  : ATMega1280
  * License : GNU GPLv3
- * Copyright (c) 2020
+ * Copyright (c) 2020, 2021
  * 
  * Implementation of USART.H
  */

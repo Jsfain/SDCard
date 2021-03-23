@@ -1,10 +1,10 @@
 /*
  * File    : USART0.H
- * Version : 1.0
+ * Version : 1.0 
  * Author  : Joshua Fain
  * Target  : ATMega1280
  * License : GNU GPLv3
- * Copyright (c) 2020
+ * Copyright (c) 2020, 2021
  * 
  * Interface for interacting with the ATMega's USART0 port.
  */
