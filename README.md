@@ -68,7 +68,7 @@ When writing a program to implement the AVR-SD Card module, the following must o
     * The *type* member of CTV will be used for determining whether the card should be block or byte addressed.
     * If the initialization function returns OUT_OF_IDLE, then initialization was successful.
 
-**Example**
+**Example - Initialization**
  
 ```
 int main(void)
