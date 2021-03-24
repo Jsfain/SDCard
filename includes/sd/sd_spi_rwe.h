@@ -1,10 +1,12 @@
 /*
- * File    : SD_SPI_RWE.H
- * Version : 1.0 
- * Author  : Joshua Fain
- * Target  : ATMega1280
- * License : GNU GPLv3
- * Copyright (c) 2020-2021
+ * File       : SD_SPI_RWE.H
+ * Version    : 1.0 
+ * Target     : ATMega1280
+ * Compiler   : AVR-GCC 9.3.0
+ * Downloader : AVRDUDE 6.3
+ * License    : GNU GPLv3
+ * Author     : Joshua Fain
+ * Copyright (c) 2020, 2021
  * 
  * Interface for some functions that implement SD Card single-block read/print, 
  * write, and multi-block erase by calling the necessary SD commands provided

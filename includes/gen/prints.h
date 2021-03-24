@@ -1,9 +1,11 @@
 /*
- * File    : PRINTS.H
- * Version : 2.0
- * Author  : Joshua Fain
- * Target  : ATMega1280
- * License : GNU GPLv3
+ * File       : PRINTS.H
+ * Version    : 2.0
+ * Target     : ATMega1280
+ * Compiler   : AVR-GCC 9.3.0
+ * Downloader : AVRDUDE 6.3
+ * License    : GNU GPLv3
+ * Author     : Joshua Fain
  * Copyright (c) 2020, 2021
  * 
  * Interface for some print functions used to print strings and unsigned
