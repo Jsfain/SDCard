@@ -11,7 +11,6 @@
  * Implementation of SPI.H
  */
 
-#include <stdint.h>
 #include <avr/io.h>
 #include "spi.h"
 

@@ -11,7 +11,6 @@
  * Implementation of SD_SPI_MISC.H
  */
 
-#include <stdint.h>
 #include <avr/io.h>
 #include "prints.h"
 #include "spi.h"
