@@ -36,11 +36,11 @@
 // this section. A description of what each section does is provided above its
 // set of enabled macro paramters provided in the next section.
 //
-#define READ_IN_AND_PRINT_SINGLE_BLOCK_TESTING     0
-#define PRINT_MULTIPLE_BLOCKS_TESTING              0
+#define READ_IN_AND_PRINT_SINGLE_BLOCK_TESTING     1
+#define PRINT_MULTIPLE_BLOCKS_TESTING              1
 #define WRITE_ERASE_SINGLE_BLOCK_TESTING           0
 #define COPY_SINGLE_BLOCK_TESTING                  0
-#define WRITE_ERASE_MULTIPLE_BLOCKS_TESTING        0
+#define WRITE_ERASE_MULTIPLE_BLOCKS_TESTING        1
 #define USER_INPUT_SECTION_TESTING                 0
 #define MEMORY_CAPACITY_TESTING                    1
 #define FIND_NONZERO_DATA_BLOCKS_TESTING           1

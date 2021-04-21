@@ -189,7 +189,7 @@ uint32_t sd_InitModeSPI(CTV *ctv);
  *                  SPI interfacing functions in the SD card module.
  * ----------------------------------------------------------------------------
  */
-void sd_SendByteSPI(const uint8_t byte);
+void sd_SendByteSPI(uint8_t byte);
 
 /*
  * ----------------------------------------------------------------------------
@@ -221,7 +221,7 @@ uint8_t sd_ReceiveByteSPI(void);
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-void sd_SendCommand(const uint8_t cmd, const uint32_t arg);
+void sd_SendCommand(uint8_t cmd, uint32_t arg);
 
 /*
  * ----------------------------------------------------------------------------
@@ -253,7 +253,7 @@ uint8_t sd_GetR1(void);
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-void sd_PrintR1(const uint8_t r1);
+void sd_PrintR1(uint8_t r1);
 
 /*
  * ----------------------------------------------------------------------------
@@ -275,7 +275,7 @@ void sd_PrintR1(const uint8_t r1);
  *               sd_PrintR1().
  * ----------------------------------------------------------------------------
  */
-void sd_PrintInitError(const uint32_t initErr);
+void sd_PrintInitError(uint32_t initErr);
 
 /*
  * ----------------------------------------------------------------------------
@@ -289,6 +289,6 @@ void sd_PrintInitError(const uint32_t initErr);
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-void sd_WaitSendDummySPI(const uint16_t clckCycles);
+void sd_WaitSendDummySPI(uint16_t clckCycles);
 
 #endif //SD_SPI_BASE_H

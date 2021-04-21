@@ -22,7 +22,7 @@
  ******************************************************************************
  */
 
-static uint8_t pvt_CRC7(const uint64_t tca);
+static uint8_t pvt_CRC7(uint64_t tca);
 
 /*
  ******************************************************************************
@@ -203,7 +203,7 @@ uint32_t sd_InitModeSPI(CTV *ctv)
  *                  SPI interfacing functions in the SD card module.
  * ----------------------------------------------------------------------------
  */
-void sd_SendByteSPI(const uint8_t byte)
+void sd_SendByteSPI(uint8_t byte)
 {
   spi_MasterTransmit(byte);
 }
@@ -242,7 +242,7 @@ uint8_t sd_ReceiveByteSPI(void)
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-void sd_SendCommand(const uint8_t cmd, const uint32_t arg)
+void sd_SendCommand(uint8_t cmd, uint32_t arg)
 {
   // Found forcing some delay between commands can improve stability/behavrior.
   sd_WaitSendDummySPI(80);
@@ -305,7 +305,7 @@ uint8_t sd_GetR1(void)
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-void sd_PrintR1(const uint8_t r1)
+void sd_PrintR1(uint8_t r1)
 {
   if (r1 & R1_TIMEOUT)
     print_Str (" R1_TIMEOUT,");
@@ -347,7 +347,7 @@ void sd_PrintR1(const uint8_t r1)
  *               sd_PrintR1().
  * ----------------------------------------------------------------------------
  */
-void sd_PrintInitError(const uint32_t initResp)
+void sd_PrintInitError(uint32_t initResp)
 {
   if (initResp & FAILED_GO_IDLE_STATE)
     print_Str (" FAILED_GO_IDLE_STATE,");
@@ -383,7 +383,7 @@ void sd_PrintInitError(const uint32_t initResp)
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-void sd_WaitSendDummySPI(const uint16_t clckCycles)
+void sd_WaitSendDummySPI(uint16_t clckCycles)
 {
   for (uint8_t waitCnt = 0; waitCnt < clckCycles / SPI_REG_BIT_LEN; ++waitCnt)
     sd_SendByteSPI(DMY_TKN);
@@ -406,7 +406,7 @@ void sd_WaitSendDummySPI(const uint16_t clckCycles)
  * Returns     : calculated CRC7 to be sent with the SD command. 
  * ----------------------------------------------------------------------------
  */
-static uint8_t pvt_CRC7(const uint64_t tca)
+static uint8_t pvt_CRC7(uint64_t tca)
 {
   // to test if division will take place during a given calc iteration.
   uint64_t test = 0x800000000000; 

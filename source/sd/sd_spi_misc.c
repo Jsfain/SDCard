@@ -82,8 +82,7 @@ uint32_t sd_GetCardByteCapacity(const CTV *ctv)
  *                  range at a time.
  * ----------------------------------------------------------------------------
  */
-void sd_FindNonZeroDataBlockNums(const uint32_t startBlckAddr, 
-                                 const uint32_t endBlckAddr)
+void sd_FindNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr)
 {
   // keeps track of numbers printed on each line
   uint16_t numPerLine = 0;        
@@ -130,8 +129,7 @@ void sd_FindNonZeroDataBlockNums(const uint32_t startBlckAddr,
  * Returns     : Read Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-uint16_t sd_PrintMultipleBlocks(const uint32_t startBlckAddr, 
-                                const uint32_t numOfBlcks)
+uint16_t sd_PrintMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks)
 {
   //
   // send request for SD card to return contents of the blocks starting at the
@@ -204,9 +202,8 @@ uint16_t sd_PrintMultipleBlocks(const uint32_t startBlckAddr,
  * Returns     : Write Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-uint16_t sd_WriteMultipleBlocks(const uint32_t startBlckAddr, 
-                                const uint32_t numOfBlcks, 
-                                const uint8_t *dataArr)
+uint16_t sd_WriteMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks, 
+                                const uint8_t dataArr[])
 {
   uint16_t retTkn = INVALID_DATA_RESPONSE;  // initialize return value
 

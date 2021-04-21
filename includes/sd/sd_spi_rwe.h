@@ -150,7 +150,7 @@
  * Returns     : Read Block Error (upper byte) and R1 Response (lower byte).   
  * ----------------------------------------------------------------------------
  */
-uint16_t sd_ReadSingleBlock(const uint32_t blckAddr, uint8_t blckArr[]);
+uint16_t sd_ReadSingleBlock(uint32_t blckAddr, uint8_t blckArr[]);
 
 /*
  * ----------------------------------------------------------------------------
@@ -185,7 +185,7 @@ void sd_PrintSingleBlock(const uint8_t blckArr[]);
  * Returns     : Write Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-uint16_t sd_WriteSingleBlock(const uint32_t blckAddr, const uint8_t dataArr[]);
+uint16_t sd_WriteSingleBlock(uint32_t blckAddr, const uint8_t dataArr[]);
 
 /*
  * ----------------------------------------------------------------------------
