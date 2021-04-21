@@ -24,7 +24,7 @@
 
 #define SD_CARD_INIT_ATTEMPTS_MAX      5
 #define MAX_DATA_BYTES_32_BIT          2147483648 
-#define MAX_BLOCK_NUM_32_BIT           MAX_DATA_BYTES_32_BIT / BLOCK_LEN
+#define MAX_BLOCK_NUM_32_BIT           (MAX_DATA_BYTES_32_BIT / BLOCK_LEN)
 #define BACKSPACE                      127  // used for keyboard backspace here
 
 // 
