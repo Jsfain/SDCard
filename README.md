@@ -3,7 +3,11 @@ Access and control an SD Card in SPI mode using an AVR microcontroller.
 
 
 ## Purpose
-This projects was something I worked on during quarantine. It's purpose was to establish a set of functions for accessing and controlling an SD card operating in SPI mode using an AVR microcontroller's SPI port. The capabilities provided in the files included in this module are intended to provide functionality for standalone raw data access or for the raw data access disk driver/layer operating under a File System layer.
+This projects was something I worked on during quarantine. It's purpose was to establish a set of functions for accessing and controlling an SD card operating in SPI mode using an AVR microcontroller's SPI port. The capabilities provided in the files included in this module are intended to provide functionality for standalone raw data access or for the raw data access disk driver/layer operating under a File System layer.  
+
+The image below shows a raw data read and print using the sdReadSingleBlock function and passing the block array that was just read in to the sd_PrintSingleBlock function.
+
+![alt text](https://github.com/Jsfain/AVR-SDCard/images/printSingleBlock.png)
 
 
 ## Technology
@@ -73,12 +77,12 @@ When writing a program to implement the AVR-SD Card module, the following must o
 ```
 int main(void)
 {
-  uint32_t initResp;                  
-  CTV ctv;                 
-
   usart_Init();
   spi_MasterInit();
 
+  uint32_t initResp;                  
+  CTV ctv;  
+  
   initResp = sd_InitModeSPI(&ctv);
 
   if (initResp != OUT_OF_IDLE)
@@ -93,7 +97,6 @@ int main(void)
   }
 }
 ```
-
 
  ### Additional Comments
  * A *MAKE.SH* file can also be used for reference to see how I built the module from the source files and downloaded it to an ATmega1280 AVR target. The make file would primarily be useful for non-Windows users without access to Atmel Studio. Windows users should be able to just build/download the module from the source/header files using Atmel Studio (though I have not used this).
