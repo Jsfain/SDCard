@@ -7,9 +7,9 @@ This projects was something I worked on during quarantine. It's purpose was to e
 
 The image below shows a raw data read and print using the sdReadSingleBlock function and passing the block array that was just read in to the sd_PrintSingleBlock function.
 
-![alt text](https://github.com/Jsfain/AVR-SDCard/images/printSingleBlock.png)
+![alt text](https://github.com/Jsfain/AVR-SDCard/blob/master/images/printSingleBlock.png)
 
-
+images/printSingleBlock.png
 ## Technology
 * TARGET     : ATmega1280. Portable to other AVR targets with correct PORT reassignments, provided sufficient resources available.
 * LANGUAGE   : C
