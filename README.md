@@ -5,7 +5,7 @@ Access and control an SD Card in SPI mode using an AVR microcontroller.
 ## Purpose
 This projects was something I worked on during quarantine. It's purpose was to establish a set of functions for accessing and controlling an SD card operating in SPI mode using an AVR microcontroller's SPI port. The capabilities provided in the files included in this module are intended to provide functionality for standalone raw data access or for the raw data access disk driver/layer operating under a File System layer.  
 
-The image below shows a raw data read and print using the sdReadSingleBlock function and passing the block array that was just read in to the sd_PrintSingleBlock function.
+The image below shows the results from a raw data block read and print. This is done by using the sd_ReadSingleBlock function to read a specified block into an array, and then passing the block array to the sd_PrintSingleBlock function. This particular image is the raw data contents of the first block of the root directory in a FAT32 volume.
 
 ![alt text](https://github.com/Jsfain/AVR-SDCard/blob/master/images/printSingleBlock.png)
 
