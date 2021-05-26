@@ -217,7 +217,7 @@ uint16_t sd_WriteMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
   uint8_t r1 = sd_GetR1();
   if (r1 != OUT_OF_IDLE)
   {
-    CS_SD_HIGH
+    CS_SD_HIGH;
     return (R1_ERROR | r1);
   }
 

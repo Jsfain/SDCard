@@ -49,6 +49,13 @@ static uint8_t pvt_CRC7(uint64_t tca);
  */
 uint32_t sd_InitModeSPI(CTV *ctv)
 {
+  // 
+  // initialize SPI port.
+  //
+  CS_SD_DDR |= 1 << CS_SD_DD;              // set chip select DD to input
+  CS_SD_HIGH;                              // chip select is high (disabled)
+  spi_MasterInit();                        // initialize SPI port.
+
   uint8_t r1;           // first byte ret by SD card in response to any cmd
 
   //

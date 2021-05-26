@@ -29,15 +29,17 @@
  * Arguments   : void
  * 
  * Returns     : void
+ * 
+ * Notes       : Chip Select (CS) / SS pin(s) should be selected and set by the
+ *               specific application using the SPI interface. The CS/SS pins
+ *               should be set so that the SPI is not active on the external
+ *               device when the SPI port is initialized here.
  * ----------------------------------------------------------------------------
  */
 void spi_MasterInit(void)
 {
-  // Set MOSI, SCK, SS pins of SPI port as outputs.
-  DDR_SPI =  1 << DD_MOSI | 1 << DD_SCK | 1 << DD_SS0 | 1 << DD_SS1;
-
-  // Make sure SS pins are high (not asserted) before initializing SPI.
-  SPI_PORT = 1 << SS0 | 1 << SS1;
+  // Set MOSI, and SCK pins of SPI port as outputs. MISO is input.
+  DDR_SPI |= 1 << DD_MOSI | 1 << DD_SCK;
   
   // PRSPI in PPR0 must be 0 to enable SPI. Should be 0 by default.
   PRR0 &= ~(1 << PRSPI);

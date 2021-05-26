@@ -44,6 +44,8 @@
 #define SDHC            1                   // High Cap - block addressable
 #define SDSC            0                   // Std. Cap - byte addressable
 
+
+
 /* 
  * ----------------------------------------------------------------------------
  *                                                        HOST CAPACITY SUPPORT
@@ -84,8 +86,14 @@
  *                  (set high) when SS0 is asserted (set low).
  * ----------------------------------------------------------------------------
  */
-#define CS_SD_LOW       SPI_PORT = ((SPI_PORT & ~(1 << SS0)) | (1 << SS1));
-#define CS_SD_HIGH      SPI_PORT |=  (1 << SS0);
+// define CS port, pin, and data direction pin
+#define CS_SD_PORT      PORTB
+#define CS_SD_PIN       PB0
+#define CS_SD_DDR       DDRB
+#define CS_SD_DD        DDB0
+// assert and deassert
+#define CS_SD_LOW       CS_SD_PORT = (CS_SD_PORT & ~(1 << CS_SD_PIN))
+#define CS_SD_HIGH      CS_SD_PORT |=  (1 << CS_SD_PIN)
 
 /* 
  * ----------------------------------------------------------------------------

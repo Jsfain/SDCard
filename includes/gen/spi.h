@@ -32,14 +32,6 @@
 #define MOSI        PB2
 #define MISO        PB3
 
-// Chip Select 0 
-#define DD_SS0      DDB0
-#define SS0         PB0
-
-// Chip Select 1
-#define DD_SS1      DDB4
-#define SS1         PB4
-
 #define SPI_REG_BIT_LEN      8
 
 /*

@@ -17,7 +17,6 @@
 #include <avr/io.h>
 #include "usart0.h"
 #include "prints.h"
-#include "spi.h"
 #include "sd_spi_base.h"
 #include "sd_spi_rwe.h"
 #include "sd_spi_misc.h"
@@ -36,13 +35,13 @@
 // this section. A description of what each section does is provided above its
 // set of enabled macro paramters provided in the next section.
 //
-#define READ_IN_AND_PRINT_SINGLE_BLOCK_TESTING     1
+#define READ_IN_AND_PRINT_SINGLE_BLOCK_TESTING     0
 #define PRINT_MULTIPLE_BLOCKS_TESTING              0
 #define WRITE_ERASE_SINGLE_BLOCK_TESTING           0
 #define COPY_SINGLE_BLOCK_TESTING                  0
 #define WRITE_ERASE_MULTIPLE_BLOCKS_TESTING        0
 #define USER_INPUT_SECTION_TESTING                 0
-#define MEMORY_CAPACITY_TESTING                    0
+#define MEMORY_CAPACITY_TESTING                    1
 #define FIND_NONZERO_DATA_BLOCKS_TESTING           0
 
 //
@@ -167,9 +166,8 @@ uint32_t enterBlockNumber();
 
 int main(void)                                        
 {
-  // Initializat usart and spi ports.
+  // Initialize usart
   usart_Init();
-  spi_MasterInit();
 
   //
   // SD CARD INITILIAIZATION
