@@ -9,7 +9,7 @@
  * Copyright (c) 2020, 2021
  *
  * This is meant to be a catch-all for some misellaneous functions. Will 
- * require SD_SPI_BASE and SD_SPI_RWE.
+ * require SD_SPI_BASE and SD_SPI_RWE to function.
  */
 
 #ifndef SD_SPI_MISC_H

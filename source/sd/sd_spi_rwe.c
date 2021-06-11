@@ -12,7 +12,6 @@
  */
 
 #include <avr/io.h>
-#include "usart0.h"
 #include "prints.h"
 #include "spi.h"
 #include "sd_spi_base.h"
@@ -122,7 +121,7 @@ void sd_PrintSingleBlock(const uint8_t blckArr[])
     // Print row address offset. Loop is used to print any needed prefixed 0's
     print_Str("\n\r     0x");
     for (uint16_t os = offset + 1; os < 0x100; os *= radix)
-      usart_Transmit('0');
+      print_Str("0");
     print_Hex(offset);
 
     // print HEX values of the block's offset row
@@ -131,12 +130,12 @@ void sd_PrintSingleBlock(const uint8_t blckArr[])
     {
       // every 4 bytes print an extra space.
       if (offset % 4 == 0) 
-        usart_Transmit(' ');
-      usart_Transmit(' ');
+        print_Str(" ");
+      print_Str(" ");
 
       // if value is not two hex digits, prefix a 0. 
       if (blckArr[offset] < 0x10)
-        usart_Transmit('0');
+        print_Str("0");
 
       // print value in hex.
       print_Hex(blckArr[offset]);
@@ -152,11 +151,15 @@ void sd_PrintSingleBlock(const uint8_t blckArr[])
     for (offset = row * radix; offset < row * radix + radix; ++offset)
     {
       if (blckArr[offset] < ASCII_PRINT_CHAR_FIRST)    
-        usart_Transmit(' '); 
+        print_Str(" "); 
       else if (blckArr[offset] <= ASCII_PRINT_CHAR_LAST)
-        usart_Transmit(blckArr[offset]);
+      { 
+        // single char string to use with print_Str.
+        char str[2] = {blckArr[offset], '\0'}; 
+        print_Str(str);
+      }
       else 
-        usart_Transmit('.');
+        print_Str(".");
     }
   }    
 }

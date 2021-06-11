@@ -91,6 +91,7 @@
 #define CS_SD_PIN       PB0
 #define CS_SD_DDR       DDRB
 #define CS_SD_DD        DDB0
+
 // assert and deassert
 #define CS_SD_LOW       CS_SD_PORT = (CS_SD_PORT & ~(1 << CS_SD_PIN))
 #define CS_SD_HIGH      CS_SD_PORT |=  (1 << CS_SD_PIN)

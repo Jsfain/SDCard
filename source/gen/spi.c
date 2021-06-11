@@ -38,8 +38,15 @@
  */
 void spi_MasterInit(void)
 {
-  // Set MOSI, and SCK pins of SPI port as outputs. MISO is input.
-  DDR_SPI |= 1 << DD_MOSI | 1 << DD_SCK;
+  //
+  // Set MOSI, and SCK pins of SPI port as outputs. MISO is input. The SS pin
+  // must also be set to output before enabling master mode, regardless of
+  // whether it is actually used as the chip select.
+  //
+  DDR_SPI |= 1 << DD_MOSI | 1 << DD_SCK | 1 << DD_SS;
+
+  // Set SS pin high before enabling SPI port. Pre-caution in case using as CS.
+  SPI_PORT |= 1 << SS;
   
   // PRSPI in PPR0 must be 0 to enable SPI. Should be 0 by default.
   PRR0 &= ~(1 << PRSPI);

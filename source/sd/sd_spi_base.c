@@ -49,14 +49,15 @@ static uint8_t pvt_CRC7(uint64_t tca);
  */
 uint32_t sd_InitModeSPI(CTV *ctv)
 {
+  uint8_t r1;           // first byte rtnd by SD card in response to any cmd
+  
   // 
   // initialize SPI port.
   //
-  CS_SD_DDR |= 1 << CS_SD_DD;              // set chip select DD to input
-  CS_SD_HIGH;                              // chip select is high (disabled)
-  spi_MasterInit();                        // initialize SPI port.
+  CS_SD_DDR |= 1 << CS_SD_DD;              // set CS to output and high 
+  CS_SD_HIGH;                              // (disabled) before enabling SPI.
 
-  uint8_t r1;           // first byte ret by SD card in response to any cmd
+  spi_MasterInit();                        // initialize SPI port.
 
   //
   // if prevSuccessFlag is set, then initialization has previously completed 
@@ -265,12 +266,12 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg)
   tcacs |= STOP_BIT;
 
   // Send cmd / arg to SD Card via SPI port. 8-bits at a time.
-  sd_SendByteSPI ((uint8_t)(tcacs >> 40));
-  sd_SendByteSPI ((uint8_t)(tcacs >> 32));
-  sd_SendByteSPI ((uint8_t)(tcacs >> 24));
-  sd_SendByteSPI ((uint8_t)(tcacs >> 16));
-  sd_SendByteSPI ((uint8_t)(tcacs >> 8));
-  sd_SendByteSPI ((uint8_t)(tcacs));
+  sd_SendByteSPI((uint8_t)(tcacs >> 40));
+  sd_SendByteSPI((uint8_t)(tcacs >> 32));
+  sd_SendByteSPI((uint8_t)(tcacs >> 24));
+  sd_SendByteSPI((uint8_t)(tcacs >> 16));
+  sd_SendByteSPI((uint8_t)(tcacs >> 8));
+  sd_SendByteSPI((uint8_t)(tcacs));
 }
 
 /*
@@ -315,23 +316,23 @@ uint8_t sd_GetR1(void)
 void sd_PrintR1(uint8_t r1)
 {
   if (r1 & R1_TIMEOUT)
-    print_Str (" R1_TIMEOUT,");
+    print_Str(" R1_TIMEOUT,");
   if (r1 & PARAMETER_ERROR)
-    print_Str (" PARAMETER_ERROR,");
+    print_Str(" PARAMETER_ERROR,");
   if (r1 & ADDRESS_ERROR)
-    print_Str (" ADDRESS_ERROR,");
+    print_Str(" ADDRESS_ERROR,");
   if (r1 & ERASE_SEQUENCE_ERROR)
-    print_Str (" ERASE_SEQUENCE_ERROR,");
+    print_Str(" ERASE_SEQUENCE_ERROR,");
   if (r1 & COM_CRC_ERROR)
-    print_Str (" COM_CRC_ERROR,");
+    print_Str(" COM_CRC_ERROR,");
   if (r1 & ILLEGAL_COMMAND)
-    print_Str (" ILLEGAL_COMMAND,");
+    print_Str(" ILLEGAL_COMMAND,");
   if (r1 & ERASE_RESET)
-    print_Str (" ERASE_RESET,");
+    print_Str(" ERASE_RESET,");
   if (r1 & IN_IDLE_STATE)
-    print_Str (" IN_IDLE_STATE");
+    print_Str(" IN_IDLE_STATE");
   if (r1 == OUT_OF_IDLE) // 0
-    print_Str (" OUT_OF_IDLE");
+    print_Str(" OUT_OF_IDLE");
 }
 
 /*
@@ -357,25 +358,25 @@ void sd_PrintR1(uint8_t r1)
 void sd_PrintInitError(uint32_t initResp)
 {
   if (initResp & FAILED_GO_IDLE_STATE)
-    print_Str (" FAILED_GO_IDLE_STATE,");
+    print_Str(" FAILED_GO_IDLE_STATE,");
   if (initResp & FAILED_SEND_IF_COND)
-    print_Str (" FAILED_SEND_IF_COND,");
+    print_Str(" FAILED_SEND_IF_COND,");
   if (initResp & UNSUPPORTED_CARD_TYPE)
-    print_Str (" UNSUPPORTED_CARD_TYPE,");
+    print_Str(" UNSUPPORTED_CARD_TYPE,");
   if (initResp & FAILED_CRC_ON_OFF)
-    print_Str (" FAILED_CRC_ON_OFF,");
+    print_Str(" FAILED_CRC_ON_OFF,");
   if (initResp & FAILED_APP_CMD)
-    print_Str (" FAILED_APP_CMD,");
+    print_Str(" FAILED_APP_CMD,");
   if (initResp & FAILED_SD_SEND_OP_COND)
-    print_Str (" FAILED_SD_SEND_OP_COND,");
+    print_Str(" FAILED_SD_SEND_OP_COND,");
   if (initResp & OUT_OF_IDLE_TIMEOUT)
-    print_Str (" OUT_OF_IDLE_TIMEOUT,");
+    print_Str(" OUT_OF_IDLE_TIMEOUT,");
   if (initResp & FAILED_READ_OCR)
-    print_Str (" FAILED_READ_OCR,");
+    print_Str(" FAILED_READ_OCR,");
   if (initResp & POWER_UP_NOT_COMPLETE)
-    print_Str (" POWER_UP_NOT_COMPLETE,");
+    print_Str(" POWER_UP_NOT_COMPLETE,");
   if (initResp == OUT_OF_IDLE) // 0
-    print_Str (" INIT_SUCCESS\n\r");
+    print_Str(" INIT_SUCCESS\n\r");
 }
 
 /*

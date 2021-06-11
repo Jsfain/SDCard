@@ -22,12 +22,15 @@
 
 // SPI Data Direction Register (DDR).
 #define DDR_SPI     DDRB
+#define DD_SS       DDB0
 #define DD_SCK      DDB1
 #define DD_MOSI     DDB2
 #define DD_MISO     DDB3
 
+
 // SPI Port Assignment.
 #define SPI_PORT    PORTB
+#define SS          PB0
 #define SCK         PB1 
 #define MOSI        PB2
 #define MISO        PB3
