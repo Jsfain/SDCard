@@ -53,7 +53,7 @@ The following source/header files are also required by the module, and thus incl
 3. PRINTS.H(C)  : required to print integers (decimal, hex, binary) and strings to the screen via the USART.
 
 #### additional comments:
-The SD_SPI_XXXX files do not implement anything that directly interacts with the ATMega1280 AVR microcontroller, but instead use the SPI.C(H) and USART0.C(H) files for all interaction. As such, if a different microcontroller is to be used, then you would only need to ensure that the SPI and USART transmit and receive functions are implemented to behave similarly to those functions in the SPI and USART files included here. Additionally, the SD_SPI_XXXX files only utilize the USART through the PRINTS.H(C) and do not call any usart transmit \ receive functions directly. So, it should be fairly simple to implement this against a variety of microcontrollers, but that said it has only been tested with the ATMega1280.
+The SD_SPI_XXXX files do not implement anything that directly interacts with the ATMega1280 AVR microcontroller, but instead use the SPI.C(H) and USART0.C(H) files for all interaction. As such, if a different target is desired, then you would only need to ensure that the SPI and USART transmit and receive functions are implemented to behave similarly to those functions in the SPI and USART files included here. Additionally, the SD_SPI_XXXX files only utilize the USART through the PRINTS.H(C) and do not call any usart transmit \ receive functions directly. It should be fairly simple to implement this against a variety of microcontrollers, but that said it has only been tested with the ATMega1280.
 
 
 ## How to use
