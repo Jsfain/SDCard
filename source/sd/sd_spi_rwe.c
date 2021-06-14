@@ -1,7 +1,6 @@
 /*
  * File       : SD_SPI_RWE.H
  * Version    : 1.0
- * Target     : ATMega1280
  * License    : GNU GPLv3
  * Author     : Joshua Fain
  * Copyright (c) 2020, 2021
@@ -10,8 +9,8 @@
  */
 
 #include <stdint.h>
-#include "prints.h"
 #include "avr_spi.h"
+#include "prints.h"
 #include "sd_spi_base.h"
 #include "sd_spi_rwe.h"
 
