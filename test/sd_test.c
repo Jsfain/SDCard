@@ -2,8 +2,6 @@
  * File       : SD_TEST.C
  * Author     : Joshua Fain
  * Target     : ATMega1280
- * Compiler   : AVR-GCC 9.3.0
- * Downloader : AVRDUDE 6.3
  * License    : GNU GPLv3
  * Author     : Joshua Fain
  * Copyright (c) 2020, 2021
@@ -15,7 +13,7 @@
  */
 
 #include <avr/io.h>
-#include "usart0.h"
+#include "avr_usart.h"
 #include "prints.h"
 #include "sd_spi_base.h"
 #include "sd_spi_rwe.h"

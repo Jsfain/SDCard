@@ -1,19 +1,30 @@
 /*
  * File       : PRINTS.C
- * Version    : 2.0
- * Target     : ATMega1280
- * Compiler   : AVR-GCC 9.3.0
- * Downloader : AVRDUDE 6.3
+ * Version    : 3.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
  * Copyright (c) 2020, 2021
  * 
- * Implementation of PRINTS.H
+ * PRINST.C defines for some print functions used to print strings and unsigned
+ * integers. The unsigned integers can be printed in decimal, binary, and hex 
+ * formats. This is the implementation for PRINTS.H.
  */
 
 #include <stdint.h>
-#include "usart0.h"
+#include "avr_usart.h"
 #include "prints.h"
+
+// Maximum character lengths for 32-bit numbers in different forms.
+#define DEC_CHAR_LEN_MAX   10
+#define HEX_CHAR_LEN_MAX   8
+#define BIN_CHAR_LEN_MAX   32
+
+//
+// The digits in a binary number are printed in groups of this many chars
+// which are separated by spaces. Set this value >= BIN_CHAR_LEN_MAX if no 
+// spaces should be printed.
+//
+#define BIN_CHARS_GRP_SIZE    4           
 
 /*
  ******************************************************************************
@@ -23,30 +34,28 @@
 
 /*
  * ----------------------------------------------------------------------------
- *                                    PRINT UNSIGNED DECIMAL (BASE-10) INTEGERS 
+ *                            PRINT UNSIGNED DECIMAL (BASE-10) FORM OF INTEGERS 
  * 
- * Description : Prints unsigned decimal integer form of argument to screen.
+ * Description : Prints unsigned decimal integer form of argument.
  * 
- * Arguments   : num     Unsigned integer to be printed to the screen.
- * 
- * Returns     : void
+ * Argument    : num   - Unsigned decimal integer to be printed to screen.
  * ----------------------------------------------------------------------------
  */
 void print_Dec(uint32_t num)
 {
   const uint8_t radix = 10;                 // decimal radix
-  char digit[10];                           // length is max possible digits
-  int  digitCnt = 0;                        // total number of digits required
+  char digit[DEC_CHAR_LEN_MAX];             
+  int  digitCnt;                            // total number of digits required
 
   //
-  // 1) Load last digit (remainder) of num into array when divided by 10.
-  // 2) Update the value of the num by dividing itself by 10.
-  // 4) Repeat until number is 0. 
+  // 1) Load last digit (remainder) of num into array when divided by radix.
+  // 2) Update the value of the num by dividing itself by radix.
+  // 3) Repeat until number is 0. 
   // Note: The array is loaded in reverse order.
   //
-  for (digitCnt = 0; num > 0; digitCnt++)
+  for (digitCnt = 0; num > 0; ++digitCnt)
   {
-    digit[digitCnt] = num % radix + '0';    // add 48 to convert to ascii
+    digit[digitCnt] = num % radix + '0';    // convert to ascii
     num /= radix; 
   }
 
@@ -62,31 +71,30 @@ void print_Dec(uint32_t num)
  * ----------------------------------------------------------------------------
  *                                                 PRINT BINARY FORM OF INTEGER 
  *                                        
- * Description : Prints the binary form of the integer argument to the screen.
+ * Description : Prints the binary integer form of the argument.
  * 
- * Argument    : num     Unsigned integer to be printed to the screen.
- * 
- * Returns     : void 
+ * Argument    : num   - Unsigned decimal integer to be printed to screen.
  * 
  * Notes       : 1) The function will only print the number of bits required.
- *               2) A space will be print between every 4-bit group.
+ *               2) A space will be print between every BIN_CHARS_GRP_SIZE 
+ *                  group of digits to make it more easily readable.
  * ----------------------------------------------------------------------------
  */
 void print_Bin(uint32_t num)
 {
   const uint8_t radix = 2;                  // binary radix
-  char digit[32];                           // length is max possible digits
-  int  digitCnt = 0;                        // total number of digits required
+  char digit[BIN_CHAR_LEN_MAX];             
+  int  digitCnt;                            // total number of digits required
 
   //
-  // 1) Load remainder of number into digit array when divided by 2. 
-  // 2) Update the value of the number by dividing itself by 2.
-  // 4) Repeat until number is 0. 
+  // 1) Load remainder of num into digit array when divided by radix. 
+  // 2) Update the value of the num by dividing itself by radix.
+  // 3) Repeat until number is 0. 
   // Note: The array is loaded in reverse order.
   //
   for (digitCnt = 0; num > 0; digitCnt++)
   {
-    digit[digitCnt] = num % radix + '0';    // add 48 to convert to ascii
+    digit[digitCnt] = num % radix + '0';    // convert to ascii
     num /= radix; 
   }
 
@@ -97,8 +105,7 @@ void print_Bin(uint32_t num)
     for (--digitCnt; digitCnt >= 0; digitCnt--)
     {
       usart_Transmit(digit[digitCnt]);
-      // every 4 digit characters print a space
-      if (digitCnt % 4 == 0)
+      if (digitCnt % BIN_CHARS_GRP_SIZE == 0)         // print a space ?
         usart_Transmit(' ');
     }
 }
@@ -107,19 +114,16 @@ void print_Bin(uint32_t num)
  * ----------------------------------------------------------------------------
  *                                         PRINT HEXADECIMAL FORM OF AN INTEGER
  *                                       
- * Description : Prints the hexadecimal form of unsigned integer argument to
- *               the screen.
+ * Description : Prints the hexadecimal form of the argument.
  * 
- * Argument    : num     Unsigned integer to be printed to the screen.
- * 
- * Returns     : void
+ * Argument    : num   - Unsigned decimal integer to be printed to screen.
  * ----------------------------------------------------------------------------
  */
 void print_Hex(uint32_t num)
 {
   const uint8_t radix = 16;                 // hex radix
-  char digit[8];                            // length is max possible digits
-  int  digitCnt = 0;                        // total number of digits required
+  char digit[HEX_CHAR_LEN_MAX];             
+  int  digitCnt;                            // total number of digits required
   
   //
   // 1) Load last digit (remainder) of num into array when divided by radix.
@@ -133,7 +137,6 @@ void print_Hex(uint32_t num)
     digit[digitCnt] = num % radix;
     num /= radix;
 
-    // convert to ascii characters
     if (digit[digitCnt] < 10)
       digit[digitCnt] += '0';               // convert to ascii numbers
     else
@@ -154,7 +157,7 @@ void print_Hex(uint32_t num)
  *                                       
  * Description : Prints the C-string passed as the argument.
  * 
- * Argument    : str     Pointer to a null-terminated char array (i.e. string)
+ * Argument    : str   - Pointer to a null-terminated char array (i.e. string)
  *                       that will be printed to the screen.
  * 
  * Warning     : There is currently no limit on the length of the string but

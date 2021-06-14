@@ -1,18 +1,17 @@
 /*
- * File       : SPI.C
+ * File       : AVR_SPI.C
  * Version    : 1.0 
- * Target     : ATMega1280
- * Compiler   : AVR-GCC 9.3.0
- * Downloader : AVRDUDE 6.3
+ * Target     : Default - ATMega1280
  * License    : GNU GPLv3
  * Author     : Joshua Fain
  * Copyright (c) 2020, 2021
  * 
- * Implementation of SPI.H
+ * AVR_SPI.C defines the functions for accessing and controlling the ATMega 
+ * microcontroller's SPI port.
  */
 
 #include <avr/io.h>
-#include "spi.h"
+#include "avr_spi.h"
 
 /*
  ******************************************************************************
@@ -24,16 +23,14 @@
  * ----------------------------------------------------------------------------
  *                                         INITIALIZE SPI PORT INTO MASTER MODE
  * 
- * Description : Initialize the SPI port into master mode.
+ * Description : Initialize the AVR's SPI port into master mode.
  * 
- * Arguments   : void
- * 
- * Returns     : void
- * 
- * Notes       : Chip Select (CS) / SS pin(s) should be selected and set by the
- *               specific application using the SPI interface. The CS/SS pins
- *               should be set so that the SPI is not active on the external
- *               device when the SPI port is initialized here.
+ * Note        : If an application is using a different pin for Chip Select
+ *               other than the SS pin of the AVR'S SPI port, then that
+ *               application must define it and set the data direction to
+ *               output. It should also ensure that the pin is deasserted prior
+ *               to calling this function. This is to ensure that the device's
+ *               SPI port is not active at the moment it is enabled on the AVR.
  * ----------------------------------------------------------------------------
  */
 void spi_MasterInit(void)
@@ -41,11 +38,11 @@ void spi_MasterInit(void)
   //
   // Set MOSI, and SCK pins of SPI port as outputs. MISO is input. The SS pin
   // must also be set to output before enabling master mode, regardless of
-  // whether it is actually used as the chip select.
+  // whether it is actually used as a device's chip select.
   //
   DDR_SPI |= 1 << DD_MOSI | 1 << DD_SCK | 1 << DD_SS;
 
-  // Set SS pin high before enabling SPI port. Pre-caution in case using as CS.
+  // Set SS pin high before enabling SPI port. Precaution in case using as CS.
   SPI_PORT |= 1 << SS;
   
   // PRSPI in PPR0 must be 0 to enable SPI. Should be 0 by default.
@@ -65,8 +62,6 @@ void spi_MasterInit(void)
  *                                       
  * Description : Gets byte sent to the SPDR by an SPI connected device.  
  * 
- * Arguments   : void
- * 
  * Returns     : byte received by the SPI port.
  * ----------------------------------------------------------------------------
  */
@@ -81,9 +76,7 @@ uint8_t spi_MasterReceive(void)
  * 
  * Description : Sends a byte via the SPI port operating in master mode.
  * 
- * Arguments   : byte     data byte to be sent via SPI.
- * 
- * Returns     : void
+ * Arguments   : byte   - data byte to be sent via SPI.
  * ----------------------------------------------------------------------------
  */
 void spi_MasterTransmit(uint8_t byte)

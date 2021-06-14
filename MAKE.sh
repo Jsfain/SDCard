@@ -23,17 +23,17 @@ Link=(avr-gcc -Wall -g -mmcu=atmega1280 -o)
 IHex=(avr-objcopy -j .text -j .data -O ihex)
 
 
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/usart0.o" $genDir"/usart0.c"
-"${Compile[@]}" $buildDir/usart0.o $genDir/usart0.c
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/avr_usart.o" $genDir"/avr_usart.c"
+"${Compile[@]}" $buildDir/avr_usart.o $genDir/avr_usart.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
 then
-    echo -e "error compiling usart0.c"
+    echo -e "error compiling avr_usart.c"
     echo -e "program exiting with code $status"
     exit $status
 else
-    echo -e "Compiling USART0.C successful"
+    echo -e "Compiling AVR_USART.C successful"
 fi
 
 
@@ -51,17 +51,17 @@ else
 fi
 
 
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/spi.o" $genDir"/spi.c"
-"${Compile[@]}" $buildDir/spi.o $genDir/spi.c
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/avr_spi.o" $genDir"/avr_spi.c"
+"${Compile[@]}" $buildDir/avr_spi.o $genDir/avr_spi.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
 then
-    echo -e "error compiling spi.c"
+    echo -e "error compiling avr_spi.c"
     echo -e "program exiting with code $status"
     exit $status
 else
-    echo -e "Compiling SPI.C successful"
+    echo -e "Compiling avr_SPI.C successful"
 fi
 
 
@@ -121,8 +121,8 @@ else
 fi
 
 
-echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/sd_test.elf "$buildDir"/sd_test.o  "$buildDir"/spi.o "$buildDir"/sd_spi_base.o "$buildDir"/sd_spi_rwe.o "$buildDir"/sd_spi_misc.o "$buildDir"/usart0.o "$buildDir"/prints.o"
-"${Link[@]}" $buildDir/sd_test.elf $buildDir/sd_test.o $buildDir/spi.o $buildDir/sd_spi_base.o $buildDir/sd_spi_rwe.o $buildDir/sd_spi_misc.o $buildDir/usart0.o $buildDir/prints.o
+echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/sd_test.elf "$buildDir"/sd_test.o  "$buildDir"/avr_spi.o "$buildDir"/sd_spi_base.o "$buildDir"/sd_spi_rwe.o "$buildDir"/sd_spi_misc.o "$buildDir"/avr_usart.o "$buildDir"/prints.o"
+"${Link[@]}" $buildDir/sd_test.elf $buildDir/sd_test.o $buildDir/avr_spi.o $buildDir/sd_spi_base.o $buildDir/sd_spi_rwe.o $buildDir/sd_spi_misc.o $buildDir/avr_usart.o $buildDir/prints.o
 status=$?
 sleep $t
 if [ $status -gt 0 ]

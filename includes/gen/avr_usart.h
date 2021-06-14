@@ -1,22 +1,34 @@
 /*
- * File       : USART0.C
+ * File       : AVR_USART.H
  * Version    : 1.0 
- * Target     : ATMega1280
- * Compiler   : AVR-GCC 9.3.0
- * Downloader : AVRDUDE 6.3
+ * Target     : Default - ATMega1280
  * License    : GNU GPLv3
  * Author     : Joshua Fain
  * Copyright (c) 2020, 2021
  * 
- * Implementation of USART.H
+ * AVR_USART.H provides an interface for accessing and controlling a USART on 
+ * the ATMega microcontroller.
  */
 
-#include <avr/io.h>
-#include "usart0.h"
+#ifndef AVR_USART_H
+#define AVR_USART_H
 
 /*
  ******************************************************************************
- *                                  FUNCTIONS
+ *                                  MACROS
+ ******************************************************************************
+ */
+
+#ifndef F_CPU
+#define F_CPU       16000000UL                   // default target clk freq.
+#endif //F_CPU
+
+#define BAUD        9600U                        // decimal baud rate
+#define UBRR_VALUE  ((F_CPU) / 16 / (BAUD) - 1)  // calculate value for UBRR
+
+/*
+ *******************************************************************************
+ *                             FUNCTION PROTOTYPES
  ******************************************************************************
  */
 
@@ -27,61 +39,34 @@
  * Description : Initializes USART0 of the ATMega target device.
  * 
  * Arguments   : void 
- * 
- * Returns     : void
  * ----------------------------------------------------------------------------
  */
-void usart_Init(void)
-{
-  // Set baud rate
-  UBRR0H = (uint8_t)(UBRR_VALUE >> 8);
-  UBRR0L = (uint8_t)UBRR_VALUE;
+void usart_Init(void);
 
-  // Enable USART0 receiver and transmitter
-  UCSR0B = 1 << RXEN0 | 1 << TXEN0;
-  
-  // Set USART - Asynch mode, no parity, data frame = 8 data, 1 stop
-  UCSR0C = 1 << UCSZ01 | 1 << UCSZ00;
-}
 
 /*
  * ----------------------------------------------------------------------------
  *                                                           USART RECEIVE BYTE
  *                                         
- * Description : Receives a byte using the USART0 on the ATmega target device.
+ * Description : Receives a byte using the USART on the ATmega target device.
  * 
  * Arguments   : void
  * 
- * Returns     : byte received by the USART0, i.e. value in UDR0.
+ * Returns     : byte received by the USART, i.e. value in UDR0.
  * ----------------------------------------------------------------------------
-*/
-uint8_t usart_Receive(void)
-{
-  // poll the RX complete flag, until it is set
-  while ( !(UCSR0A & 1 << RXC0))
-    ;
-  
-  // return byte received into usart buffer
-  return UDR0; 
-}
+ */
+uint8_t usart_Receive(void);
+
 
 /*
  * ----------------------------------------------------------------------------
  *                                                          USART TRANSMIT BYTE
  *                                       
- * Description : Sends a byte to another device via the USART0.
+ * Description : Sends a byte to another device via the USART.
  * 
- * Arguments   : data     byte to sent via USART0.
- * 
- * Returns     : void
+ * Arguments   : data   - byte to sent via USART.
  * ----------------------------------------------------------------------------
  */
-void usart_Transmit(uint8_t data)
-{
-  // poll Data Reg Empty Flag until it is set.
-  while( !(UCSR0A & 1 << UDRE0))
-    ;
-  
-  // load data into usart buffer which will transmit it.
-  UDR0 = data;
-}
+void usart_Transmit(uint8_t data);
+
+#endif //AVR_USART_H

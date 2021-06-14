@@ -1,14 +1,13 @@
 /*
- * File       : SPI.H
+ * File       : AVR_SPI.H
  * Version    : 1.0 
- * Target     : ATMega1280
- * Compiler   : AVR-GCC 9.3.0
- * Downloader : AVRDUDE 6.3
+ * Target     : Default - ATMega1280
  * License    : GNU GPLv3
  * Author     : Joshua Fain
  * Copyright (c) 2020, 2021
  * 
- * Interface for interacting with the ATMega's SPI port.
+ * AVR_SPI.H provides the interface or accessing and controlling the ATMega 
+ * microcontroller's SPI port.
  */
 
 #ifndef SPI_H
@@ -29,7 +28,6 @@
 #define DD_MOSI     DDB2
 #define DD_MISO     DDB3
 
-
 // SPI Port Assignment.
 #define SPI_PORT    PORTB
 #define SS          PB0
@@ -49,11 +47,14 @@
  * ----------------------------------------------------------------------------
  *                                         INITIALIZE SPI PORT INTO MASTER MODE
  * 
- * Description : Initialize the SPI port into master mode.
+ * Description : Initialize the AVR's SPI port into master mode.
  * 
- * Arguments   : void
- * 
- * Returns     : void
+ * Note        : If an application is using a different pin for Chip Select
+ *               other than the SS pin of the AVR'S SPI port, then that
+ *               application must define it and set the data direction to
+ *               output. It should also ensure that the pin is deasserted prior
+ *               to calling this function. This is to ensure that the device's
+ *               SPI port is not active at the moment it is enabled on the AVR.
  * ----------------------------------------------------------------------------
  */
 void spi_MasterInit(void);
@@ -63,9 +64,7 @@ void spi_MasterInit(void);
  *                                                             SPI RECEIVE BYTE
  *                                       
  * Description : Gets byte sent to the SPDR by an SPI connected device.  
- * 
- * Arguments   : void
- * 
+ *
  * Returns     : byte received by the SPI port.
  * ----------------------------------------------------------------------------
  */
@@ -77,9 +76,7 @@ uint8_t spi_MasterReceive(void);
  * 
  * Description : Sends a byte via the SPI port operating in master mode.
  * 
- * Arguments   : byte     data byte to be sent via SPI.
- * 
- * Returns     : void
+ * Arguments   : byte   - data byte to be sent via SPI.
  * ----------------------------------------------------------------------------
  */
 void spi_MasterTransmit(uint8_t byte);
