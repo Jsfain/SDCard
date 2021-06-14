@@ -23,19 +23,46 @@ Link=(avr-gcc -Wall -g -mmcu=atmega1280 -o)
 IHex=(avr-objcopy -j .text -j .data -O ihex)
 
 
-echo -e ">> COMPILE: "${Compile[@]}" "$buildDir"/sd_test.o " $testDir"/sd_test.c"
-"${Compile[@]}" $buildDir/sd_test.o $testDir/sd_test.c
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/usart0.o" $genDir"/usart0.c"
+"${Compile[@]}" $buildDir/usart0.o $genDir/usart0.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
 then
-    echo -e "error compiling SD_TEST.C"
+    echo -e "error compiling usart0.c"
     echo -e "program exiting with code $status"
     exit $status
 else
-    echo -e "Compiling SD_TEST.C successful"
+    echo -e "Compiling USART0.C successful"
 fi
 
+
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/prints.o" $genDir"/prints.c"
+"${Compile[@]}" $buildDir/prints.o $genDir/prints.c
+status=$?
+sleep $t
+if [ $status -gt 0 ]
+then
+    echo -e "error compiling prints.c"
+    echo -e "program exiting with code $status"
+    exit $status
+else
+    echo -e "Compiling PRINTS.C successful"
+fi
+
+
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/spi.o" $genDir"/spi.c"
+"${Compile[@]}" $buildDir/spi.o $genDir/spi.c
+status=$?
+sleep $t
+if [ $status -gt 0 ]
+then
+    echo -e "error compiling spi.c"
+    echo -e "program exiting with code $status"
+    exit $status
+else
+    echo -e "Compiling SPI.C successful"
+fi
 
 
 echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/sd_spi_base.o" $sdDir"/sd_spi_base.c"
@@ -80,45 +107,17 @@ else
 fi
 
 
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/spi.o" $genDir"/spi.c"
-"${Compile[@]}" $buildDir/spi.o $genDir/spi.c
+echo -e ">> COMPILE: "${Compile[@]}" "$buildDir"/sd_test.o " $testDir"/sd_test.c"
+"${Compile[@]}" $buildDir/sd_test.o $testDir/sd_test.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
 then
-    echo -e "error compiling spi.c"
+    echo -e "error compiling SD_TEST.C"
     echo -e "program exiting with code $status"
     exit $status
 else
-    echo -e "Compiling SPI.C successful"
-fi
-
-
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/usart0.o" $genDir"/usart0.c"
-"${Compile[@]}" $buildDir/usart0.o $genDir/usart0.c
-status=$?
-sleep $t
-if [ $status -gt 0 ]
-then
-    echo -e "error compiling usart0.c"
-    echo -e "program exiting with code $status"
-    exit $status
-else
-    echo -e "Compiling USART0.C successful"
-fi
-
-
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/prints.o" $genDir"/prints.c"
-"${Compile[@]}" $buildDir/prints.o $genDir/prints.c
-status=$?
-sleep $t
-if [ $status -gt 0 ]
-then
-    echo -e "error compiling prints.c"
-    echo -e "program exiting with code $status"
-    exit $status
-else
-    echo -e "Compiling PRINTS.C successful"
+    echo -e "Compiling SD_TEST.C successful"
 fi
 
 

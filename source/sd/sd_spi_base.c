@@ -11,9 +11,9 @@
  * Implementation of SD_SPI_BASE.H
  */
 
-#include <avr/io.h>
-#include "prints.h"
+#include <stdint.h>
 #include "spi.h"
+#include "prints.h"
 #include "sd_spi_base.h"
 
 /*
@@ -57,11 +57,11 @@ uint32_t sd_InitModeSPI(CTV *ctv)
   CS_SD_DDR |= 1 << CS_SD_DD;              // set CS to output and high 
   CS_SD_HIGH;                              // (disabled) before enabling SPI.
 
-  spi_MasterInit();                        // initialize SPI port.
+  spi_MasterInit();                        // initialize SPI port master mode.
 
   //
   // if prevSuccessFlag is set, then initialization has previously completed 
-  // successfully so return. If not, proceed with rest of init function.
+  // successfully so return. If not, proceed with rest of init.
   //
   static uint8_t prevSuccessFlag;
   if (prevSuccessFlag)

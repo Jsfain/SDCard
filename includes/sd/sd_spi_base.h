@@ -76,7 +76,7 @@
  * ----------------------------------------------------------------------------
  *                                                                  CHIP SELECT
  *
- * Description : defines the SPI port's chip select pin for the SD card.
+ * Description : defines the chip select pin to use for the device's SPI port.
  * 
  * Notes       : 1) Assert by setting CS low. De-Assert by setting CS high.
  *               2) SSO, defined in SPI.H, is used here as the CS pin.
@@ -87,10 +87,10 @@
  * ----------------------------------------------------------------------------
  */
 // define CS port, pin, and data direction pin
-#define CS_SD_PORT      PORTB
-#define CS_SD_PIN       PB0
-#define CS_SD_DDR       DDRB
-#define CS_SD_DD        DDB0
+#define CS_SD_PORT      SPI_PORT
+#define CS_SD_PIN       SS
+#define CS_SD_DDR       DDR_SPI
+#define CS_SD_DD        DD_SS
 
 // assert and deassert
 #define CS_SD_LOW       CS_SD_PORT = (CS_SD_PORT & ~(1 << CS_SD_PIN))

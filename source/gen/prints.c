@@ -11,9 +11,9 @@
  * Implementation of PRINTS.H
  */
 
-#include <avr/io.h>
-#include "prints.h"
+#include <stdint.h>
 #include "usart0.h"
+#include "prints.h"
 
 /*
  ******************************************************************************
