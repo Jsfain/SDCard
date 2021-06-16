@@ -1,35 +1,47 @@
-# SD Card Module - SPI Mode
-Module for accessing and controling an SD Card in SPI mode, intended for use with a microcontroller.
+# SD Card - SPI Mode
+Module for accessing and controling an SD Card in SPI mode.
 
-**Note**: the original intent is to use it running against an ATMega1280 AVR microcontroller's SPI port, though it should be easily extensible to operate against other microcontroller types, AVR and non-AVR, though this has not been tested. This will be discussed briefly later.  
+
+## Who can use
+Anyone.
+
+## How to use
+ * The source and header files contain descriptions of each function available and how to use them.
+ * If using against an AVR ATMega1280 target then simply clone/copy the repo, compile / build, and download to the AVR. 
+ * If **NOT** using an AVR ATMega1280 then it will be necessary to either modify, or replace, the IO-specific files that have been included in the repo (AVR_SPI and AVR_USART), to support the specified target.
+
 
 ## Purpose
-This project was something I worked on during quarantine. It's purpose was to establish a set of functions for accessing and controlling an SD card operating in SPI mode using a microcontroller. The capabilities provided in the files included in this module are intended to provide functionality for standalone raw data access, but it can easily be implemented as a disk access layer of a File System driver. 
+The purpose of this project was to establish a set of functions for accessing and controlling an SD card operating in SPI mode using a microcontroller. The capabilities provided in the files included in this module are intended to provide functionality for standalone raw data access, but the files in this module could be directly implemented as a disk access layer within a File System driver.
 
-The image below shows the results from a raw data block read and print. This is done by using the sd_ReadSingleBlock function to read a specified block into an array, and then passing the block array to the sd_PrintSingleBlock function. This particular image is the raw data contents of the first block of the root directory in a FAT32 volume.
+As a simple demo of its capabilities, the image below shows the results from a raw data block read and print. This is done by using the sd_ReadSingleBlock function to read a specified block into an array, and then passing the block array to the sd_PrintSingleBlock function. This particular image shows the raw data contents of the first block of the root directory in a FAT32 volume.
 
-![alt text](https://github.com/Jsfain/AVR-SDCard/blob/master/images/printSingleBlock.png)
+![alt text](https://github.com/Jsfain/SDCard/blob/master/images/printSingleBlock.png)
 
 images/printSingleBlock.png
+
+### NOTE on portability 
+The original intent of this module was for SD Card access using an **ATMega1280 AVR microcontroller**. However, any AVR-specific functionality is handled entirely within AVR IO port access files found under ***avrio*** within this repo. These IO files include **AVR_SPI** and **AVR_USART**, and are not considered part of the SD card module, but are maintained in [AVR-GEN](https://github.com/Jsfain/AVR-General). As such, it should be straightforward to implement the SD Card module to operate against other target devices, so long as the specific functionality of the AVR_SPI and AVR_USART files is handled and included. This will be discussed in more detail below under the section ***Portability Considerations (not yet written)***
+
 ## Technology
-* TARGET     : ATmega1280. Portable to other AVR targets with correct PORT reassignments, provided sufficient resources available.
-* LANGUAGE   : C
-* COMPILER   : AVR-GCC 9.3.0
-* DOWNLOADER : AVRDUDE 6.3
+* LANGUAGE      : C
+* TARGET(S)     : ATmega1280 - only target tested. 
+* COMPILER(S)   : AVR-GCC 9.3.0
+* DOWNLOADER(S) : AVRDUDE 6.3
 * Compiler and downloader used were available with the [AVR-Toolchain from Homebrew](https://github.com/osx-cross/homebrew-avr).
 * SD card SPI mode functionality was implemented according to the *SD Specifications Part 1: Physical Layer Specification - Simplified Specification Version 7.10*
 
 
-## Overview
+## Overview of Repo Contents
 There are multiple source/header files included as part of this SD Card module. Only *SD_SPI_BASE.C(H)* is required, which will include SD_SPI_CAR.H. The source/header files are listed below, with brief descriptions, in order of precendence. See the files themselves for full definitions regarding each of the available functions, structs, macros, etc... 
 
 ### SD Card Module Files
 1. **SD_SPI_BASE.C(H)** - *REQUIRED*
-    * These source/header files are the only ones required to implement the module.
+    * These source/header files are the only ones required to implement the module; provided SPI and USART functionality is being properly handled.
     * These files implement the basic functions required to interact with the SD card in SPI mode. In particular they implement the SD card's SPI mode initialization function, ***sd_InitModeSPI***, as well as implement the functions required by the initialization function, such as *sd_SendByteSPI*, *sd_ReceiveByteSPI*, *sd_SendCommand*, etc... 
     * Additionally, also provided in these files are some error printing functions for interpreting the output of R1 responses and the initialization routine.
     * SD_SPI_BASE.H will include SD_SPI_CAR.H which provides macro definitions for the SD card (C)ommands, (A)rguments, and (R)esponses available when operating in SPI mode. 
-    * See the *SD_SPI_BASE* files for the full descriptions of the structs, functions, and macros available.
+    * See the *SD_SPI_BASE* files for more detailed descriptions of the specific structs, functions, and macros available.
 
 2. **SD_SPI_RWE.C(H)** - (R)ead/(W)rite/(E)rase
     * Requires SD_SPI_BASE.
@@ -45,20 +57,15 @@ There are multiple source/header files included as part of this SD Card module. 
     * Currently these include multi-block read, write, and print functions, card capacity calculation functions, and others.
     * See the *SD_SPI_MISC* files for the full descriptions of the structs, functions, and macros available.
 
-### Additional Required Files
+### Helper Files
+1. PRINTS.H(C)     : this is simply a file used to print integers (decimal, hex, binary) and strings to the screen via a UART. It is platform independent, and here uses AVR_USART.C(H) for all USART functionality.
+
+### IO Files
 The following source/header files are also required by the module, and thus included in the repository but they are maintained in [AVR-General](https://github.com/Jsfain/AVR-General.git)
 
-1. SPI.C(H)     : required to interface with the AVR's SPI port used for the physical sending/receiving of data to/from the SD card.
-2. USART0.C(H)   : required to interface with the AVR's USART port used to print messages and data to a terminal.
-3. PRINTS.H(C)  : required to print integers (decimal, hex, binary) and strings to the screen via the USART.
+1. AVR_SPI.C(H)    : required to interface with the AVR's SPI port used for the physical sending/receiving of data to/from the SD card.
+2. AVR_USART.C(H)  : required to interface with the AVR's USART port used to print messages and data to a terminal.
 
-#### additional comments:
-The SD_SPI_XXXX files do not implement anything that directly interacts with the ATMega1280 AVR microcontroller, but instead use the SPI.C(H) and USART0.C(H) files for all interaction. As such, if a different target is desired, then you would only need to ensure that the SPI and USART transmit and receive functions are implemented to behave similarly to those functions in the SPI and USART files included here. Additionally, the SD_SPI_XXXX files only utilize the USART through the PRINTS.H(C) and do not call any usart transmit \ receive functions directly. It should be fairly simple to implement this against a variety of microcontrollers, but that said it has only been tested with the ATMega1280.
-
-
-## How to use
- * Clone the repo or copy the required files, then compile, build, and download to the AVR using your preferred method (Atmel Studio, AVR Toolchain, etc...). 
- * The source and header files contain descriptions of each function available and how to use them.
 
  ### SD_TEST.C
  * A test file, *SD_TEST.C*, is probably the best way to understand how to implment the functions in the module. This file contains main(), and includes several examples of implementing the various functions and capabilities available in the module.
@@ -67,8 +74,8 @@ The SD_SPI_XXXX files do not implement anything that directly interacts with the
  * Below is an example of the initialization steps, similar to that implemented in *SD_TEST.C*. This, again, must always be implemented in main() prior to using any other parts of the AVR-SD Card module. 
 
 ### Initialization:
-When writing a program to implement the AVR-SD Card module, the following must occur before anything else:
-  1. Initialize USART0 with ***usart_Init()*** - *Required for any print functions.*
+When writing a program to implement the SD Card module, the following must occur before anything else:
+  1. Initialize USART with ***usart_Init()*** - *Required for any print functions.*
   2. Create an instance of a CTV struct (i.e. (C)ard (T)ype (V)ersion).
   3. Initialize the SD Card into SPI mode by calling ***sd_InitModeSPI(&ctv)*** - Pass a pointer of the CTV instance to the initialization routine, which will set its members to their correct values.
     * The SPI port will be initialized by the  ***spi_MasterInit()*** function which is called from this SD initialization function - *Required for master mode communincation on the SPI port.*
@@ -101,14 +108,11 @@ int main(void)
 ```
 
  ### Additional Comments
- * A *MAKE.SH* file is included for reference to see how I built the module from the source files and downloaded it to an ATmega1280 AVR target. The make file would primarily be useful for non-Windows users without access to Atmel Studio. Windows users should be able to just build/download the module from the source/header files using Atmel Studio (though I have not used this).
-
-## Who can use
-Anyone.
+ * A *MAKE.SH* file is included for reference only, to see how I built the module from the source files and downloaded it to an ATmega1280 AVR target. The make file would primarily be useful for non-Windows users without access to Atmel Studio. Windows users should be able to just build/download the module from the source/header files using Atmel Studio (though I have not used this).
 
 
 ## License
-[GNU GPLv3](https://github.com/Jsfain/AVR-SDCard/blob/master/LICENSE)
+[GNU GPLv3](https://github.com/Jsfain/SDCard/blob/master/LICENSE)
 
 
 ## Warnings / Disclaimers

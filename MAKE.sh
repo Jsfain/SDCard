@@ -3,11 +3,14 @@ clear
 #directory to store build/compiled files
 buildDir=../untracked/build
 
-#directory for avr-sdcard source files
+#directory for sdcard source files
 sdDir=source/sd
 
 #directory for avr-general source files
-genDir=source/gen
+ioDir=source/avrio
+
+#directory for helper source files
+hlprDir=source/hlpr
 
 #directory for test files
 testDir=test
@@ -18,13 +21,13 @@ mkdir -p -v $buildDir
 
 t=0.25
 # -g = debug, -Os = Optimize Size
-Compile=(avr-gcc -Wall -g -Os -I "includes/sd" -I "includes/gen" -DF_CPU=16000000 -mmcu=atmega1280 -c -o)
+Compile=(avr-gcc -Wall -g -Os -I "includes/sd" -I "includes/avrio" -I "includes/hlpr" -DF_CPU=16000000 -mmcu=atmega1280 -c -o)
 Link=(avr-gcc -Wall -g -mmcu=atmega1280 -o)
 IHex=(avr-objcopy -j .text -j .data -O ihex)
 
 
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/avr_usart.o" $genDir"/avr_usart.c"
-"${Compile[@]}" $buildDir/avr_usart.o $genDir/avr_usart.c
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/avr_usart.o" $ioDir"/avr_usart.c"
+"${Compile[@]}" $buildDir/avr_usart.o $ioDir/avr_usart.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
@@ -37,8 +40,8 @@ else
 fi
 
 
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/prints.o" $genDir"/prints.c"
-"${Compile[@]}" $buildDir/prints.o $genDir/prints.c
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/prints.o" $hlprDir"/prints.c"
+"${Compile[@]}" $buildDir/prints.o $hlprDir/prints.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
@@ -51,8 +54,8 @@ else
 fi
 
 
-echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/avr_spi.o" $genDir"/avr_spi.c"
-"${Compile[@]}" $buildDir/avr_spi.o $genDir/avr_spi.c
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/avr_spi.o" $ioDir"/avr_spi.c"
+"${Compile[@]}" $buildDir/avr_spi.o $ioDir/avr_spi.c
 status=$?
 sleep $t
 if [ $status -gt 0 ]
