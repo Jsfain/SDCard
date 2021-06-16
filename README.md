@@ -1,5 +1,5 @@
 # SD Card - SPI Mode
-Module for accessing and controling an SD Card in SPI mode.
+Module for accessing and controlling an SD Card in SPI mode.
 
 
 ## Who can use
@@ -8,11 +8,10 @@ Anyone.
 ## How to use
  * The source and header files contain descriptions of each function available and how to use them.
  * If using against an AVR ATMega1280 target then simply clone/copy the repo, compile / build, and download to the AVR. 
- * If **NOT** using an AVR ATMega1280 then it will be necessary to either modify, or replace, the IO-specific files that have been included in the repo (AVR_SPI and AVR_USART), to support the specified target.
-
+ * If **NOT** using an AVR ATMega1280 then it will be necessary to either modify, or replace, the IO-specific files that have been included in the repo (AVR_SPI and AVR_USART), to support the target.
 
 ## Purpose
-The purpose of this project was to establish a set of functions for accessing and controlling an SD card operating in SPI mode using a microcontroller. The capabilities provided in the files included in this module are intended to provide functionality for standalone raw data access, but the files in this module could be directly implemented as a disk access layer within a File System driver.
+The purpose of this project was to establish a set of functions for accessing and controlling an SD card operating in SPI mode using a microcontroller. The capabilities provided by the files included in this module are intended to for standalone raw data access of an SD card, but the files in this module could be directly implemented as a disk access layer within a File System driver.
 
 As a simple demo of its capabilities, the image below shows the results from a raw data block read and print. This is done by using the sd_ReadSingleBlock function to read a specified block into an array, and then passing the block array to the sd_PrintSingleBlock function. This particular image shows the raw data contents of the first block of the root directory in a FAT32 volume.
 
@@ -20,8 +19,6 @@ As a simple demo of its capabilities, the image below shows the results from a r
 
 images/printSingleBlock.png
 
-### NOTE on portability 
-The original intent of this module was for SD Card access using an **ATMega1280 AVR microcontroller**. However, any AVR-specific functionality is handled entirely within AVR IO port access files found under ***avrio*** within this repo. These IO files include **AVR_SPI** and **AVR_USART**, and are not considered part of the SD card module, but are maintained in [AVR-GEN](https://github.com/Jsfain/AVR-General). As such, it should be straightforward to implement the SD Card module to operate against other target devices, so long as the specific functionality of the AVR_SPI and AVR_USART files is handled and included. This will be discussed in more detail below under the section ***Portability Considerations (not yet written)***
 
 ## Technology
 * LANGUAGE      : C
@@ -109,6 +106,21 @@ int main(void)
 
  ### Additional Comments
  * A *MAKE.SH* file is included for reference only, to see how I built the module from the source files and downloaded it to an ATmega1280 AVR target. The make file would primarily be useful for non-Windows users without access to Atmel Studio. Windows users should be able to just build/download the module from the source/header files using Atmel Studio (though I have not used this).
+
+
+## Portability Considerations
+The original intent of this module was for SD Card access using an **ATMega1280 AVR microcontroller**. However, any of the AVR-specific functionality is handled entirely within the AVR IO port access files found under ***avrio*** within this repo. These IO files, **AVR_SPI** and **AVR_USART**, are not considered part of the SD card module, but are maintained in [AVR-GEN](https://github.com/Jsfain/AVR-General). As such, it should be straightforward to implement the SD Card module to operate against other target devices, so long as the specific functionality of the AVR_SPI and AVR_USART files is handled and included. This section is meant to provide the details on what needs to be addressed for portability to another target:
+
+For SPI IO the the SPI-specific pin/port assignments must be made, as found in ***AVR_SPI.H***
+
+For SPI IO the following functions must be implemented, as found in ***AVR_SPI.H/C***:
+  1. spi_MasterInit
+  2. spi_MasterReceive
+  3. spi_MasterTransmit
+
+For USART / UART IO the following functions must be implemented, as found in ***AVR_USART.H/C***:
+  1. usart_Receive
+  2. usart_Transmit
 
 
 ## License
