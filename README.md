@@ -109,7 +109,7 @@ int main(void)
 
 
 ## Portability Considerations
-The original intent of this module was for SD Card access using an **ATMega1280 AVR microcontroller**. However, any of the AVR-specific functionality is handled entirely within the AVR IO port access files found under ***avrio*** within this repo. These IO files, **AVR_SPI** and **AVR_USART**, are not considered part of the SD card module, but are maintained in [AVR-GEN](https://github.com/Jsfain/AVR-General). As such, it should be straightforward to implement the SD Card module to operate against other target devices, so long as the specific functionality of the AVR_SPI and AVR_USART files is handled and included. This section is meant to provide the details on what needs to be addressed for portability to another target:
+The original intent of this module was for SD Card access using an **ATMega1280 AVR microcontroller**. However, any of the AVR-specific functionality is handled entirely within the AVR IO port access files found under ***avrio*** within this repo. These IO files, **AVR_SPI** and **AVR_USART**, are not considered part of the SD card module, but are maintained in [AVR-GEN](https://github.com/Jsfain/AVR-General). As such, it should be straightforward to implement the SD Card module to operate against other target devices, so long as the similar functionality to what is found in the AVR_SPI and AVR_USART files is handled and included. This section is meant to provide some details on what needs to be addressed for portability to another target, however note that this has not been tested on any other targets, so there may be other changes required that are currently not known:
 
 For SPI IO the the SPI-specific pin/port assignments must be made, as found in ***AVR_SPI.H***
 
