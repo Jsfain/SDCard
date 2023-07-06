@@ -12,7 +12,7 @@ images/printSingleBlock.png
 
 
 ## Who can use
-Anyone.
+Anyone
 
 ## How to use
  * The source and header files contain the descriptions of each function available and how to use them.
