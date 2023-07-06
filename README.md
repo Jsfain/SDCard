@@ -1,23 +1,21 @@
 # SD Card - SPI Mode
 Module for accessing and controlling an SD Card in SPI mode.
 
+## Purpose
+This module was developed to establish a set of functions for accessing and controlling an SD Card in SPI mode using an SPI-capable microcontroller. The capabilities provided allow for executing any of the SPI-specific SD card commands. As such, this module could be used as a stand-alone SD card driver for raw data access or implemented as a disk access layer under a file system driver.
+
+As a simple example of its use, the image below shows the results of a raw data block read and print. This is done using **sd_ReadSingleBlock** function to read the specified block into an array, then calling the **sd_PrintSingleBlock** function. The  image below shows the raw data contents of the first block of the root directory in a FAT32 volume.
+
+![alt text](https://github.com/Jsfain/SDCard/blob/master/images/printSingleBlock.png)
+
+images/printSingleBlock.png
 ## Who can use
 Anyone.
 
 ## How to use
  * The source and header files contain descriptions of each function available and how to use them.
- * If using against an AVR ATMega1280 target then simply clone/copy the repo, compile / build, and download to the AVR. 
- * If **NOT** using an AVR ATMega1280 then it will be necessary to either modify, or replace, the IO-specific files that have been included in the repo (AVR_SPI and AVR_USART), to support the desired target. See the ***Portability Considerations*** section below.
-
-## Purpose
-The purpose of this module is to establish a set of functions for accessing and controlling an SD card operating in SPI mode using a microcontroller, and the capabilities provided allow for executing any of the SPI-specific SD card commands. As such, this module could be used as a stand-alone SD card driver for raw data access or implemented as a disk access layer under a file system driver.
-
-As a simple demo of its capabilities, the image below shows the results from a raw data block read and print. This is done by using the sd_ReadSingleBlock function to read a specified block into an array, and then passing the block array to the sd_PrintSingleBlock function. This particular image shows the raw data contents of the first block of the root directory in a FAT32 volume.
-
-![alt text](https://github.com/Jsfain/SDCard/blob/master/images/printSingleBlock.png)
-
-images/printSingleBlock.png
-
+ * If using against an AVR ATMega1280 target then simply clone/copy the repo, compile / build, and download to the microcontroller. 
+ * If **NOT** using an AVR ATMega1280 then it will be necessary to either modify, or replace, the IO-specific files that have been included in the repo (AVR_SPI and AVR_USART), to support the desired target. See ***Portability Considerations*** section below.
 
 ## Technology
 * LANGUAGE      : C
