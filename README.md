@@ -2,13 +2,15 @@
 Module for accessing and controlling an SD Card in SPI mode.
 
 ## Purpose
-This module was developed to establish a set of functions for accessing and controlling an SD Card in SPI mode using an SPI-capable microcontroller. The capabilities provided allow for executing any of the SPI-specific SD card commands. As such, this module could be used as a stand-alone SD card driver for raw data access or implemented as a disk access layer under a file system driver.
+This module was developed to establish a set of functions for accessing and controlling an SD Card in SPI mode using an SPI-capable microcontroller. The capabilities provided in this module allow for executing any of the SPI-specific SD card commands. As such, this module could be used as a stand-alone SD card driver for raw data access or implemented as a disk access layer under a file system driver.
 
-As a simple example of its use, the image below shows the results of a raw data block read and print. This is done using **sd_ReadSingleBlock** function to read the specified block into an array, then calling the **sd_PrintSingleBlock** function. The  image below shows the raw data contents of the first block of the root directory in a FAT32 volume.
+As a simple example of its use, the image below shows the results of a raw data block read and print. This is done using the ***sd_ReadSingleBlock*** function to read the specified data block into an array, then calling the ***sd_PrintSingleBlock*** function. The image below is of the raw data contents of the first block of the root directory in a FAT32 volume.
 
 ![alt text](https://github.com/Jsfain/SDCard/blob/master/images/printSingleBlock.png)
 
 images/printSingleBlock.png
+
+
 ## Who can use
 Anyone.
 
