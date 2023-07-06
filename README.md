@@ -15,8 +15,8 @@ images/printSingleBlock.png
 Anyone.
 
 ## How to use
- * The source and header files contain descriptions of each function available and how to use them.
- * If using against an AVR ATMega1280 target then simply clone/copy the repo, compile / build, and download to the microcontroller. 
+ * The source and header files contain the descriptions of each function available and how to use them.
+ * If using against an AVR ATMega1280 target, simply clone/copy the repo, compile/build, and then download to the microcontroller. 
  * If **NOT** using an AVR ATMega1280 then it will be necessary to either modify, or replace, the IO-specific files that have been included in the repo (AVR_SPI and AVR_USART), to support the desired target. See ***Portability Considerations*** section below.
 
 ## Technology
