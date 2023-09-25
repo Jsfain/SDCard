@@ -3,28 +3,37 @@
  * Version    : 3.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020, 2021
+ * Copyright (c) 2020 - 2023
  * 
- * PRINST.C defines for some print functions used to print strings and unsigned
- * integers. The unsigned integers can be printed in decimal, binary, and hex 
- * formats. This is the implementation for PRINTS.H.
+ * Description: Implements PRINTS.H. These functions can be used to print 
+ *              unsigned integers (decimal, binary, hex) and C-strings. 
+ * 
+ * NOTE on TRANSMIT FUNCTION:
+ * Each print function operates by sending a single character at a time to the
+ * static transmit function in this file. From within this function, the user 
+ * will need to specify an appropriate I/O transmit (e.g. USART transmit) 
+ * function to be called that will perform the action of printing the single 
+ * char argument to the output device (e.g. terminal). Ensure this function
+ * has been included as well.
  */
 
 #include <stdint.h>
-#include "avr_usart.h"
 #include "prints.h"
 
-// Maximum character lengths for 32-bit numbers in different forms.
-#define DEC_CHAR_LEN_MAX   10
-#define HEX_CHAR_LEN_MAX   8
-#define BIN_CHAR_LEN_MAX   32
+// include file to implement char I/O transmit function
+#include "avr_usart.h"
 
-//
-// The digits in a binary number are printed in groups of this many chars
-// which are separated by spaces. Set this value >= BIN_CHAR_LEN_MAX if no 
-// spaces should be printed.
-//
-#define BIN_CHARS_GRP_SIZE    4           
+/*
+ ******************************************************************************
+ *                             "PRIVATE" FUNCTIONS 
+ ******************************************************************************
+ */
+
+// SEE NOTE AT TOP
+static void transmit(char val)
+{
+  usart_Transmit(val); // implement transmit via USART
+}
 
 /*
  ******************************************************************************
@@ -32,9 +41,10 @@
  ******************************************************************************
  */
 
+
 /*
  * ----------------------------------------------------------------------------
- *                            PRINT UNSIGNED DECIMAL (BASE-10) FORM OF INTEGERS 
+ *                             PRINT UNSIGNED DECIMAL (BASE-10) FORM OF INTEGER 
  * 
  * Description : Prints unsigned decimal integer form of argument.
  * 
@@ -49,7 +59,7 @@ void print_Dec(uint32_t num)
 
   //
   // 1) Load last digit (remainder) of num into array when divided by radix.
-  // 2) Update the value of the num by dividing itself by radix.
+  // 2) Update the value of num by dividing itself by radix.
   // 3) Repeat until number is 0. 
   // Note: The array is loaded in reverse order.
   //
@@ -59,12 +69,12 @@ void print_Dec(uint32_t num)
     num /= radix; 
   }
 
-  // print digits.
+  // print digits
   if (digitCnt == 0)
-    usart_Transmit('0');
+    transmit('0');
   else
     for (--digitCnt; digitCnt >= 0; digitCnt--)
-      usart_Transmit(digit[digitCnt]);
+      transmit(digit[digitCnt]);
 }
 
 /*
@@ -76,7 +86,7 @@ void print_Dec(uint32_t num)
  * Argument    : num   - Unsigned decimal integer to be printed to screen.
  * 
  * Notes       : 1) The function will only print the number of bits required.
- *               2) A space will be print between every BIN_CHARS_GRP_SIZE 
+ *               2) A space will be printed between every BIN_CHARS_GRP_SIZE 
  *                  group of digits to make it more easily readable.
  * ----------------------------------------------------------------------------
  */
@@ -100,13 +110,13 @@ void print_Bin(uint32_t num)
 
   // print digits.
   if (digitCnt == 0)
-    usart_Transmit('0');
+    transmit('0');
   else
     for (--digitCnt; digitCnt >= 0; digitCnt--)
     {
-      usart_Transmit(digit[digitCnt]);
+      transmit(digit[digitCnt]);
       if (digitCnt % BIN_CHARS_GRP_SIZE == 0)         // print a space ?
-        usart_Transmit(' ');
+        transmit(' ');
     }
 }
 
@@ -145,10 +155,10 @@ void print_Hex(uint32_t num)
 
   // print digits.
   if (digitCnt == 0)
-    usart_Transmit('0');
+    transmit('0');
   else
     for (--digitCnt; digitCnt >= 0; digitCnt--)
-      usart_Transmit(digit[digitCnt]);
+      transmit(digit[digitCnt]);
 }    
 
 /*
@@ -160,14 +170,14 @@ void print_Hex(uint32_t num)
  * Argument    : str   - Pointer to a null-terminated char array (i.e. string)
  *                       that will be printed to the screen.
  * 
- * Warning     : There is currently no limit on the length of the string but
- *               if the array is not null-terminiated then it will loop until
- *               without bounds, until it happens to hit a null in memory.
+ * Warning     : There is currently no limit on the length of the string, but
+ *               if the array is not null-terminiated then it will loop
+ *               continuously until it happens to hit a null in memory.
  * ----------------------------------------------------------------------------
  */
 void print_Str(char *str)
 {
   for (; *str; str++)
-    usart_Transmit(*str);
+    transmit(*str);
 }
 
