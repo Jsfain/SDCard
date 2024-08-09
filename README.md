@@ -1,7 +1,8 @@
 # SD Card - SPI Mode
 Module for accessing and controlling an SD Card in SPI mode. 
 
-**Note on Portability** :  This SD Card module is intended to work with the SPI port on an ATMega1280 AVR microcontroller. See ***Portability Considerations*** below for more details on using against other targets.
+**Note on Portability** :  This SD Card module is intended to work with the SPI port on an ATMega1280 AVR microcontroller. See the *Portability Considerations* section below for more details on using against other targets.
+
 
 ## Purpose
 This module was developed to establish a set of functions for accessing and controlling an SD Card in SPI mode using an SPI-capable microcontroller. The capabilities provided in this module allow for executing any of the SPI-specific SD card commands. As such, this module could be used as a stand-alone SD card driver for raw data access or implemented as a disk access layer under a file system driver.
