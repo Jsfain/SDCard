@@ -1,7 +1,7 @@
 # SD Card - SPI Mode
 Module for accessing and controlling an SD Card in SPI mode. 
 
-### Note on Portability
+**Note on Portability**
 This SD Card module is intended to work with the SPI port on an ATMega1280 AVR microcontroller. However, any of the AVR-specific functionality, is handled entirely within the AVR IO port access files found under AVRIO within this repo. These IO files, AVR_SPI and AVR_USART are maintained in [AVR-IO](https://github.com/Jsfain/AVR-IO). As such, it should be straightforward to implement the SD Card module to operate against other target devices, ensuring the few SPI- and USART-specific macros and functions required are included. AVR_SPI is included by SD_SPI_BASE and AVR_USART is included by PRINTS helper and is only necessary if using any of the printing functions. See the SD_SPI_BASE and the PRINTS files for specific details.
 
 ## Purpose
