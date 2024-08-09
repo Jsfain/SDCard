@@ -3,11 +3,9 @@
  * Version    : 1.0 
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020, 2021
+ * Copyright (c) 2020 - 2024
  * 
- * Interface for some functions that implement SD Card single-block read/print, 
- * write, and multi-block erase by calling the necessary SD commands provided
- * in SD_SPI_CMDS.H. These functions require SD_SPI_BASE.H/C.
+ * Interface for SD Card single-block (R)ead, (W)rite and multi-block (E)rase.
  */
 
 #ifndef SD_SPI_RWE_H
@@ -21,20 +19,10 @@
 
 /* 
  * ----------------------------------------------------------------------------
- *                                                   ASCII PRINTABLE CHAR RANGE
- *
- * Description : These are used to define the printable ascii char range.
- * ----------------------------------------------------------------------------
- */
-#define ASCII_PRINT_CHAR_FIRST         32
-#define ASCII_PRINT_CHAR_LAST          127
-
-/* 
- * ----------------------------------------------------------------------------
  *                                                            START BLOCK TOKEN
  *
- * Description : Token sent by the SD card to signal it is ready to 
- *               send/receive data for a block read/write.
+ * Description : Token sent by the SD card to signal it is ready to send or
+ *               receive data for a block read/write.
  * ----------------------------------------------------------------------------
  */
 #define START_BLOCK_TKN                0xFE
@@ -45,10 +33,10 @@
  *
  * Description : Used for data responses during a write operation. These tokens
  *               are sent by the SD card to indicate whether the data was
- *               accepted for write, or an error occurred. The mask is used to
- *               filter the token from the rest of the bytes since the byte 
- *               containing the token will has the form - XXX0TTT1, where the 
- *               X's are don't care, and the T's are the token bits. 
+ *               accepted for write or an error occurred. The returned byte 
+ *               containing the response token is of the form - XXX0TTT1, where 
+ *               X's are 'don't cares', and T's are token bits. The mask
+ *               filters the response to extract the token.
  * ----------------------------------------------------------------------------
  */
 #define DATA_ACCEPTED_TKN              0x05
@@ -60,8 +48,8 @@
  * ----------------------------------------------------------------------------
  *                                                                R1 ERROR FLAG
  *
- * Description : Flag used to indicate a functions's returned value contains an
- *               error in the R1 response portion.
+ * Description : Flag used to indicate a functions's returned error is the R1 
+ *               response and not one of the other errors defined here.
  * ----------------------------------------------------------------------------
  */
 #define R1_ERROR                       0x8000
@@ -70,67 +58,48 @@
  * ----------------------------------------------------------------------------
  *                                                       READ BLOCK ERROR FLAGS
  *
- * Description : Flags returned by READ block functions,
- *               e.g. sd_ReadSingleBlock.
- * 
- * Notes       : The lower byte is reserved for the R1 Response Flags; see
- *               SD_SPI_BASE.H. 
+ * Description : non-R1 response flags returned by READ block functions.
  * ----------------------------------------------------------------------------
  */
-#define START_TOKEN_TIMEOUT            0x0200
-#define READ_SUCCESS                   0x0400
+#define READ_SUCCESS                   0x01
+#define START_TOKEN_TIMEOUT            0x02
+
 
 /* 
  * ----------------------------------------------------------------------------
  *                                                      WRITE BLOCK ERROR FLAGS
  *
- * Description : Flags returned by WRITE block functions, 
- *               e.g. sd_WriteSingleBlock().
- * 
- * Notes       : The lower byte is reserved for the R1 Response Flags; see
- *               SD_SPI_BASE.H. 
+ * Description : non-R1 response flags returned by WRITE block functions.
  * ----------------------------------------------------------------------------
  */
-#define DATA_WRITE_SUCCESS             0x0100
-#define CRC_ERROR_TKN_RECEIVED         0x0200
-#define WRITE_ERROR_TKN_RECEIVED       0x0400
-#define INVALID_DATA_RESPONSE          0x0800
-#define DATA_RESPONSE_TIMEOUT          0x1000
-#define CARD_BUSY_TIMEOUT              0x2000
+#define WRITE_SUCCESS                  0x01
+#define CRC_ERROR_TKN_RECEIVED         0x02
+#define WRITE_ERROR_TKN_RECEIVED       0x04
+#define INVALID_DATA_RESPONSE          0x08
+#define DATA_RESPONSE_TIMEOUT          0x10
+#define CARD_BUSY_TIMEOUT              0x20
 
 /* 
  * ----------------------------------------------------------------------------
  *                                                      ERASE BLOCK ERROR FLAGS
  *
- * Description : Flags returned by ERASE block functions, 
- *               e.g. sd_eraseSingleBlock().
+ * Description : non-R1 response flags returned by ERASE functions.
  * 
- * Notes       : The lower byte is reserved for the R1 Response Flags; see
- *               SD_SPI_BASE.H. 
+ * Notes       : The lower byte is reserved for the R1 Response Flags (see
+ *               SD_SPI_BASE.H).
  * ----------------------------------------------------------------------------
  */
-#define ERASE_SUCCESSFUL               0x0000
-#define SET_ERASE_START_ADDR_ERROR     0x0100
-#define SET_ERASE_END_ADDR_ERROR       0x0200
-#define ERASE_ERROR                    0x0400
-#define ERASE_BUSY_TIMEOUT             0x0800
+#define ERASE_SUCCESS                  0x0100
+#define SET_ERASE_START_ADDR_ERROR     0x0200
+#define SET_ERASE_END_ADDR_ERROR       0x0400
+#define ERASE_ERROR                    0x0800
+#define ERASE_BUSY_TIMEOUT             0x1000
 
 /*
  ******************************************************************************
  *                               FUNCTIONS   
  ******************************************************************************
  */
-
-/*
- * For the following read, write, and erase block functions, the returned error
- * response values can be read by their corresponding print error function. For
- * example, the returned value of sd_ReadSingleBlock() can be read by passing
- * it to sd_PrintReadError(). These print functions will read the upper byte of
- * of the returned error response. If in the error response the R1_ERROR flag 
- * is set in the upper byte, then the lower byte (i.e. the R1 Response portion
- * of the error response) contains at least one flag that has been set which 
- * should then be read by passing it to sd_printR1() in SD_SPI_BASE. 
- */ 
 
 /*
  * ----------------------------------------------------------------------------
@@ -141,31 +110,16 @@
  * Arguments   : blckAddr   - address of the data block on the SD card that    
  *                            will be read into the array.
  *               blckArr    - pointer to the array to be loaded with the       
- *                            contents of the data block at blckAddr. Must be  
- *                            length BLOCK_LEN.
+ *                            contents of the data block at blckAddr. The array
+ *                            must be length BLOCK_LEN.
  * 
- * Returns     : Read Block Error (upper byte) and R1 Response (lower byte).   
+ * Returns     : If an R1 error occurs when sending the READ command the 
+ *               returned response is the R1 error and the R1_ERROR 
+ *               flag is set to indicate this. If no R1 error occurs, the 
+ *               function returns one of the READ BLOCK ERROR flags.   
  * ----------------------------------------------------------------------------
  */
 uint16_t sd_ReadSingleBlock(uint32_t blckAddr, uint8_t blckArr[]);
-
-/*
- * ----------------------------------------------------------------------------
- *                                                           PRINT SINGLE BLOCK
- * 
- * Description : Prints the contents of a single SD card data block to the 
- *               screen, previously loaded into an array by sd_ReadSingleBlock. 
- *               The block's contents will be printed to the screen in rows of
- *               16 bytes, columnized as (Addr)OFFSET | HEX | ASCII.
- * 
- * Arguments   : blckArr   - pointer to an array holding the contents of the 
- *                           block to be printed to the screen. Must be of 
- *                           length BLOCK_LEN.
- * 
- * Returns     : void
- * ----------------------------------------------------------------------------
- */
-void sd_PrintSingleBlock(const uint8_t blckArr[]);
 
 /*
  * ----------------------------------------------------------------------------
@@ -179,7 +133,10 @@ void sd_PrintSingleBlock(const uint8_t blckArr[]);
  *                            that will be written to the block at blckAddr on
  *                            the SD card. Must be of length BLOCK_LEN.
  * 
- * Returns     : Write Block Error (upper byte) and R1 Response (lower byte).
+ * Returns     : If an R1 error occurs when sending the WRITE command, the 
+ *               returned response is the R1 error and the R1_ERROR 
+ *               flag is set to indicate this. If no R1 error occurs, the 
+ *               function returns one of the WRITE BLOCK ERROR flags.   
  * ----------------------------------------------------------------------------
  */
 uint16_t sd_WriteSingleBlock(uint32_t blckAddr, const uint8_t dataArr[]);
@@ -194,55 +151,13 @@ uint16_t sd_WriteSingleBlock(uint32_t blckAddr, const uint8_t dataArr[]);
  * Arguments   : startBlckAddr   - address of the first block to be erased.
  *               endBlckAddr     - address of the last block to be erased.
  * 
- * Returns     : Erase Block Error (upper byte) and R1 Response (lower byte).
+ * Returns     : Erase Block Error is returned in the upper byte and if an R1
+ *               response other OUT_OF_IDLE is returned by the SD card when
+ *               issuing one of the in this function, then the R1_ERROR flag is
+ *               also set and the lower byte will contain this R1 response.
  * ----------------------------------------------------------------------------
  */
 uint16_t sd_EraseBlocks(uint32_t startBlckAddr, uint32_t endBlckAddr);
 
-/*
- * If either of the three print error functions below show that the R1_ERROR 
- * flag was set in the error response that was passed to it, then the error 
- * response should also be passed to sd_PrintR1() from SD_SPI_BASE.H/C to read 
- * the R1 Error.
- */
-
-/*
- * ----------------------------------------------------------------------------
- *                                                             PRINT READ ERROR
- * 
- * Description : Print Read Error Flag returned by a SD card read function.  
- * 
- * Arguments   : err   - Read Error Response.
- * 
- * Returns     : void
- * ----------------------------------------------------------------------------
- */
-void sd_PrintReadError(uint16_t err);
-
-/*
- * ----------------------------------------------------------------------------
- *                                                            PRINT WRITE ERROR
- * 
- * Description : Print Write Error Flag returned by a SD card read function.  
- * 
- * Arguments   : err   - Write Error Response.
- * 
- * Returns     : void
- * ----------------------------------------------------------------------------
- */
-void sd_PrintWriteError(uint16_t err);
-
-/*
- * ----------------------------------------------------------------------------
- *                                                            PRINT ERASE ERROR
- * 
- * Description : Print Erase Error Flag returned by a SD card read function.  
- * 
- * Arguments   : err   - Erase Error Response.
- * 
- * Returns     : void
- * ----------------------------------------------------------------------------
- */
-void sd_PrintEraseError(uint16_t err);
 
 #endif // SD_SPI_RWE_H

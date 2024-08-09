@@ -19,9 +19,7 @@
 
 #include <stdint.h>
 #include "prints.h"
-
-// include file to implement char I/O transmit function
-#include "avr_usart.h"
+#include "avr_usart.h" // included here for transmit function
 
 /*
  ******************************************************************************
@@ -32,7 +30,7 @@
 // SEE NOTE AT TOP
 static void transmit(char val)
 {
-  usart_Transmit(val); // implement transmit via USART
+  usart_Transmit(val);
 }
 
 /*

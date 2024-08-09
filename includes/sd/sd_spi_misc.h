@@ -3,7 +3,7 @@
  * Version    : 1.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020, 2021
+ * Copyright (c) 2020 - 2024
  *
  * This is meant to be a catch-all for some misellaneous functions. Will 
  * require SD_SPI_BASE and SD_SPI_RWE to function.
@@ -261,7 +261,7 @@
 
 /* 
  * ----------------------------------------------------------------------------
- *                                                    FIND NON-ZERO DATA BLOCKS
+ *                                                     CARD CAPACITY CALCULATOR
  *                                        
  * Description : Gets the total byte capacity of the SD card and returns the 
  *               value. This function actually just operates to determine the

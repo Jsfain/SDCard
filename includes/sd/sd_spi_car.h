@@ -3,12 +3,12 @@
  * Version    : 1.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020, 2021
+ * Copyright (c) 2020 - 2024
  * 
- * Macro definitions for the SD Card Commands, Arguments, Responses
- * available in SPI mode, and some related macros.
+ * Macros for SD Card Commands, Arguments, Responses available in SPI mode,
+ * along with some other related macros.
  * 
- * This file should only be included using sd_spi_base.h
+ * This file should only be included from sd_spi_base.h
  */
 
 #ifndef SD_SPI_CAR_H
@@ -59,15 +59,15 @@
  */
 
 //
-// Some constant cmd args in the current implementation.
+// Some constant cmd args used in this current implementation.
 //
 
 //
 // SEND_IF_COND arguments
 //
-#define VOLT_RANGE_SUPPORTED  0x01 // 0x01 means supports 2.7 to 3.6V 
-#define CHECK_PATTERN         0xAA // arb val. sent to and retnd by SD card
-#define SEND_IF_COND_ARG  (VOLT_RANGE_SUPPORTED << 8) | CHECK_PATTERN
+#define VOLT_RANGE_SUPPORTED  0x01 // 0x01 supports 2.7 to 3.6V 
+#define CHECK_PATTERN         0xAA // arbitrary val. sent to/retnd by SD card
+#define SEND_IF_COND_ARG      (VOLT_RANGE_SUPPORTED << 8) | CHECK_PATTERN
 
 //
 // CRC_ON_OFF arguments
@@ -94,17 +94,17 @@
  * ----------------------------------------------------------------------------
  *                                                            R1 RESPONSE FLAGS
  * 
- * Description : Flags returned by sd_GetR1().
+ * Description : The R1 response flags returned by sd_GetR1().
  * 
  * Notes       : 1) With the exception of R1_TIMEOUT, these flags correspond to
  *                  the first byte returned by the SD card in response to any 
  *                  command.
  *               2) R1_TIMEOUT will be set in the sd_GetR1() return value if 
- *                  the SD card does not send an R1 response after set amount
- *                  of time.
+ *                  the card does not send an R1 response after set amount
+ *                  of attempts/time.
  * ----------------------------------------------------------------------------
  */
-#define OUT_OF_IDLE             0x00
+#define OUT_OF_IDLE             0x00        // no R1 error
 #define IN_IDLE_STATE           0x01
 #define ERASE_RESET             0x02
 #define ILLEGAL_COMMAND         0x04
@@ -118,11 +118,11 @@
  * ----------------------------------------------------------------------------
  *                                                                  R7 RESPONSE
  * 
- * Description : The R7 response is a 5 (8-bit) bytes long, returned by the SD
+ * Description : The R7 response is a 5 bytes long response returned by the SD 
  *               card in response to the SEND_IF_COND command (CMD8).
  * ----------------------------------------------------------------------------
  */
-#define R7_BYTE_LEN               5         // length of R7 response in bytes
+#define R7_BYTE_LEN               5         // byte length of R7 response
 
 // These are the order of the R7 response bytes returned by the SD card.
 #define R7_R1_RESP_BYTE           0

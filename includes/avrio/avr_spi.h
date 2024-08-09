@@ -1,17 +1,17 @@
 /*
  * File       : AVR_SPI.H
  * Version    : 1.0 
- * Target     : Default - ATMega1280
+ * Target     : ATMega1280
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020, 2021
+ * Copyright (c) 2020 - 2024
  * 
- * AVR_SPI.H provides the interface or accessing and controlling the ATMega 
- * microcontroller's SPI port.
+ * Description: Interface for setting and controlling the target AVR device's 
+ *              SPI port.
  */
 
-#ifndef SPI_H
-#define SPI_H
+#ifndef AVR_SPI_H
+#define AVR_SPI_H
 
 #include <avr/io.h>
 
@@ -35,6 +35,12 @@
 #define MOSI        PB2
 #define MISO        PB3
 
+// Common SPI operations. 
+#define SS_LO        SPI_PORT  = SPI_PORT & ~(1 << SS)  // set SS pin low
+#define SS_HI        SPI_PORT |= 1 << SS                // set SS pin high
+#define SS_DD_OUT    DDR_SPI  |= 1 << DD_SS             // set SS pin as output
+
+// Bit length of SPI data register
 #define SPI_REG_BIT_LEN      8
 
 /*
@@ -47,14 +53,14 @@
  * ----------------------------------------------------------------------------
  *                                         INITIALIZE SPI PORT INTO MASTER MODE
  * 
- * Description : Initialize the AVR's SPI port into master mode.
+ * Description : Initialize the target's SPI port into master mode.
  * 
  * Note        : If an application is using a different pin for Chip Select
  *               other than the SS pin of the AVR'S SPI port, then that
  *               application must define it and set the data direction to
- *               output. It should also ensure that the pin is deasserted prior
- *               to calling this function. This is to ensure that the device's
- *               SPI port is not active at the moment it is enabled on the AVR.
+ *               output. It should also ensure the pin is de-asserted prior to
+ *               calling this function so the device's SPI port will not be
+ *               active at the moment it is enabled on the AVR.
  * ----------------------------------------------------------------------------
  */
 void spi_MasterInit(void);
@@ -63,9 +69,9 @@ void spi_MasterInit(void);
  * ----------------------------------------------------------------------------
  *                                                             SPI RECEIVE BYTE
  *                                       
- * Description : Gets byte sent to the SPDR by an SPI connected device.  
- *
- * Returns     : byte received by the SPI port.
+ * Description : Gets byte sent to the SPDR from an SPI connected device.  
+ * 
+ * Returns     : byte received by the SPI port's data register (SPDR).
  * ----------------------------------------------------------------------------
  */
 uint8_t spi_MasterReceive(void);
@@ -76,9 +82,9 @@ uint8_t spi_MasterReceive(void);
  * 
  * Description : Sends a byte via the SPI port operating in master mode.
  * 
- * Arguments   : byte   - data byte to be sent via SPI.
+ * Arguments   : byte - data byte to be sent via SPI.
  * ----------------------------------------------------------------------------
  */
 void spi_MasterTransmit(uint8_t byte);
 
-#endif  //SPI_H
+#endif  //AVR_SPI_H

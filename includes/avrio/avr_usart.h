@@ -1,13 +1,13 @@
 /*
  * File       : AVR_USART.H
  * Version    : 1.0 
- * Target     : Default - ATMega1280
+ * Target     : ATMega1280
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020, 2021
+ * Copyright (c) 2020 - 2023
  * 
- * AVR_USART.H provides an interface for accessing and controlling a USART on 
- * the ATMega microcontroller.
+ * Description: Interface for accessing and controlling the USART on an AVR 
+ *              microcontroller.
  */
 
 #ifndef AVR_USART_H
@@ -20,11 +20,12 @@
  */
 
 #ifndef F_CPU
-#define F_CPU       16000000UL                   // default target clk freq.
+#define F_CPU       16000000UL                       // AVR target's clk freq.
 #endif //F_CPU
 
-#define BAUD        9600U                        // decimal baud rate
-#define UBRR_VALUE  ((F_CPU) / 16 / (BAUD) - 1)  // calculate value for UBRR
+#define BAUD        9600U                            // decimal baud rate
+#define ASYNC_MODE  16                               // Asynch normal mode
+#define UBRR_VALUE  (F_CPU / ASYNC_MODE / BAUD - 1)  // calculate UBRR. 
 
 /*
  *******************************************************************************
@@ -36,9 +37,7 @@
  * ----------------------------------------------------------------------------
  *                                                             INITIALIZE USART
  *                                        
- * Description : Initializes USART0 of the ATMega target device.
- * 
- * Arguments   : void 
+ * Description : Initialize USART on the AVR target device.
  * ----------------------------------------------------------------------------
  */
 void usart_Init(void);
@@ -46,13 +45,11 @@ void usart_Init(void);
 
 /*
  * ----------------------------------------------------------------------------
- *                                                           USART RECEIVE BYTE
+ *                                                                USART RECEIVE
  *                                         
- * Description : Receives a byte using the USART on the ATmega target device.
+ * Description : Receive a character via USART on the AVR target device.
  * 
- * Arguments   : void
- * 
- * Returns     : byte received by the USART, i.e. value in UDR0.
+ * Returns     : character received by the USART, i.e. value in UDR0.
  * ----------------------------------------------------------------------------
  */
 uint8_t usart_Receive(void);
@@ -60,11 +57,11 @@ uint8_t usart_Receive(void);
 
 /*
  * ----------------------------------------------------------------------------
- *                                                          USART TRANSMIT BYTE
+ *                                                               USART TRANSMIT
  *                                       
- * Description : Sends a byte to another device via the USART.
+ * Description : Sends a character via USART.
  * 
- * Arguments   : data   - byte to sent via USART.
+ * Arguments   : data - data to send via USART.
  * ----------------------------------------------------------------------------
  */
 void usart_Transmit(uint8_t data);
