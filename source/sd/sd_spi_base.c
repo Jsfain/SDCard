@@ -3,15 +3,14 @@
  * Version    : 1.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020 - 2024
+ * Copyright (c) 2020 - 2025
  * 
- * SD_SPI_BASE.C defines the basic functions required to access an SD card in 
- * SPI mode.
+ * SD_SPI_BASE.C defines the functions from SD_SPI_BASE.H. These are the basic
+ * functions required to access an SD card in SPI mode.
  */
 
 #include <stdint.h>
 #include "sd_spi_base.h"
-
 
 /*
  ******************************************************************************
@@ -19,7 +18,6 @@
  ******************************************************************************
  */
 
-static void pvt_initSPI(void);                   // initialize SPI port
 static uint8_t pvt_CRC7(uint64_t tca);           // returns the CRC7 checksum
 
 
@@ -31,51 +29,28 @@ static uint8_t pvt_CRC7(uint64_t tca);           // returns the CRC7 checksum
 
 /*
  * ----------------------------------------------------------------------------
- *                                          WAIT MAX NUMBER OF SPI CLOCK CYCLES
- * 
- * Description : Used to wait a specified max number of SPI clock cycles by
- *               repeatedly sending DMY_TKN via SPI.
- * 
- * Arguments   : clkCycles   - max num of SPI clock cycles to wait. 
- * 
- * Note        : 1)  SPI_REG_BIT_LEN is included via SPI module and is just the
- *                   bit length of the SPI data register.
- *               2)  If clkCycles is not a multiple of the SPI bit length, then 
- *                   the actual number of clock cycles to wait will be the 
- *                   greatest multiple of SPI bit length below the value of
- *                   clkCycles.
- * ----------------------------------------------------------------------------
- */
-void sd_WaitSPI(uint16_t clkCycles)
-{
-  for (uint8_t waitCnt = 0; waitCnt < clkCycles / SPI_REG_BIT_LEN; ++waitCnt)
-    sd_SendByteSPI(DMY_TKN);
-}
-
-
-/*
- * ----------------------------------------------------------------------------
- *                                                       SD CARD INITIALIZATION
+ *                                              SPI MODE SD CARD INITIALIZATION
  *
- * Description : Implements the SD Card SPI mode initialization routine and 
+ * Description : Implements the SD Card's SPI mode initialization routine and 
  *               sets the members of the CTV (Card Type and Version) struct
  *               instance. 
  *
- * Arguments   : ctv - ptr to CTV instance whose members are set during init.
+ * Arguments   : ctv - pointer to CTV instance whose members are set during
+ *                     the initialization routine.
  * 
  * Returns     : Initialization Response. This includes any Initialization
  *               Error Flags set in bits 8 to 16 and the most recent R1 
  *               response in the lowest byte.
  * 
- * Warning     : An instance of CTV should ONLY be set by this function.
+ * Warning     : Any instance of CTV should ONLY be set by this function.
  * ----------------------------------------------------------------------------
  */
-uint32_t sd_InitModeSPI(CTV *ctv)
+uint32_t sd_InitSpiMode(CTV *ctv)
 {
   uint8_t r1;                     // for r1 response
 
-  pvt_initSPI();                  // initialize SPI port
-  sd_WaitSPI(80);                 // wait 80 SPI Clk cycles to ensure power up
+  sd_InitMasterModeSPI();                   // init SPI port in master mode
+  sd_WaitSpiClkCyclesSPI(POWERUP_WAIT);     // wait for power up to complete
 
   //
   // Step 1: GO_IDLE_STATE (CMD0)
@@ -95,11 +70,11 @@ uint32_t sd_InitModeSPI(CTV *ctv)
   CS_ASSERT;
   sd_SendCommand(SEND_IF_COND, SEND_IF_COND_ARG);
   // Get R7 response.
-  r7[R7_R1_RESP_BYTE] = sd_GetR1();              // First R7 byte is the R1 response
-  r7[R7_CMD_VERS_BYTE] = sd_ReceiveByteSPI();    // not used
-  r7[R7_RSRVD_BYTE] = sd_ReceiveByteSPI();       // not used
-  r7[R7_VOLT_RNG_ACPTD_BYTE] = sd_ReceiveByteSPI();
-  r7[R7_CHK_PTRN_ECHO_BYTE] = sd_ReceiveByteSPI();
+  r7[R7_R1_RESP_BYTE] = sd_GetR1();         // First R7 byte is the R1 response
+  r7[R7_CMD_VERS_BYTE] = sd_ReceiveByteFromSD();    // not used
+  r7[R7_RSRVD_BYTE] = sd_ReceiveByteFromSD();       // not used
+  r7[R7_VOLT_RNG_ACPTD_BYTE] = sd_ReceiveByteFromSD();
+  r7[R7_CHK_PTRN_ECHO_BYTE] = sd_ReceiveByteFromSD();
   CS_DEASSERT;
   if (r7[R7_R1_RESP_BYTE] == (ILLEGAL_COMMAND | IN_IDLE_STATE)) 
     ctv->version = VERSION_1;
@@ -160,7 +135,6 @@ uint32_t sd_InitModeSPI(CTV *ctv)
   // bit of the OCR is used to set the type member of the CTV instance, critical
   // for correct addressing of data on the card.
   //
-
   uint8_t  ocr;
   uint16_t vra;                             // OCR voltage range accepted
   
@@ -170,7 +144,7 @@ uint32_t sd_InitModeSPI(CTV *ctv)
   if (r1 != OUT_OF_IDLE)
     return (FAILED_READ_OCR | r1);
 
-  ocr = sd_ReceiveByteSPI();                // load MSByte of OCR
+  ocr = sd_ReceiveByteFromSD();             // load MSByte of OCR
 
   // power up status
   if (!(ocr & POWER_UP_BIT_MASK))
@@ -186,11 +160,11 @@ uint32_t sd_InitModeSPI(CTV *ctv)
     ctv->type = SDSC;
 
   // load two bytes for the vra
-  vra = sd_ReceiveByteSPI();
+  vra = sd_ReceiveByteFromSD();
   vra <<= 8;
-  vra |= sd_ReceiveByteSPI();
+  vra |= sd_ReceiveByteFromSD();
 
-  // verify voltage range of card and unsupported card type is not used  
+  // verify voltage range of card and unsupported card type is not used
   if (ocr & (UHSII_BIT_MASK | CO2T_BIT_MASK | S18A_BIT_MASK) 
       || vra != VRA_OCR_MASK)
   {
@@ -198,7 +172,7 @@ uint32_t sd_InitModeSPI(CTV *ctv)
     return (FAILED_READ_OCR | UNSUPPORTED_CARD_TYPE | r1);
   }
 
-  // Initialization success
+  // initialization success
   CS_DEASSERT;
   return OUT_OF_IDLE;
 }
@@ -211,16 +185,13 @@ uint32_t sd_InitModeSPI(CTV *ctv)
  * 
  * Arguments   : byte   - byte to be sent to the SD Card via SPI.
  * 
- * Notes       : 1) Call this function as many times as necessary to send the 
- *                  complete data packet, token, command, etc...
- *               2) This function calls spi_MasterTransmit. This, or similarly 
- *                  operating function must be included to perform the SPI 
- *                  transmit byte operation via SPI port in master mode.
+ * Note        : Call this function as many times as necessary to send the 
+ *               complete data packet, token, command, etc...
  * ----------------------------------------------------------------------------
  */
-void sd_SendByteSPI(uint8_t byte)
+void sd_SendByteToSD(uint8_t byte)
 {
-  spi_MasterTransmit(byte);       // sends byte via SPI port. Must be included.
+  sd_TransmitByteSPI(byte);       // sends byte via SPI port.
 }
 
 /*
@@ -231,17 +202,13 @@ void sd_SendByteSPI(uint8_t byte)
  * 
  * Returns     : byte received from the SD card.
  * 
- * Notes       : 1) Call this function as many times as necessary to retrieve 
- *                  the complete data packet, token, error response, etc...
- *               2) This function calls spi_MasterReceive. This, or a similarly 
- *                  operating function must be included to perform the SPI 
- *                  receive byte operation via SPI port in master mode.
+ * Note        : Call this function as many times as necessary to retrieve the
+ *               complete data packet, token, error response, etc...
  * ----------------------------------------------------------------------------
  */
-uint8_t sd_ReceiveByteSPI(void)
+uint8_t sd_ReceiveByteFromSD(void)
 {
-  sd_SendByteSPI(DMY_TKN);             // send dummy byte to initiate response
-  return spi_MasterReceive();          // return byte received from SD card
+  return sd_ReceiveByteSPI();
 }
 
 /*
@@ -257,8 +224,8 @@ uint8_t sd_ReceiveByteSPI(void)
  */
 void sd_SendCommand(uint8_t cmd, uint32_t arg)
 {
-  // Forcing a wait period between commands improves stability/behavior.
-  sd_WaitSPI(80);
+  // Forcing a wait period between commands improved stability/behavior.
+  sd_WaitSpiClkCyclesSPI(CMD_WAIT);
                            
   // 
   // Construct the command/argument packet to be sent to the SD card. The form
@@ -271,35 +238,38 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg)
   tcacs |= STOP_BIT;
 
   // Send cmd/arg to SD Card via SPI port 8-bits at a time
-  sd_SendByteSPI((uint8_t)(tcacs >> 40));
-  sd_SendByteSPI((uint8_t)(tcacs >> 32));
-  sd_SendByteSPI((uint8_t)(tcacs >> 24));
-  sd_SendByteSPI((uint8_t)(tcacs >> 16));
-  sd_SendByteSPI((uint8_t)(tcacs >> 8));
-  sd_SendByteSPI((uint8_t)(tcacs));
+  sd_SendByteToSD((uint8_t)(tcacs >> 40));
+  sd_SendByteToSD((uint8_t)(tcacs >> 32));
+  sd_SendByteToSD((uint8_t)(tcacs >> 24));
+  sd_SendByteToSD((uint8_t)(tcacs >> 16));
+  sd_SendByteToSD((uint8_t)(tcacs >> 8));
+  sd_SendByteToSD((uint8_t)(tcacs));
 }
 
 /*
  * ----------------------------------------------------------------------------
  *                                                              GET R1 RESPONSE
  * 
- * Description : Retrieves the R1 response from the SD card after it has been 
- *               sent a command.
+ * Description : Used to retrieve the R1 response from the SD card immediately 
+ *               after a command is sent. It will return once a valid R1 value
+ *               has been retrieved or MAX_ATTEMPT limit reached.
  * 
- * Returns     : R1 response flag(s). See sd_spi_car.h.
+ * Returns     : R1 response (see sd_spi_car.h) or R1_TIMEOUT error.
  * 
  * Notes       : 1) always call immediately after calling sd_SendCommand.
- *               2) if R1_TIMEOUT is returned, then the SD Card did not return
- *                  a response within the specified number of attempts.
+ *               2) only call immediately after calling sd_SendCommand.
+ *               3) if R1_TIMEOUT is returned, then the SD Card did not return
+ *                  a valid R1 response within the MAX_ATTEMPT limit.
+ *               4) a valid R1 response is of the form 0b0XXXXXXX.
  * ----------------------------------------------------------------------------
  */
 uint8_t sd_GetR1(void)
 {
   uint8_t r1;
-  
-  // loop until SPDR has new values or attempt limit has been reached.
-  for (uint8_t attempt = 0; (r1 = sd_ReceiveByteSPI()) == DMY_TKN; ++attempt)
-    if(attempt >= MAX_ATTEMPTS) 
+
+  // loop until valid R1 response received or attempt limit reached.
+  for (uint8_t att = 0; (r1 = sd_ReceiveByteFromSD()) & ~R1_MASK; ++att)
+    if(att >= MAX_ATTEMPTS) 
       return R1_TIMEOUT;
   return r1;
 }
@@ -309,23 +279,6 @@ uint8_t sd_GetR1(void)
  *                        "PRIVATE" FUNCTIONS DEFINITIONS
  ******************************************************************************
  */
-
-/*
- * ----------------------------------------------------------------------------
- *                                           INITIALIZE SPI PORT IN MASTER MODE 
- * 
- * Description : Called from sd_InitModeSPI to initialize the SPI port in
- *               Master Mode. Implementation of this function may vary based
- *               on how a target's SPI port is setup and implemented.
- * ----------------------------------------------------------------------------
- */
-
-static void pvt_initSPI(void)
-{
-  SS_DD_OUT;                  // set SPI SS as an output pin.
-  CS_DEASSERT;                // ensure SD CS pin deassert before enabling SPI.
-  spi_MasterInit();           // initialize SPI port in master mode.
-}
 
 /*
  * ----------------------------------------------------------------------------

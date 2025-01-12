@@ -34,20 +34,21 @@ There are multiple source/header files included as part of this SD Card module. 
 
 ### SD Card Module Files
 1. **SD_SPI_BASE.C(H)** - *REQUIRED*
-    * These source/header files are the only ones required to implement the module; provided SPI and USART functionality is properly handled.
-    * These files implement the basic functions required to interact with the SD card in SPI mode. In particular they implement the SD card's SPI mode initialization function, ***sd_InitModeSPI***, as well as implement the functions required by the initialization function, such as *sd_SendByteSPI*, *sd_ReceiveByteSPI*, *sd_SendCommand*, etc... 
-    * SD_SPI_BASE.H will include SD_SPI_CAR.H which provides macro definitions for the SD card (C)ommands, (A)rguments, and (R)esponses available for SD cards operating in SPI mode.
-    * See the *SD_SPI_BASE* files for more detailed descriptions of the specific structs, functions, and macros available, as well as what functions and macros must be implemented by the SPI interface for portability considerations.
+    * These source/header files are the only ones necessary to implement the SD module, provided SPI-specific functionality is in place.
+    * These are the only files that should have direct access to the SPI interface functions/macros and as such the SPI interface should only be included in the SD module from here.
+    * These files implement the basic functions required to interact with the SD card in SPI mode. In particular they implement the SD card's SPI mode initialization function, *sd_InitModeSPI*, as well as the functions required by the initialization function, such as *sd_SendByteSPI*, *sd_ReceiveByteSPI*, *sd_SendCommand*, etc... 
+    * SD_SPI_BASE.H will include SD_SPI_CAR.H, which provides macro definitions for the SD card (C)ommands, (A)rguments, and (R)esponses available for SD cards operating in SPI mode.
+    * See the SD_SPI_BASE files for more detailed descriptions of the specific structs, functions, and macros available, as well as what functions and macros must be implemented by the SPI interface for portability considerations.
 
 2. **SD_SPI_RWE.C(H)** - (R)ead/(W)rite/(E)rase
     * Requires SD_SPI_BASE.
     * These files provide command functions for the SD card to perform single-block reads and writes and multi-block erases.
-    * See the *SD_SPI_RWE* files for the full descriptions of the structs, functions, and macros available.
+    * See the SD_SPI_RWE files for the full descriptions of the structs, functions, and macros available.
 
 3. **SD_SPI_PRINT.C(H)** - SD print functions
-    * These source/header files can be used to print out the various error reponses from ***SD_SPI_BASE*** and ***SD_SPI_RWE***.
-    * They also include ***sd_PrintSingleBlock*** used to print a block of data read in by the single-block read function from ***SD_SPI_RWE*** (see screenshot above). The function prints the provided block data in 16 byte rows of hex values and their corresponding ASCII characters, with the block-offset byte address beginning each row.
-    * See the *SD_SPI_PRINT* files for the full descriptions of the structs, functions, and macros available.
+    * These source/header files can be used to print out the various error reponses from SD_SPI_BASE and SD_SPI_RWE.
+    * They also include *sd_PrintSingleBlock* used to print a block of data read in by the single-block read function from SD_SPI_RWE (see screenshot above). The function prints the provided block data in 16 byte rows of hex values and their corresponding ASCII characters, with the block-offset byte address beginning each row.
+    * See the SD_SPI_PRINT files for the full descriptions of the structs, functions, and macros available.
 
 4. **SD_SPI_MISC.C(H)** - miscellaneous functions
     * Requires SD_SPI_BASE, SD_SPI_RWE, and SD_SPI_PRINT
@@ -57,26 +58,26 @@ There are multiple source/header files included as part of this SD Card module. 
     * See the *SD_SPI_MISC* files for the full descriptions of the structs, functions, and macros available.
 
 ### Helper Files
-1. **PRINTS.H(C)** : This file is only needed if any of the SD print functions/files are to be used. This is a simple file used to print integers (decimal, hex, binary) and strings to the screen via a U(S)ART. Any source files that include print functions require this to be implemented. In it's current implementation it includes AVR_USART.C(H) for transmiting bytes to print via USART. See the file itself for portability considerations. The file is maintained in [C-Helpers](https://github.com/Jsfain/C-Helpers)
+1. **PRINTS.H(C)** : This file is only needed if any of the SD print functions/files are to be used. This is a simple file used to print integers (decimal, hex, binary) and strings to the screen via a U(S)ART. Any source files that include print functions require PRINTS to be implemented. In it's current implementation it includes AVR_USART.C(H) for transmiting bytes to print via USART. See below and the file itself for portability considerations. The file is maintained in [C-Helpers](https://github.com/Jsfain/C-Helpers)
 
 ### IO Files
-The following source/header files are also used by the module for SPI and USART access for the specific AVR target, and so have been included in the repository but they are maintained in [AVR-IO](https://github.com/Jsfain/AVR-IO.git)
+The following source/header files are also used by the SD module to implement the required SPI and USART functionality against the intended AVR ATMega1280 target device, and so have been included in the repository but they are maintained in [AVR-IO](https://github.com/Jsfain/AVR-IO.git)
 
 1. AVR_SPI.C(H)    : Used to interface with the AVR's (ATMega1280) SPI port for the physical sending/receiving of data to/from the SD card.
 2. AVR_USART.C(H)  : Used to interface with the AVR's (ATMega1280) USART port used to print messages and data to a terminal. This is only needed if the provided SD print functions/files are to be used in SD_SPI_PRINT and SD_SPI_MISC.
 
 
  ### SD_TEST.C
- * A test file, *SD_TEST.C*, is also included and is probably the best way to understand how many of the functions in the module are implemented. The file contains main(), and includes several examples of implementing the various functions and capabilities available in the module.
- * *SD_TEST.C* is structured in sections to test out the various features and functions. These sections are independently enabled by setting local macros to 1, that correspond to a specific section to 1. The sections are clearly marked and the macros self-described (see the file).
+ * A test file, SD_TEST.C, is also included. This is probably the best way to understand how many of the functions in the module are to be implemented. The file contains main(), and includes several examples of implementing the various functions and capabilities available in the SD module.
+ * SD_TEST is structured in sections to test the various features and functions. These sections are independently enabled by setting local macros to 1, that corresponding to a specific test sections. The sections are clearly marked and the macros self-described (see file).
  * The only section that is always enabled (no associated enabling macro) is the initialization section.
- * Below is an example of the initialization steps, similar to that implemented in *SD_TEST.C*. This, again, must always be implemented in main() prior to using any other parts of this SD Card module. 
+ * Below is an example of the initialization steps, similar to that implemented in SD_TEST. This, again, must always be implemented in main() prior to using any other parts of this SD Card module. 
 
 ### SD Card Initialization example:
 The below steps outline the process for initializing the SD card before it can be utilized. Steps 2 and 3 below are required. Step 1 (USART initialization) is only necessary if using any print functions, which this example uses:
-  1. Initialize USART with ***usart_Init()*** - *Required for any print functions.*
+  1. Initialize USART with *usart_Init()* - Required for any print functions.
   2. Create instance of CTV struct (i.e. (C)ard (T)ype (V)ersion).
-  3. Initialize the SD Card into SPI mode by calling ***sd_InitModeSPI(&ctv)*** - Pass a pointer of the CTV instance to the initialization routine, which will set its members to their correct values.
+  3. Initialize the SD Card into SPI mode by calling *sd_InitModeSPI(&ctv)* - passing a pointer of the CTV instance to the initialization routine, which will set its members to their correct values.
     * The SPI port will be initialized from this function into master mode. See the file for details if interfacing with a target other than ATMega1280.
     * The CTV instance members should only be set once, and this should only be done by the initialization routine.
     * The *type* member of CTV will be used for determining whether the card should be block or byte addressed.
@@ -107,7 +108,7 @@ int main(void)
 ```
 
  ### Additional Comments
- * A *MAKE.SH* file is included for reference only. This is simply to see how I built the module from the source files and downloaded it to an ATmega1280 AVR target. The make file would primarily be useful for non-Windows users without access to Atmel Studio. Windows users should be able to just build/download the module from the source/header files using Atmel Studio (though I have not used this).
+ * A *MAKE.SH* file is included for reference only. This is simply to see how I built the module from the source files and downloaded it to the target device. The make file would primarily be useful for non-Windows users without access to Atmel Studio. Windows users should be able to just build/download the module from the source/header files using Atmel Studio, but I have not used this.
 
 
 ## Portability Considerations

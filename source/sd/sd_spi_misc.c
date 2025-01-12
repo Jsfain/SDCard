@@ -158,17 +158,17 @@ uint16_t sd_PrintMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks)
     // loop until Start Block Token received. Return error if max attempts
     // reached without receiving valid response.
     //
-    for (uint16_t attempts = 0; sd_ReceiveByteSPI() != START_BLOCK_TKN;)
+    for (uint16_t attempts = 0; sd_ReceiveByteFromSD() != START_BLOCK_TKN;)
       if (++attempts > MAX_ATTEMPTS) 
         return (START_TOKEN_TIMEOUT | r1);
 
     // Load array with data from SD card block.
     for (uint16_t byteNum = 0; byteNum < BLOCK_LEN; ++byteNum) 
-      blckArr[byteNum] = sd_ReceiveByteSPI();
+      blckArr[byteNum] = sd_ReceiveByteFromSD();
     
     // 16-bit CRC. CRC is off (default) so values returned do not matter.
-    sd_ReceiveByteSPI(); 
-    sd_ReceiveByteSPI();
+    sd_ReceiveByteFromSD(); 
+    sd_ReceiveByteFromSD();
 
     // print the block to the screen.
     sd_PrintSingleBlock(blckArr);
@@ -178,7 +178,7 @@ uint16_t sd_PrintMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks)
   sd_SendCommand(STOP_TRANSMISSION, 0);
   
   // R1b response. Don't care.
-  sd_ReceiveByteSPI(); 
+  sd_ReceiveByteFromSD(); 
 
   CS_DEASSERT;
   return READ_SUCCESS;
@@ -228,15 +228,15 @@ uint16_t sd_WriteMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
     uint8_t dataRespTkn = 0;
     
     // send the multi-block write Start Block Token to initiate data transfer
-    sd_SendByteSPI(START_BLOCK_TKN_MBW); 
+    sd_SendByteToSD(START_BLOCK_TKN_MBW); 
 
     // send data for a single block to SD card, 1 byte at a time.
     for (uint16_t byteNum = 0; byteNum < BLOCK_LEN; ++byteNum)
-      sd_SendByteSPI(dataArr[byteNum]);
+      sd_SendByteToSD(dataArr[byteNum]);
 
     // Send 16-bit CRC. Off by default, so values do not matter.
-    sd_SendByteSPI(0xFF);
-    sd_SendByteSPI(0xFF);
+    sd_SendByteToSD(0xFF);
+    sd_SendByteToSD(0xFF);
   
     //
     // loop until valid data response token received or function exits on max 
@@ -247,7 +247,7 @@ uint16_t sd_WriteMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
          && dataRespTkn != CRC_ERROR_TKN 
          && dataRespTkn != WRITE_ERROR_TKN;)
     {
-      dataRespTkn = sd_ReceiveByteSPI() & DATA_RESPONSE_TKN_MASK;
+      dataRespTkn = sd_ReceiveByteFromSD() & DATA_RESPONSE_TKN_MASK;
       if (++attempts > MAX_ATTEMPTS)
       {
         CS_DEASSERT;
@@ -265,7 +265,7 @@ uint16_t sd_WriteMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
     //
     if (dataRespTkn == DATA_ACCEPTED_TKN)     
     {
-      for (uint16_t attempts = 0; sd_ReceiveByteSPI() == 0; ++attempts)
+      for (uint16_t attempts = 0; sd_ReceiveByteFromSD() == 0; ++attempts)
         if (attempts > 2 * MAX_ATTEMPTS)    // increased attempts limit
         {
           CS_DEASSERT;
@@ -286,8 +286,8 @@ uint16_t sd_WriteMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
   }
 
   // Stop Transmission. 0xFD is the Stop Transmission Token
-  sd_SendByteSPI(STOP_TRANSMIT_TKN_MBW);
-  for (uint16_t attempts = 0; sd_ReceiveByteSPI() == 0; ++attempts)
+  sd_SendByteToSD(STOP_TRANSMIT_TKN_MBW);
+  for (uint16_t attempts = 0; sd_ReceiveByteFromSD() == 0; ++attempts)
     if (attempts > 2 * MAX_ATTEMPTS)        // increased attempts limit
     {
       CS_DEASSERT;
@@ -299,7 +299,7 @@ uint16_t sd_WriteMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
   // command is immediately issued, it results in errors unless some delay is
   // added before deasserting CS here.
   //
-  sd_WaitSPI(0x5FF);
+  sd_WaitSpiClkCyclesSPI(0x5FF);
   CS_DEASSERT;
 
   return (retTkn | r1);                            // successful write.
@@ -351,22 +351,22 @@ uint16_t sd_GetNumOfWellWrittenBlocks(uint32_t *wellWrtnBlcks)
   // loop until Start Block Token received. Return error if max attempts 
   // reached without receiving a valid response.
   //
-  for (uint16_t attempts = 0; sd_ReceiveByteSPI() != START_BLOCK_TKN;)
+  for (uint16_t attempts = 0; sd_ReceiveByteFromSD() != START_BLOCK_TKN;)
     if (++attempts > MAX_ATTEMPTS) 
       return (START_TOKEN_TIMEOUT | r1);
   
   // Get the number of well written blocks (32-bit)
-  *wellWrtnBlcks  = sd_ReceiveByteSPI();
+  *wellWrtnBlcks  = sd_ReceiveByteFromSD();
   *wellWrtnBlcks <<= 8;
-  *wellWrtnBlcks |= sd_ReceiveByteSPI();
+  *wellWrtnBlcks |= sd_ReceiveByteFromSD();
   *wellWrtnBlcks <<= 8;
-  *wellWrtnBlcks |= sd_ReceiveByteSPI();
+  *wellWrtnBlcks |= sd_ReceiveByteFromSD();
   *wellWrtnBlcks <<= 8;
-  *wellWrtnBlcks |= sd_ReceiveByteSPI();
+  *wellWrtnBlcks |= sd_ReceiveByteFromSD();
 
   // get 16-bit CRC bytes. CRC is off by default so values do not matter.
-  sd_ReceiveByteSPI();
-  sd_ReceiveByteSPI();
+  sd_ReceiveByteFromSD();
+  sd_ReceiveByteFromSD();
 
   CS_DEASSERT;
 
@@ -416,7 +416,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   // CSD_STRUCTURE
   //
   for (uint16_t attempts = 0; 
-       GET_CSD_VSN(sd_ReceiveByteSPI()) != CSD_VSN_SDSC;)
+       GET_CSD_VSN(sd_ReceiveByteFromSD()) != CSD_VSN_SDSC;)
     if (++attempts >= MAX_ATTEMPTS)
     { 
       CS_DEASSERT;
@@ -426,7 +426,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   //
   // TAAC
   //
-  for (uint16_t attempts = 0; !TAAC_CHK_SDSC(sd_ReceiveByteSPI());)
+  for (uint16_t attempts = 0; !TAAC_CHK_SDSC(sd_ReceiveByteFromSD());)
     if (++attempts >= MAX_ATTEMPTS)
     { 
       CS_DEASSERT;
@@ -436,12 +436,12 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   //
   // NSAC - Any value is valid for SDSC
   //
-  sd_ReceiveByteSPI();
+  sd_ReceiveByteFromSD();
 
   //
   // TRAN_SPEED - this tests for default value.
   //
-  for (uint16_t attempts = 0; sd_ReceiveByteSPI() != TRANS_SPEED_SDSC;)
+  for (uint16_t attempts = 0; sd_ReceiveByteFromSD() != TRANS_SPEED_SDSC;)
     if (++attempts >= MAX_ATTEMPTS)
     { 
       CS_DEASSERT;
@@ -455,10 +455,10 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   // Next 2 bytes contain the 12-bit CCC and 4-bit READ_BL_LEN.
   for (uint16_t attempts = 0;; ++attempts)
   {
-    if (CCC_HI_BYTE_CHK_SDSC(sd_ReceiveByteSPI()))
+    if (CCC_HI_BYTE_CHK_SDSC(sd_ReceiveByteFromSD()))
     {
       // value required for capacity calculation
-      readBlkLen = sd_ReceiveByteSPI() & RBL_MASK_SDSC;
+      readBlkLen = sd_ReceiveByteFromSD() & RBL_MASK_SDSC;
       if (readBlkLen >= RBL_LO_SDSC || readBlkLen <= RBL_HI_SDSC)
         break;
       else
@@ -480,18 +480,18 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   for (uint16_t attempts = 0;; ++attempts)
   {
     // get byte containing 2 highest bits of cSize
-    cSize = sd_ReceiveByteSPI() & C_SIZE_HI_MASK_SDSC; 
+    cSize = sd_ReceiveByteFromSD() & C_SIZE_HI_MASK_SDSC; 
     if (cSize == C_SIZE_HI_MASK_SDSC)
     {                   
       // position and load rest of cSize bits
       cSize <<= 8;           
-      cSize |= sd_ReceiveByteSPI();
+      cSize |= sd_ReceiveByteFromSD();
       cSize <<= 2;        
-      cSize |= sd_ReceiveByteSPI() >> 6;
+      cSize |= sd_ReceiveByteFromSD() >> 6;
       
       // postion and load cSizeMult bits
-      cSizeMult  = (sd_ReceiveByteSPI() & C_SIZE_MULT_HI_MASK_SDSC) << 1;
-      cSizeMult |= sd_ReceiveByteSPI() >> 7;
+      cSizeMult  = (sd_ReceiveByteFromSD() & C_SIZE_MULT_HI_MASK_SDSC) << 1;
+      cSizeMult |= sd_ReceiveByteFromSD() >> 7;
 
     }
     if (attempts >= MAX_ATTEMPTS) 
@@ -559,7 +559,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   // CSD_STRUCTURE - Must be 1 for SDHC/SDXC types.
   //
   for (uint16_t attempts = 0; 
-       GET_CSD_VSN(sd_ReceiveByteSPI()) != CSD_VSN_SDHC;)
+       GET_CSD_VSN(sd_ReceiveByteFromSD()) != CSD_VSN_SDHC;)
     if (++attempts >= MAX_ATTEMPTS)
     { 
       CS_DEASSERT;
@@ -569,7 +569,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   //
   // TAAC - fixed at 1ms (0x0E) for SDHC
   //
-  for (uint16_t attempts = 0; sd_ReceiveByteSPI() != TAAC_SDHC;)
+  for (uint16_t attempts = 0; sd_ReceiveByteFromSD() != TAAC_SDHC;)
     if (++attempts >= MAX_ATTEMPTS)
     { 
       CS_DEASSERT;
@@ -579,7 +579,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   //
   // NSAC - not used for SDHC, but field is still there.
   //
-  for (uint16_t attempts = 0; sd_ReceiveByteSPI() != NSAC_SDHC;)
+  for (uint16_t attempts = 0; sd_ReceiveByteFromSD() != NSAC_SDHC;)
     if (++attempts >= MAX_ATTEMPTS)
     { 
       CS_DEASSERT;
@@ -589,7 +589,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   //
   // TRAN_SPEED
   //
-  for (uint16_t attempts = 0; sd_ReceiveByteSPI() != TRANS_SPEED_SDHC;)
+  for (uint16_t attempts = 0; sd_ReceiveByteFromSD() != TRANS_SPEED_SDHC;)
     if (++attempts >= MAX_ATTEMPTS)
     { 
       CS_DEASSERT;
@@ -603,9 +603,9 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   // Next 2 bytes contain the 12-bit CCC and 4-bit READ_BL_LEN.
   for (uint16_t attempts = 0;; ++attempts)
   {
-    if (CCC_HI_BYTE_CHK_SDHC(sd_ReceiveByteSPI()))
+    if (CCC_HI_BYTE_CHK_SDHC(sd_ReceiveByteFromSD()))
     {
-      if (sd_ReceiveByteSPI() != CCC_LO_BITS_MASK_SDHC + RBL_SDHC)
+      if (sd_ReceiveByteFromSD() != CCC_LO_BITS_MASK_SDHC + RBL_SDHC)
       {
         CS_DEASSERT; 
         return FAILED_CAPACITY_CALC;
@@ -625,13 +625,13 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   for (uint16_t attempts = 0;; ++attempts)
   {
     // Remaining bits before reaching C_SIZE
-    if (CSD_BYTE_7_CHK_SDHC(sd_ReceiveByteSPI()))
+    if (CSD_BYTE_7_CHK_SDHC(sd_ReceiveByteFromSD()))
     {
-      cSize = sd_ReceiveByteSPI() & C_SIZE_HI_MASK_SDHC;// Only [5:0] is C_SIZE
+      cSize = sd_ReceiveByteFromSD() & C_SIZE_HI_MASK_SDHC;// Only [5:0] is C_SIZE
       cSize <<= 8;           
-      cSize |= sd_ReceiveByteSPI();
+      cSize |= sd_ReceiveByteFromSD();
       cSize <<= 8;        
-      cSize |= sd_ReceiveByteSPI();
+      cSize |= sd_ReceiveByteFromSD();
       break;
     }
     if (attempts >= MAX_ATTEMPTS) 

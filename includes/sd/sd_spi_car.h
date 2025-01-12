@@ -112,7 +112,9 @@
 #define ERASE_SEQUENCE_ERROR    0x10
 #define ADDRESS_ERROR           0x20
 #define PARAMETER_ERROR         0x40
-#define R1_TIMEOUT              0x80
+#define R1_TIMEOUT              0x80        // not R1 std setting
+
+#define R1_MASK                 0x7F        // all std R1 bits set
 
 /* 
  * ----------------------------------------------------------------------------

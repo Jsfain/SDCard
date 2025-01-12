@@ -54,7 +54,7 @@ uint16_t sd_ReadSingleBlock(uint32_t blckAddr, uint8_t blckArr[])
   // loop until the Start Block Token is received from the SD card,
   // indicating data from requested blckAddr is about to be sent.
   //
-  for (uint8_t attempt = 0; sd_ReceiveByteSPI() != START_BLOCK_TKN; ++attempt)
+  for (uint8_t attempt = 0; sd_ReceiveByteFromSD() != START_BLOCK_TKN; ++attempt)
     if (attempt >= MAX_ATTEMPTS)
     {
       CS_DEASSERT;
@@ -63,14 +63,14 @@ uint16_t sd_ReadSingleBlock(uint32_t blckAddr, uint8_t blckArr[])
 
   // Load SD card block into array.         
   for (uint16_t byte = 0; byte < BLOCK_LEN; ++byte)
-    blckArr[byte] = sd_ReceiveByteSPI();
+    blckArr[byte] = sd_ReceiveByteFromSD();
 
   // Get 16-bit CRC. Don't need.
-  sd_ReceiveByteSPI();
-  sd_ReceiveByteSPI();
+  sd_ReceiveByteFromSD();
+  sd_ReceiveByteFromSD();
   
   // clear any remaining data from the SPDR
-  sd_ReceiveByteSPI();          
+  sd_ReceiveByteFromSD();          
 
   CS_DEASSERT;
   return (READ_SUCCESS);
@@ -109,15 +109,15 @@ uint16_t sd_WriteSingleBlock(uint32_t blckAddr, const uint8_t dataArr[])
   }
 
   // send Start Block Token (0xFE) to initiate data transfer
-  sd_SendByteSPI(START_BLOCK_TKN); 
+  sd_SendByteToSD(START_BLOCK_TKN); 
 
   // send data to write to SD card.
   for (uint16_t pos = 0; pos < BLOCK_LEN; ++pos) 
-    sd_SendByteSPI(dataArr[pos]);
+    sd_SendByteToSD(dataArr[pos]);
 
   // Send 16-bit CRC. CRC should be off (default), so these do not matter.
-  sd_SendByteSPI(DMY_TKN);
-  sd_SendByteSPI(DMY_TKN);
+  sd_SendByteToSD(DMY_TKN);
+  sd_SendByteToSD(DMY_TKN);
   
   //
   // loop until valid data response token received or function exits on 
@@ -128,7 +128,7 @@ uint16_t sd_WriteSingleBlock(uint32_t blckAddr, const uint8_t dataArr[])
        && dataRespTkn != CRC_ERROR_TKN 
        && dataRespTkn != WRITE_ERROR_TKN;)
   {
-    dataRespTkn = sd_ReceiveByteSPI() & DATA_RESPONSE_TKN_MASK;
+    dataRespTkn = sd_ReceiveByteFromSD() & DATA_RESPONSE_TKN_MASK;
     if (++attempts > MAX_ATTEMPTS)
     {
       CS_DEASSERT;
@@ -144,7 +144,7 @@ uint16_t sd_WriteSingleBlock(uint32_t blckAddr, const uint8_t dataArr[])
   //
   if (dataRespTkn == DATA_ACCEPTED_TKN)
   { 
-    for (uint16_t attempts = 0; sd_ReceiveByteSPI() == 0; ++attempts)
+    for (uint16_t attempts = 0; sd_ReceiveByteFromSD() == 0; ++attempts)
       if (attempts > 4 * MAX_ATTEMPTS)      // increased attempts limit
       {
         CS_DEASSERT;
@@ -215,7 +215,7 @@ uint16_t sd_EraseBlocks(uint32_t startBlckAddr, uint32_t endBlckAddr)
   }
 
   // wait for erase to finish. Busy (0) signal returned until erase completes.
-  for (uint16_t attempts = 0; sd_ReceiveByteSPI() == 0; ++attempts)
+  for (uint16_t attempts = 0; sd_ReceiveByteFromSD() == 0; ++attempts)
     if(attempts++ > 4 * MAX_ATTEMPTS) 
       return (ERASE_BUSY_TIMEOUT);
 

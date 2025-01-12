@@ -68,6 +68,20 @@ else
 fi
 
 
+echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/sd_spi_interface.o" $sdDir"/sd_spi_interface.c"
+"${Compile[@]}" $buildDir/sd_spi_interface.o $sdDir/sd_spi_interface.c
+status=$?
+sleep $t
+if [ $status -gt 0 ]
+then
+    echo -e "error compiling SD_SPI_INTERFACE.C"
+    echo -e "program exiting with code $status"
+    exit $status
+else
+    echo -e "Compiling SD_SPI_INTERFACE.C successful"
+fi
+
+
 echo -e "\n\r>> COMPILE: "${Compile[@]}" "$buildDir"/sd_spi_base.o" $sdDir"/sd_spi_base.c"
 "${Compile[@]}" $buildDir/sd_spi_base.o $sdDir/sd_spi_base.c
 status=$?
@@ -138,8 +152,8 @@ else
 fi
 
 
-echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/sd_test.elf "$buildDir"/sd_test.o  "$buildDir"/avr_spi.o "$buildDir"/sd_spi_base.o "$buildDir"/sd_spi_rwe.o "$buildDir"/sd_spi_misc.o "$buildDir"/sd_spi_print.o "$buildDir"/avr_usart.o "$buildDir"/prints.o"
-"${Link[@]}" $buildDir/sd_test.elf $buildDir/sd_test.o $buildDir/avr_spi.o $buildDir/sd_spi_base.o $buildDir/sd_spi_rwe.o $buildDir/sd_spi_misc.o $buildDir/sd_spi_print.o $buildDir/avr_usart.o $buildDir/prints.o
+echo -e "\n\r>> LINK: "${Link[@]}" "$buildDir"/sd_test.elf "$buildDir"/sd_test.o  "$buildDir"/avr_spi.o "$buildDir"/sd_spi_interface.o "$buildDir"/sd_spi_base.o "$buildDir"/sd_spi_rwe.o "$buildDir"/sd_spi_misc.o "$buildDir"/sd_spi_print.o "$buildDir"/avr_usart.o "$buildDir"/prints.o"
+"${Link[@]}" $buildDir/sd_test.elf $buildDir/sd_test.o $buildDir/avr_spi.o $buildDir/sd_spi_interface.o $buildDir/sd_spi_base.o $buildDir/sd_spi_rwe.o $buildDir/sd_spi_misc.o $buildDir/sd_spi_print.o $buildDir/avr_usart.o $buildDir/prints.o
 status=$?
 sleep $t
 if [ $status -gt 0 ]

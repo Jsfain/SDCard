@@ -3,43 +3,17 @@
  * Version    : 1.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020 - 2024
+ * Copyright (c) 2020 - 2025
  * 
- * SD_SPI_BASE provides functions and macros required for the basic interaction 
- * with an SD card in SPI mode.
- *  
- * NOTE:
- * An SPI interface module must be included to handle the SPI-specific
- * operations on the target device. The following is a list of the SPI macros
- * and functions defined in the included SPI module that are required for this 
- * SD module to function.
- * 
- * SPI Macros   :  SS_HI           - sets the master SPI SS pin to HI(1). Used 
- *                                   to define CS_DEASSERT in this file.
- *                 SS_LO           - sets the master SPI SS pin to LO(0). Used 
- *                                   to define CS_ASSERT in this file.
- *                 SS_DD_OUT       - sets the data direction of the SPI SS pin
- *                                   so it operates as an output pin. Used in 
- *                                   pvt_initSPI in sd_spi_base.c.
- *                 SPI_REG_BIT_LEN - the bit length of the SPI data register 
- *                                   to calculate number of SPI clock cycles in
- *                                   sd_WaitSPI in sd_spi_base.c.
- * 
- * The below SPI-specific fuctions are called from functions in sd_spi_base.c
- * 
- * SPI Functions : spi_MasterInit     - initializes target's SPI port into
- *                                      master mode. Called in pvt_initSPI.
- *                 spi_MasterTransmit - transmits single byte via SPI. Called 
- *                                      in sd_SendByteSPI
- *                 spi_MasterReceive  - receives single byte via SPI. Called 
- *                                      in sd_ReceiveByteSPI
+ * SD_SPI_BASE provides functions and macros required for the basic interaction
+ * with an SD card in SPI mode. Function definitions are found in SD_SPI_BASE.C
  */
 
 #ifndef SD_SPI_BASE_H
 #define SD_SPI_BASE_H
 
-#include "avr_spi.h"          // SPI module
-#include "sd_spi_car.h"       // defs for SD Commands, Arguments, Responses
+#include "sd_spi_interface.h"     // req'd to interface with SPI target device
+#include "sd_spi_car.h"           // definitions for SD Cmds, Args, Responses
 
 /*
  ******************************************************************************
@@ -48,11 +22,11 @@
  */
 
 // 
-// CS_ASSERT and CS_DEASSERT control the SD card's Chip Select (CS) pin to 
-// enable and disable SPI communication to the card.
+// CS_ASSERT and CS_DEASSERT used to set the SD card's Chip Select (CS) pin to 
+// enable/disable SPI communication to the card. Controlled by SPI's SS pin.
 // 
-#define CS_ASSERT       SS_LO               // enables card by setting CS low
-#define CS_DEASSERT     SS_HI               // disables card by setting CS high
+#define CS_ASSERT       SS_LO_SPI           // enables card by setting CS low
+#define CS_DEASSERT     SS_HI_SPI           // disables card by setting CS high
 
 // Used for Send Command
 #define TX_CMD_BITS     0x40                // transmit bits (msb = 01)
@@ -62,15 +36,22 @@
 #define MAX_ATTEMPTS    0xFE  
 
 // Dummy token. Used when waiting on, or initiating a response via SPI.
-#define DMY_TKN         0xFF
+#define DMY_TKN         DMY_BYTE_SPI
 
-// Card Versions
+// Card Versionss
 #define VERSION_1       1
 #define VERSION_2       2
 
 // Card Types - standard or high capacity
 #define SDHC            1                   // High Cap - block addressable
 #define SDSC            0                   // Std. Cap - byte addressable
+
+//
+// WAIT macros specify the number of SPI clock cycles to wait before 
+// continuing certain operations.
+//
+#define POWERUP_WAIT    80        // Cycles for power up to complete          
+#define CMD_WAIT        80        // Cycles to wait before sending a command 
 
 
 /* 
@@ -177,41 +158,23 @@ typedef struct CardTypeVersion{
 
 /*
  * ----------------------------------------------------------------------------
- *                                          WAIT MAX NUMBER OF SPI CLOCK CYCLES
- * 
- * Description : Used to wait a specified max number of SPI clock cycles by
- *               repeatedly sending DMY_TKN via SPI.
- * 
- * Arguments   : clkCycles   - max num of SPI clock cycles to wait. 
- * 
- * Note        : 1)  SPI_REG_BIT_LEN is included via SPI module and is just the
- *                   bit length of the SPI data register.
- *               2)  If clkCycles is not a multiple of the SPI bit length, then 
- *                   the actual number of clock cycles to wait will be the 
- *                   greatest multiple of SPI bit length below the value of
- *                   clkCycles.
- * ----------------------------------------------------------------------------
- */
-void sd_WaitSPI(uint16_t clkCycles);
-
-/*
- * ----------------------------------------------------------------------------
- *                                                       SD CARD INITIALIZATION
+ *                                              SPI MODE SD CARD INITIALIZATION
  *
- * Description : Implements the SD Card SPI mode initialization routine and 
+ * Description : Implements the SD Card's SPI mode initialization routine and 
  *               sets the members of the CTV (Card Type and Version) struct
  *               instance. 
  *
- * Arguments   : ctv - ptr to CTV instance whose members are set during init.
+ * Arguments   : ctv - pointer to CTV instance whose members are set during
+ *                     the initialization routine.
  * 
  * Returns     : Initialization Response. This includes any Initialization
  *               Error Flags set in bits 8 to 16 and the most recent R1 
  *               response in the lowest byte.
  * 
- * Warning     : An instance of CTV should ONLY be set by this function.
+ * Warning     : Any instance of CTV should ONLY be set by this function.
  * ----------------------------------------------------------------------------
  */
-uint32_t sd_InitModeSPI(CTV *ctv);
+uint32_t sd_InitSpiMode(CTV *ctv);
 
 /*
  * ----------------------------------------------------------------------------
@@ -221,14 +184,11 @@ uint32_t sd_InitModeSPI(CTV *ctv);
  * 
  * Arguments   : byte   - byte to be sent to the SD Card via SPI.
  * 
- * Notes       : 1) Call this function as many times as necessary to send the 
- *                  complete data packet, token, command, etc...
- *               2) This function calls spi_MasterTransmit. This, or similarly 
- *                  operating function must be included to perform the SPI 
- *                  transmit byte operation via SPI port in master mode.
+ * Note        : Call this function as many times as necessary to send the 
+ *               complete data packet, token, command, etc...
  * ----------------------------------------------------------------------------
  */
-void sd_SendByteSPI(uint8_t byte);
+void sd_SendByteToSD(uint8_t byte);
 
 /*
  * ----------------------------------------------------------------------------
@@ -238,14 +198,11 @@ void sd_SendByteSPI(uint8_t byte);
  * 
  * Returns     : byte received from the SD card.
  * 
- * Notes       : 1) Call this function as many times as necessary to retrieve 
- *                  the complete data packet, token, error response, etc...
- *               2) This function calls spi_MasterReceive. This, or a similarly 
- *                  operating function must be included to perform the SPI 
- *                  receive byte operation via SPI port in master mode.
+ * Note        : Call this function as many times as necessary to retrieve the
+ *               complete data packet, token, error response, etc...
  * ----------------------------------------------------------------------------
  */
-uint8_t sd_ReceiveByteSPI(void);
+uint8_t sd_ReceiveByteFromSD(void);
 
 /*
  * ----------------------------------------------------------------------------
@@ -264,14 +221,17 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg);
  * ----------------------------------------------------------------------------
  *                                                              GET R1 RESPONSE
  * 
- * Description : Retrieves the R1 response from the SD card after it has been 
- *               sent a command.
+ * Description : Used to retrieve the R1 response from the SD card immediately 
+ *               after a command is sent. It will return once a valid R1 value
+ *               has been retrieved or MAX_ATTEMPT limit reached.
  * 
- * Returns     : R1 response flag(s). See sd_spi_car.h.
+ * Returns     : R1 response (see sd_spi_car.h) or R1_TIMEOUT error.
  * 
  * Notes       : 1) always call immediately after calling sd_SendCommand.
- *               2) if R1_TIMEOUT is returned, then the SD Card did not return
- *                  a response within the specified number of attempts.
+ *               2) only call immediately after calling sd_SendCommand.
+ *               3) if R1_TIMEOUT is returned, then the SD Card did not return
+ *                  a valid R1 response within the MAX_ATTEMPT limit.
+ *               4) a valid R1 response is of the form 0b0XXXXXXX.
  * ----------------------------------------------------------------------------
  */
 uint8_t sd_GetR1(void);

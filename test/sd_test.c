@@ -17,7 +17,9 @@
 
 #include <avr/io.h>
 #include "avr_usart.h"
+#include "avr_spi.h"
 #include "prints.h"
+//#include "sd_spi_interface.h"
 #include "sd_spi_base.h"
 #include "sd_spi_rwe.h"
 #include "sd_spi_misc.h"
@@ -186,7 +188,7 @@ int main(void)
   {
     print_Str("\n\n\r >> SD Card Initialization Attempt "); 
     print_Dec(att); print_Str(":");
-    initResp = sd_InitModeSPI(&ctv);        // init SD Card
+    initResp = sd_InitSpiMode(&ctv);        // init SD Card
 
     if (initResp != OUT_OF_IDLE)            // Fail to init if not OUT_OF_IDLE
     {    
@@ -377,7 +379,7 @@ int main(void)
           sd_SendCommand(SEND_STATUS, 0);
           uint16_t r2 = sd_GetR1();         // The first byte of R2 is R1
           r2 <<= 8;
-          r2 |= sd_ReceiveByteSPI();
+          r2 |= sd_ReceiveByteFromSD();
           CS_DEASSERT;
           print_Str("\n\r >> R2 Response = 0x");
           print_Hex(r2);
@@ -520,7 +522,7 @@ int main(void)
           sd_SendCommand(SEND_STATUS,0);
           uint16_t r2 = sd_GetR1();         // The first byte of R2 is R1
           r2 <<= 8;
-          r2 |= sd_ReceiveByteSPI();
+          r2 |= sd_ReceiveByteFromSD();
           CS_DEASSERT;
           print_Str("\n\r >> R2 Response = ");
           print_Hex(r2);
@@ -663,7 +665,7 @@ int main(void)
           sd_SendCommand(SEND_STATUS, 0);
           uint16_t r2 = sd_GetR1();         // The first byte of R2 is R1
           r2 <<= 8;
-          r2 |= sd_ReceiveByteSPI();
+          r2 |= sd_ReceiveByteFromSD();
           CS_DEASSERT;
           print_Str("\n\r >> R2 Response = ");
           print_Hex(r2);
