@@ -6,7 +6,7 @@
  * Copyright (c) 2020 - 2025
  * 
  * SD_SPI_BASE.C defines the functions from SD_SPI_BASE.H. These are the basic
- * functions required to access an SD card in SPI mode.
+ * functions required to interact with an SD card operating in SPI mode.
  */
 
 #include <stdint.h>
@@ -40,7 +40,7 @@ static uint8_t pvt_CRC7(uint64_t tca);           // returns the CRC7 checksum
  * 
  * Returns     : Initialization Response. This includes any Initialization
  *               Error Flags set in bits 8 to 16 and the most recent R1 
- *               response in the lowest byte.
+ *               response which occupies the lowest byte returned.
  * 
  * Warning     : Any instance of CTV should ONLY be set by this function.
  * ----------------------------------------------------------------------------
@@ -122,7 +122,7 @@ uint32_t sd_InitSpiMode(CTV *ctv)
     CS_DEASSERT;
     if (r1 > IN_IDLE_STATE)
       return (FAILED_SD_SEND_OP_COND | r1);
-    if (++attempts >= MAX_ATTEMPTS && r1 != OUT_OF_IDLE)
+    if (++attempts >= MAX_CR_ATT && r1 != OUT_OF_IDLE)
       return (FAILED_SD_SEND_OP_COND | OUT_OF_IDLE_TIMEOUT | r1);
   }
   while (r1 & IN_IDLE_STATE);
@@ -252,14 +252,14 @@ void sd_SendCommand(uint8_t cmd, uint32_t arg)
  * 
  * Description : Used to retrieve the R1 response from the SD card immediately 
  *               after a command is sent. It will return once a valid R1 value
- *               has been retrieved or MAX_ATTEMPT limit reached.
+ *               has been retrieved or MAX_CR_ATT limit reached.
  * 
  * Returns     : R1 response (see sd_spi_car.h) or R1_TIMEOUT error.
  * 
  * Notes       : 1) always call immediately after calling sd_SendCommand.
  *               2) only call immediately after calling sd_SendCommand.
  *               3) if R1_TIMEOUT is returned, then the SD Card did not return
- *                  a valid R1 response within the MAX_ATTEMPT limit.
+ *                  a valid R1 response within the MAX_CR_ATT limit.
  *               4) a valid R1 response is of the form 0b0XXXXXXX.
  * ----------------------------------------------------------------------------
  */
@@ -269,14 +269,14 @@ uint8_t sd_GetR1(void)
 
   // loop until valid R1 response received or attempt limit reached.
   for (uint8_t att = 0; (r1 = sd_ReceiveByteFromSD()) & ~R1_MASK; ++att)
-    if(att >= MAX_ATTEMPTS) 
+    if(att >= MAX_CR_ATT) 
       return R1_TIMEOUT;
   return r1;
 }
 
 /*
  ******************************************************************************
- *                        "PRIVATE" FUNCTIONS DEFINITIONS
+ *                             "PRIVATE" FUNCTIONS
  ******************************************************************************
  */
 

@@ -5,8 +5,8 @@
  * Author     : Joshua Fain
  * Copyright (c) 2020 - 2025
  * 
- * SD_SPI_BASE provides functions and macros required for the basic interaction
- * with an SD card in SPI mode. Function definitions are found in SD_SPI_BASE.C
+ * SD_SPI_BASE provides functions and macros required for basic interaction
+ * with an SD card operating in SPI mode.
  */
 
 #ifndef SD_SPI_BASE_H
@@ -25,20 +25,17 @@
 // CS_ASSERT and CS_DEASSERT used to set the SD card's Chip Select (CS) pin to 
 // enable/disable SPI communication to the card. Controlled by SPI's SS pin.
 // 
-#define CS_ASSERT       SS_LO_SPI           // enables card by setting CS low
-#define CS_DEASSERT     SS_HI_SPI           // disables card by setting CS high
+#define CS_ASSERT       SS_LO_SPI           // enable card by setting CS low
+#define CS_DEASSERT     SS_HI_SPI           // disable card by setting CS high
 
 // Used for Send Command
 #define TX_CMD_BITS     0x40                // transmit bits (msb = 01)
 #define STOP_BIT        0x01                // final bit sent in a cmd/arg
 
 // Max number of attempts to check for valid command response from SD card.
-#define MAX_ATTEMPTS    0xFE  
+#define MAX_CR_ATT      0xFE  
 
-// Dummy token. Used when waiting on, or initiating a response via SPI.
-#define DMY_TKN         DMY_BYTE_SPI
-
-// Card Versionss
+// Card Versions
 #define VERSION_1       1
 #define VERSION_2       2
 
@@ -62,7 +59,7 @@
  *        
  * Notes       : Set to either SDHC or SDSC. Recommend setting to SDHC, which 
  *               supports SDSC by default. This setting is used to inform the 
- *               card the version the host is capable of supporting.
+ *               card of the version the host is capable of supporting.
  * ----------------------------------------------------------------------------
  */
 #define HOST_CAPACITY_SUPPORT  SDHC
@@ -91,9 +88,10 @@
  * Notes       : 1) These flags are specific to this module's init function,
  *                  they are not part of the SD std.
  *               2) The most recent R1 response during init is returned in the
- *                  LSB of the init routine's returned value. Hence, these init 
- *                  error flags begin at the second byte, the lower byte is 
- *                  reserved for the R1 response. See SD_SPI_CAR.H for R1 list.
+ *                  LSB of the init routine's returned value, so these init 
+ *                  error flags begin at the second byte, while the lower byte 
+ *                  is reserved for the R1 response. See SD_SPI_CAR.H for the 
+ *                  list of possible R1 response flags.
  * ----------------------------------------------------------------------------
  */
 #define FAILED_GO_IDLE_STATE    0x00100     // CMD0 error
@@ -119,7 +117,6 @@
 #define UHSII_BIT_MASK        0x20          // UHS-II Card Status
 #define CO2T_BIT_MASK         0x10          // Over 2TB support status
 #define S18A_BIT_MASK         0x08          // switching to 1.8V accepted
-
 // Volt Range Accepted by card: 2.7 - 3.6V. Only this range has been tested.
 #define VRA_OCR_MASK          0xFF80
 
@@ -142,7 +139,7 @@
  *            2) The value of 'type' is necessary for determining how a card's 
  *               blocks are addressed.
  * 
- * Warnings : Only version 2 cards have been tested.
+ * Warning  : Only version 2 cards have been tested.
  * ----------------------------------------------------------------------------
  */
 typedef struct CardTypeVersion{
@@ -169,7 +166,7 @@ typedef struct CardTypeVersion{
  * 
  * Returns     : Initialization Response. This includes any Initialization
  *               Error Flags set in bits 8 to 16 and the most recent R1 
- *               response in the lowest byte.
+ *               response which occupies the lowest byte returned.
  * 
  * Warning     : Any instance of CTV should ONLY be set by this function.
  * ----------------------------------------------------------------------------

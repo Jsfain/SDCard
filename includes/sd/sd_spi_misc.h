@@ -3,7 +3,7 @@
  * Version    : 1.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020 - 2024
+ * Copyright (c) 2020 - 2025
  *
  * This is meant to be a catch-all for some misellaneous functions. Will 
  * require SD_SPI_BASE and SD_SPI_RWE to function.

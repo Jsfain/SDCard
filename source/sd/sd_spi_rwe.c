@@ -3,9 +3,9 @@
  * Version    : 1.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020 - 2024
+ * Copyright (c) 2020 - 2025
  * 
- * Implementation of SD_SPI_RWE.H. 
+ * Implements SD_SPI_RWE.H. 
  */
 
 #include <stdint.h>
@@ -55,7 +55,7 @@ uint16_t sd_ReadSingleBlock(uint32_t blckAddr, uint8_t blckArr[])
   // indicating data from requested blckAddr is about to be sent.
   //
   for (uint8_t attempt = 0; sd_ReceiveByteFromSD() != START_BLOCK_TKN; ++attempt)
-    if (attempt >= MAX_ATTEMPTS)
+    if (attempt >= MAX_CR_ATT)
     {
       CS_DEASSERT;
       return (START_TOKEN_TIMEOUT);
@@ -129,7 +129,7 @@ uint16_t sd_WriteSingleBlock(uint32_t blckAddr, const uint8_t dataArr[])
        && dataRespTkn != WRITE_ERROR_TKN;)
   {
     dataRespTkn = sd_ReceiveByteFromSD() & DATA_RESPONSE_TKN_MASK;
-    if (++attempts > MAX_ATTEMPTS)
+    if (++attempts > MAX_CR_ATT)
     {
       CS_DEASSERT;
       return (DATA_RESPONSE_TIMEOUT);
@@ -145,7 +145,7 @@ uint16_t sd_WriteSingleBlock(uint32_t blckAddr, const uint8_t dataArr[])
   if (dataRespTkn == DATA_ACCEPTED_TKN)
   { 
     for (uint16_t attempts = 0; sd_ReceiveByteFromSD() == 0; ++attempts)
-      if (attempts > 4 * MAX_ATTEMPTS)      // increased attempts limit
+      if (attempts > 4 * MAX_CR_ATT)      // increased attempts limit
       {
         CS_DEASSERT;
         return (CARD_BUSY_TIMEOUT);
@@ -216,7 +216,7 @@ uint16_t sd_EraseBlocks(uint32_t startBlckAddr, uint32_t endBlckAddr)
 
   // wait for erase to finish. Busy (0) signal returned until erase completes.
   for (uint16_t attempts = 0; sd_ReceiveByteFromSD() == 0; ++attempts)
-    if(attempts++ > 4 * MAX_ATTEMPTS) 
+    if(attempts++ > 4 * MAX_CR_ATT) 
       return (ERASE_BUSY_TIMEOUT);
 
   CS_DEASSERT;

@@ -3,9 +3,9 @@
  * Version    : 1.0 
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020 - 2021
+ * Copyright (c) 2020 - 2025
  * 
- * Implementation of SD_SPI_MISC.H
+ * Implements SD_SPI_MISC.H
  */
 
 #include <stdint.h>
@@ -159,7 +159,7 @@ uint16_t sd_PrintMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks)
     // reached without receiving valid response.
     //
     for (uint16_t attempts = 0; sd_ReceiveByteFromSD() != START_BLOCK_TKN;)
-      if (++attempts > MAX_ATTEMPTS) 
+      if (++attempts > MAX_CR_ATT) 
         return (START_TOKEN_TIMEOUT | r1);
 
     // Load array with data from SD card block.
@@ -248,7 +248,7 @@ uint16_t sd_WriteMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
          && dataRespTkn != WRITE_ERROR_TKN;)
     {
       dataRespTkn = sd_ReceiveByteFromSD() & DATA_RESPONSE_TKN_MASK;
-      if (++attempts > MAX_ATTEMPTS)
+      if (++attempts > MAX_CR_ATT)
       {
         CS_DEASSERT;
         return (DATA_RESPONSE_TIMEOUT | r1);
@@ -266,7 +266,7 @@ uint16_t sd_WriteMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
     if (dataRespTkn == DATA_ACCEPTED_TKN)     
     {
       for (uint16_t attempts = 0; sd_ReceiveByteFromSD() == 0; ++attempts)
-        if (attempts > 2 * MAX_ATTEMPTS)    // increased attempts limit
+        if (attempts > 2 * MAX_CR_ATT)    // increased attempts limit
         {
           CS_DEASSERT;
           return (CARD_BUSY_TIMEOUT | r1);
@@ -288,7 +288,7 @@ uint16_t sd_WriteMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks,
   // Stop Transmission. 0xFD is the Stop Transmission Token
   sd_SendByteToSD(STOP_TRANSMIT_TKN_MBW);
   for (uint16_t attempts = 0; sd_ReceiveByteFromSD() == 0; ++attempts)
-    if (attempts > 2 * MAX_ATTEMPTS)        // increased attempts limit
+    if (attempts > 2 * MAX_CR_ATT)        // increased attempts limit
     {
       CS_DEASSERT;
       return (CARD_BUSY_TIMEOUT | r1);
@@ -352,7 +352,7 @@ uint16_t sd_GetNumOfWellWrittenBlocks(uint32_t *wellWrtnBlcks)
   // reached without receiving a valid response.
   //
   for (uint16_t attempts = 0; sd_ReceiveByteFromSD() != START_BLOCK_TKN;)
-    if (++attempts > MAX_ATTEMPTS) 
+    if (++attempts > MAX_CR_ATT) 
       return (START_TOKEN_TIMEOUT | r1);
   
   // Get the number of well written blocks (32-bit)
@@ -417,7 +417,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   //
   for (uint16_t attempts = 0; 
        GET_CSD_VSN(sd_ReceiveByteFromSD()) != CSD_VSN_SDSC;)
-    if (++attempts >= MAX_ATTEMPTS)
+    if (++attempts >= MAX_CR_ATT)
     { 
       CS_DEASSERT;
       return FAILED_CAPACITY_CALC; 
@@ -427,7 +427,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   // TAAC
   //
   for (uint16_t attempts = 0; !TAAC_CHK_SDSC(sd_ReceiveByteFromSD());)
-    if (++attempts >= MAX_ATTEMPTS)
+    if (++attempts >= MAX_CR_ATT)
     { 
       CS_DEASSERT;
       return FAILED_CAPACITY_CALC; 
@@ -442,7 +442,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
   // TRAN_SPEED - this tests for default value.
   //
   for (uint16_t attempts = 0; sd_ReceiveByteFromSD() != TRANS_SPEED_SDSC;)
-    if (++attempts >= MAX_ATTEMPTS)
+    if (++attempts >= MAX_CR_ATT)
     { 
       CS_DEASSERT;
       return FAILED_CAPACITY_CALC; 
@@ -467,7 +467,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
         return FAILED_CAPACITY_CALC;
       }
     }
-    if (attempts >= MAX_ATTEMPTS)
+    if (attempts >= MAX_CR_ATT)
     { 
       CS_DEASSERT;
       return FAILED_CAPACITY_CALC;
@@ -494,7 +494,7 @@ static uint32_t pvt_GetByteCapacitySDSC(void)
       cSizeMult |= sd_ReceiveByteFromSD() >> 7;
 
     }
-    if (attempts >= MAX_ATTEMPTS) 
+    if (attempts >= MAX_CR_ATT) 
     {
       CS_DEASSERT; 
       return FAILED_CAPACITY_CALC; 
@@ -560,7 +560,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   //
   for (uint16_t attempts = 0; 
        GET_CSD_VSN(sd_ReceiveByteFromSD()) != CSD_VSN_SDHC;)
-    if (++attempts >= MAX_ATTEMPTS)
+    if (++attempts >= MAX_CR_ATT)
     { 
       CS_DEASSERT;
       return FAILED_CAPACITY_CALC;
@@ -570,7 +570,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   // TAAC - fixed at 1ms (0x0E) for SDHC
   //
   for (uint16_t attempts = 0; sd_ReceiveByteFromSD() != TAAC_SDHC;)
-    if (++attempts >= MAX_ATTEMPTS)
+    if (++attempts >= MAX_CR_ATT)
     { 
       CS_DEASSERT;
       return FAILED_CAPACITY_CALC;
@@ -580,7 +580,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   // NSAC - not used for SDHC, but field is still there.
   //
   for (uint16_t attempts = 0; sd_ReceiveByteFromSD() != NSAC_SDHC;)
-    if (++attempts >= MAX_ATTEMPTS)
+    if (++attempts >= MAX_CR_ATT)
     { 
       CS_DEASSERT;
       return FAILED_CAPACITY_CALC;
@@ -590,7 +590,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
   // TRAN_SPEED
   //
   for (uint16_t attempts = 0; sd_ReceiveByteFromSD() != TRANS_SPEED_SDHC;)
-    if (++attempts >= MAX_ATTEMPTS)
+    if (++attempts >= MAX_CR_ATT)
     { 
       CS_DEASSERT;
       return FAILED_CAPACITY_CALC; 
@@ -612,7 +612,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
       }
       break;
     }
-    if (attempts >= MAX_ATTEMPTS)
+    if (attempts >= MAX_CR_ATT)
     { 
       CS_DEASSERT;
       return FAILED_CAPACITY_CALC;
@@ -634,7 +634,7 @@ static uint32_t pvt_GetByteCapacitySDHC(void)
       cSize |= sd_ReceiveByteFromSD();
       break;
     }
-    if (attempts >= MAX_ATTEMPTS) 
+    if (attempts >= MAX_CR_ATT) 
     { 
       CS_DEASSERT; 
       return FAILED_CAPACITY_CALC; 

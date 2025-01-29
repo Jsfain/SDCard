@@ -3,7 +3,7 @@
  * Version    : 1.0 
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020 - 2024
+ * Copyright (c) 2020 - 2025
  * 
  * Interface for SD Card single-block (R)ead, (W)rite and multi-block (E)rase.
  */
@@ -16,6 +16,16 @@
  *                                  MACROS   
  ******************************************************************************
  */
+
+/* 
+ * ----------------------------------------------------------------------------
+ *                                                                  DUMMY TOKEN
+ *
+ * Description : Token sent to the SD card when the value of the data sent
+ *               doesn't matter.
+ * ----------------------------------------------------------------------------
+ */
+#define DMY_TKN                        0xFF
 
 /* 
  * ----------------------------------------------------------------------------

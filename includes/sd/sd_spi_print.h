@@ -105,7 +105,7 @@ void sd_PrintEraseError(uint16_t err);
  * ----------------------------------------------------------------------------
  *                                                           PRINT SINGLE BLOCK
  * 
- * Description : Print contents of a an array loaded with data from a single
+ * Description : Print contents of an array loaded with data from a single
  *               block on the SD card. The array's contents will be printed to 
  *               the screen in rows of 16 data bytes. Each row begins with the
  *               block offset address of the first byte in each row, a copy of 
