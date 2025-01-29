@@ -73,7 +73,7 @@ void sd_InitMasterModeSPI(void)
  * 
  * Note        : An SPI dummy byte transmit is used to count the number of 
  *               SPI clock cycles to wait. If spiClkCycles is not a multiple of
- *               the SPI data register byte length, then the actual number of 
+ *               the SPI data register bit length, then the actual number of 
  *               clock cycles to wait will be the greatest number of SPI
  *               transmits that can complete before going over spiClkCycles.
  * ----------------------------------------------------------------------------

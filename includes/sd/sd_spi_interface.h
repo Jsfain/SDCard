@@ -8,13 +8,14 @@
  * SD_SPI_INTERFACE required for interfacing this SD card module with the SPI
  * module of the provided target device. A target-specific SPI module must be 
  * included here capable of initializing the SPI unit into master mode as well
- * as handling all other SPI-specific functionality - see the definitions below
- * and in the source file for details. If changing the target device, only the 
- * definitions here and in the source file should be updated (if needed).
- * DO NOT change any names of the functions or macros defined here and ensure 
- * any definition changes preserve the behavior expected by the SD card module.
+ * as handling all other SPI-specific functionality - see the definitions here
+ * and the accompanying source file for details. Changing the target device 
+ * should only require updating definitions here and the source file if needed. 
  * 
- * NOTE: The functions & macros defined here end in 'SPI' to distinguish them
+ * DO NOT change any function or macro names here and ensure any definition 
+ * changes preserve the defined behavior expected by the SD card module.
+ * 
+ * NOTE: All functions & macros defined here end in 'SPI' to distinguish them
  *       from the SD-specific functions in the rest of the SD card module.
  */
 #ifndef SD_SPI_INTERFACE_H
@@ -43,18 +44,23 @@
 // byte loaded into the data register is data to be sent to the SD card. During 
 // a receive, the value of the byte doesn't matter and this dummy byte is used
 // instead to initiate the SPI clock cycle by loading into the data register.
-// This should be standard for all SPI units, but should be verified when
-// changing target devices.
+// This should be standard for all SPI units, but should be verified for each
+// target device used.
 //
 #define DMY_BYTE_SPI 0xFF
 
-// 
-// Calculates and returns the number of complete SPI byte transmits that can
-// take place before the number of specified SPI clock cycles (clkCycles) is 
-// reached. SPI_REG_BIT_LEN is the bit length of the SPI data register and 
-// and should be defined in the included SPI module. It's value should be 8.
+
 //
-#define NUM_BYTE_TRANS_SPI(clkCycles) clkCycles / SPI_REG_BIT_LEN
+// Bit length of the SPI Data Register. The value should be 8.
+//
+#define DATA_REG_LEN_SPI    SPI_REG_BIT_LEN
+
+
+// 
+// Returns the number of complete SPI byte transmits that will occur before the
+// the number of specified SPI clock cycles (clkCycles) is reached.
+//
+#define NUM_BYTE_TRANS_SPI(clkCycles) clkCycles / DATA_REG_LEN_SPI
 
 
 /*
@@ -105,7 +111,7 @@ void sd_InitMasterModeSPI(void);
  * 
  * Note        : An SPI dummy byte transmit is used to count the number of 
  *               SPI clock cycles to wait. If spiClkCycles is not a multiple of
- *               the SPI data register byte length, then the actual number of 
+ *               the SPI data register bit length, then the actual number of 
  *               clock cycles to wait will be the greatest number of SPI
  *               transmits that can complete before going over spiClkCycles.
  * ----------------------------------------------------------------------------
