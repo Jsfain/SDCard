@@ -2,12 +2,11 @@
  * File       : AVR_USART.C
  * Version    : 1.0 
  * Target     : ATMega1280
- * License    : GNU GPLv3
- * Author     : Joshua Fain
- * Copyright (c) 2020 - 2023
+ * Author     : Joshua Fain 2020-2023
  * 
- * Description:  Implements AVR_USART.H for accessing and controlling the USART
- *               on an AVR microcontroller.
+ * Implements AVR_USART.H for accessing and controlling the USART on the target
+ * AVR device. The implementation of the functions are directly based on those 
+ * provided in the AVR device manual. 
  */
 
 #include <avr/io.h>
@@ -43,7 +42,7 @@ void usart_Init(void)
  * ----------------------------------------------------------------------------
  *                                                                USART RECEIVE
  *                                         
- * Description : Receive a character via USART on the AVR target device.
+ * Description : Receive a character via USART.
  * 
  * Returns     : character received by the USART, i.e. value in UDR0.
  * ----------------------------------------------------------------------------
@@ -75,4 +74,21 @@ void usart_Transmit(uint8_t data)
   
   // load data into usart buffer to transmit it.
   UDR0 = data;
+}
+
+/*
+ * ----------------------------------------------------------------------------
+ *                                                   USART RECEIVE BUFFER FLUSH
+ *                                         
+ * Description : Flush the USART receive buffer.
+ * ----------------------------------------------------------------------------
+ */
+void usart_Flush(void)
+{
+  //
+  // Poll RX complete flag until no longer set while continuously reading
+  // contents of UDR0, to effectively flush data register contents.
+  //
+  while (UCSR0A & (1 << RXC0))
+    UDR0;
 }

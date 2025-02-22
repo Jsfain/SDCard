@@ -19,7 +19,6 @@
 #include "avr_usart.h"
 #include "avr_spi.h"
 #include "prints.h"
-//#include "sd_spi_interface.h"
 #include "sd_spi_base.h"
 #include "sd_spi_rwe.h"
 #include "sd_spi_misc.h"

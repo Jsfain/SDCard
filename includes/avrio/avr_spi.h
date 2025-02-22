@@ -2,12 +2,11 @@
  * File       : AVR_SPI.H
  * Version    : 1.0 
  * Target     : ATMega1280
- * License    : GNU GPLv3
- * Author     : Joshua Fain
- * Copyright (c) 2020 - 2024
+ * Author     : Joshua Fain 2020-2024
  * 
- * Description: Interface for setting and controlling the target AVR device's 
- *              SPI port.
+ * Interface for setting and controlling the target AVR device's SPI port.
+ * The implementation of the functions are directly based on those provided
+ * in the AVR device manual. 
  */
 
 #ifndef AVR_SPI_H

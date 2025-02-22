@@ -2,12 +2,11 @@
  * File       : AVR_USART.H
  * Version    : 1.0 
  * Target     : ATMega1280
- * License    : GNU GPLv3
- * Author     : Joshua Fain
- * Copyright (c) 2020 - 2023
+ * Author     : Joshua Fain 2020-2023
  * 
- * Description: Interface for accessing and controlling the USART on an AVR 
- *              microcontroller.
+ * Interface for accessing and controlling the USART on the target AVR device.
+ * The implementation of the functions are directly based on those provided in
+ * the AVR device manual. 
  */
 
 #ifndef AVR_USART_H
@@ -65,5 +64,26 @@ uint8_t usart_Receive(void);
  * ----------------------------------------------------------------------------
  */
 void usart_Transmit(uint8_t data);
+
+
+/*
+ * ----------------------------------------------------------------------------
+ *                                                               USART TRANSMIT
+ *                                       
+ * Description : Returns the immediate contents of the eturn
+ * 
+ * Arguments   : data - data to send via USART.
+ * ----------------------------------------------------------------------------
+ */
+void usart_ReadDataRegister(uint8_t data);
+
+/*
+ * ----------------------------------------------------------------------------
+ *                                                   USART RECEIVE BUFFER FLUSH
+ *                                         
+ * Description : Flush the USART receive buffer.
+ * ----------------------------------------------------------------------------
+ */
+void usart_Flush(void);
 
 #endif //AVR_USART_H
