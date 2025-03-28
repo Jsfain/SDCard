@@ -5,13 +5,13 @@ clear
 buildDir=../untracked/build
 
 #directory for sdcard source files
-sdDir=source/sd
+sdDir=src
 
 #directory for avr-general source files
-ioDir=source/avrio
+ioDir=lib/avrio
 
 #directory for helper source files
-hlprDir=source/hlpr
+hlprDir=lib/hlpr
 
 #directory for test files
 testDir=test
@@ -22,7 +22,7 @@ mkdir -p -v $buildDir
 
 t=0.25
 # -g = debug, -Os = Optimize Size
-Compile=(avr-gcc -Wall -g -Os -I "includes/sd" -I "includes/avrio" -I "includes/hlpr" -DF_CPU=16000000 -mmcu=atmega1280 -c -o)
+Compile=(avr-gcc -Wall -g -Os -I "includes" -I "lib/avrio" -I "lib/hlpr" -DF_CPU=16000000 -mmcu=atmega1280 -c -o)
 Link=(avr-gcc -Wall -g -mmcu=atmega1280 -o)
 IHex=(avr-objcopy -j .text -j .data -O ihex)
 
