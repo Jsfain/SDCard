@@ -1,9 +1,9 @@
 /*
  * File       : SD_SPI_PRINT.H
- * Version    : 1.0 
+ * Version    : 0.0 
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020 - 2024
+ * Copyright (c) 2020 - 2026
  * 
  * Interface for printing the various responses that can be returned by SD card 
  * commands - e.g. init, error, and data responses.

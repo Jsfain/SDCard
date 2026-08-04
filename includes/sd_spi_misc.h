@@ -1,9 +1,9 @@
 /*
  * File       : SD_SPI_MISC.H
- * Version    : 1.0
+ * Version    : 0.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020 - 2025
+ * Copyright (c) 2020 - 2026
  *
  * This is meant to be a catch-all for some misellaneous functions. Will 
  * require SD_SPI_BASE and SD_SPI_RWE to function.

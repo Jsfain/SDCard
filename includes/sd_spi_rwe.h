@@ -1,6 +1,6 @@
 /*
  * File       : SD_SPI_RWE.H
- * Version    : 1.0 
+ * Version    : 0.0 
  * License    : GNU GPLv3
  * Author     : Joshua Fain
  * Copyright (c) 2020 - 2025

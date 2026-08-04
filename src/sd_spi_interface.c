@@ -1,9 +1,9 @@
 /*
  * File       : SD_SPI_INTERFACE.C
- * Version    : 1.0
+ * Version    : 0.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2025
+ * Copyright (c) 2026
  * 
  * Implments SD_SPI_INTERFACE.H which provides the functions & macros for
  * interfacing this SD card module with the SPI module of a target device.

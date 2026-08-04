@@ -1,9 +1,9 @@
 /*
  * File       : SD_SPI_BASE.C
- * Version    : 1.0
+ * Version    : 0.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020 - 2025
+ * Copyright (c) 2020 - 2026
  * 
  * SD_SPI_BASE.C defines the functions from SD_SPI_BASE.H. These are the basic
  * functions required to interact with an SD card operating in SPI mode.
