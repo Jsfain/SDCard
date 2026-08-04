@@ -3,7 +3,7 @@
  * Version    : 0.0 
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020 - 2025
+ * Copyright (c) 2020 - 2026
  * 
  * Interface for SD Card single-block (R)ead, (W)rite and multi-block (E)rase.
  */

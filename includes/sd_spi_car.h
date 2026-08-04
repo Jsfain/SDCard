@@ -1,9 +1,9 @@
 /*
  * File       : SD_SPI_CAR.H
- * Version    : 1.0
+ * Version    : 0.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2020 - 2024
+ * Copyright (c) 2020 - 2026
  * 
  * Macros for SD Card Commands, Arguments, Responses available in SPI mode,
  * along with some other related macros.

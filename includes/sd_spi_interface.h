@@ -3,7 +3,7 @@
  * Version    : 0.0
  * License    : GNU GPLv3
  * Author     : Joshua Fain
- * Copyright (c) 2025
+ * Copyright (c) 2026
  * 
  * SD_SPI_INTERFACE required for interfacing this SD card module with the SPI
  * module of the provided target device. A target-specific SPI module must be 
