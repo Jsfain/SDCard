@@ -28,7 +28,7 @@
  * Arguments   : r1   - The R1 response byte returned by sd_GetR1().
  * ----------------------------------------------------------------------------
  */
-void sd_PrintR1(uint8_t r1);
+void sd_PrintR1(uint8_t r1, void (*outs)(uint8_t));
 
 /*
  * ----------------------------------------------------------------------------
@@ -46,7 +46,7 @@ void sd_PrintR1(uint8_t r1);
  *               ignored here. To read the R1 portion, pass it to sd_PrintR1.
  * ----------------------------------------------------------------------------
  */
-void sd_PrintInitErrorResponse(uint32_t initResp);
+void sd_PrintInitErrorResponse(uint32_t initResp, void (*outs)(uint8_t));
 
 /*
  * COMMENT on READ/WRITE/ERASE ERROR Responses
@@ -72,7 +72,7 @@ void sd_PrintInitErrorResponse(uint32_t initResp);
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-void sd_PrintReadError(uint8_t err);
+void sd_PrintReadError(uint8_t err, void (*outs)(uint8_t));
 
 /*
  * ----------------------------------------------------------------------------
@@ -85,7 +85,7 @@ void sd_PrintReadError(uint8_t err);
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-void sd_PrintWriteError(uint8_t err);
+void sd_PrintWriteError(uint8_t err, void (*outs)(uint8_t));
 
 /*
  * ----------------------------------------------------------------------------
@@ -98,7 +98,7 @@ void sd_PrintWriteError(uint8_t err);
  * Returns     : void
  * ----------------------------------------------------------------------------
  */
-void sd_PrintEraseError(uint16_t err);
+void sd_PrintEraseError(uint16_t err, void (*outs)(uint8_t));
 
 
 /*
@@ -117,4 +117,4 @@ void sd_PrintEraseError(uint16_t err);
  * Note        : Array must be of length BLOCK_LEN.
  * ----------------------------------------------------------------------------
  */
-void sd_PrintSingleBlock(const uint8_t blckArr[]);
+void sd_PrintSingleBlock(const uint8_t blckArr[], void (*outs)(uint8_t));

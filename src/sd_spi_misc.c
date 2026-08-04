@@ -80,7 +80,8 @@ uint32_t sd_GetCardByteCapacity(const CTV *ctv)
  *                  range at a time.
  * ----------------------------------------------------------------------------
  */
-void sd_FindNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr)
+void sd_FindNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr, 
+                                 void (*outs)(uint8_t))
 {
   // keeps track of numbers printed on each line
   uint16_t numPerLine = 0;        
@@ -101,9 +102,9 @@ void sd_FindNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr)
       {
         // begin new line if numPerLine is multiple of NZDBN_PER_LINE.
         if (!(numPerLine % NZDBN_PER_LINE))
-          print_Str("\n\r");
-        print_Str("\t\t"); 
-        print_Dec(blckNum);
+          print_Str("\n\r", outs);
+        print_Str("\t\t", outs);
+        print_Num(blckNum, 10, outs);
         ++numPerLine;
         break;
       }
@@ -127,7 +128,8 @@ void sd_FindNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr)
  * Returns     : Read Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-uint16_t sd_PrintMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks)
+uint16_t sd_PrintMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks, 
+                                void (*outs)(uint8_t))
 {
   //
   // send request for SD card to return contents of the blocks starting at the
@@ -151,8 +153,8 @@ uint16_t sd_PrintMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks)
     uint8_t  blckArr[BLOCK_LEN];
 
     // print the block number for the current iteration.
-    print_Str("\n\n\r                                    BLOCK ");
-    print_Dec(startBlckAddr + blckNum);
+    print_Str("\n\n\r                                    BLOCK ", outs);
+    print_Num(startBlckAddr + blckNum, 10, outs);
     
     //
     // loop until Start Block Token received. Return error if max attempts
@@ -171,7 +173,7 @@ uint16_t sd_PrintMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks)
     sd_ReceiveByteFromSD();
 
     // print the block to the screen.
-    sd_PrintSingleBlock(blckArr);
+    sd_PrintSingleBlock(blckArr, outs);
   }
   
   // stop SD card from sending data blocks

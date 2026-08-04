@@ -301,7 +301,8 @@ uint32_t sd_GetCardByteCapacity(const CTV *ctv);
  *                  range at a time.
  * ----------------------------------------------------------------------------
  */
-void sd_FindNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr);
+void sd_FindNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr, 
+                                 void (*outs)(uint8_t));
 
 /* 
  * ----------------------------------------------------------------------------
@@ -319,7 +320,8 @@ void sd_FindNonZeroDataBlockNums(uint32_t startBlckAddr, uint32_t endBlckAddr);
  * Returns     : Read Block Error (upper byte) and R1 Response (lower byte).
  * ----------------------------------------------------------------------------
  */
-uint16_t sd_PrintMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks);
+uint16_t sd_PrintMultipleBlocks(uint32_t startBlckAddr, uint32_t numOfBlcks, 
+                                void (*outs)(uint8_t));
 
 /* 
  * ----------------------------------------------------------------------------
